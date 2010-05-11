@@ -1,0 +1,38 @@
+HTTP/1.1 200 OK
+Connection: close
+Cache-Control: no-cache
+Content-Type: text/html
+
+<HTML><HEAD><TITLE>NikeE1B</TITLE></HEAD><BODY>
+<TABLE>
+<TR>
+<TD COLSPAN=2><H2>NikeE1B v1.0</H2></TD>
+</TR>
+<TR>
+<TD>(C)2009 by Rst7/CBSIE</TD><TD><A HREF=/>Main page</A></TD>
+</TR>
+</TABLE>
+
+
+$check_eeprom_restored$
+<HR>
+
+<FORM METHOD=POST ACTION=w>
+Connect to IP: 
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$> with gate <INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>
+<BR>
+<INPUT TYPE=submit VALUE=SET>
+</FORM>
+<HR>
+<FORM METHOD=POST ACTION=r><INPUT TYPE=submit VALUE="Reboot device and use all new settigns!"></FORM><HR>
+<A HREF=z>
+Configure gate parameters (NOT SAFE!!!)</A><BR>
+<I><b>uNikeE1B v2.0 rev $svn_revision$</b><BR>
+Small hard/soft for Embedded Ethernet</I><BR>
+<A HREF=http://cbsie.dyndns.info>CBSIE HQ</A> - 18 Years of Glory</BODY></HTML>

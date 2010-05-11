@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>NikeE1B/Debug</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>165</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      <PreferedWindows><Position>4</Position><ScreenPosX>603</ScreenPosX><ScreenPosY>250</ScreenPosY><Windows/></PreferedWindows></Workspace>
+      <Find-in-Files>
+        
+        
+        
+      <PreferedWindows><Position>4</Position><ScreenPosX>598</ScreenPosX><ScreenPosY>227</ScreenPosY><Windows><Window><Factory>Workspace</Factory></Window><Window><Factory>Build</Factory></Window><Window><Factory>Debug-Log</Factory></Window></Windows></PreferedWindows><ColumnWidth0>350</ColumnWidth0><ColumnWidth1>50</ColumnWidth1><ColumnWidth2>601</ColumnWidth2></Find-in-Files>
+    <Build><PreferedWindows><Position>4</Position><ScreenPosX>598</ScreenPosX><ScreenPosY>227</ScreenPosY><Windows><Window><Factory>Workspace</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Debug-Log</Factory></Window></Windows></PreferedWindows><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>724</ColumnWidth1><ColumnWidth2>193</ColumnWidth2><ColumnWidth3>48</ColumnWidth3></Build><Debug-Log><PreferedWindows><Position>4</Position><ScreenPosX>598</ScreenPosX><ScreenPosY>227</ScreenPosY><Windows><Window><Factory>Workspace</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Build</Factory></Window></Windows></PreferedWindows><ColumnWidth0>21</ColumnWidth0><ColumnWidth1>965</ColumnWidth1></Debug-Log></Static>
+    <Windows>
+      
+      
+    <Wnd0><Tabs><Tab><Identity>TabID-28227-5296</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab><Tab><Identity>TabID-9010-6475</Identity><TabName>Build</TabName><Factory>Build</Factory><Session/></Tab><Tab><Identity>TabID-7602-31545</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab></Tabs><SelectedTab>1</SelectedTab></Wnd0><Wnd1><Tabs><Tab><Identity>TabID-21661-5215</Identity><TabName>Workspace</TabName><Factory>Workspace</Factory><Session><NodeDict><ExpandedNode>NikeE1B</ExpandedNode><ExpandedNode>NikeE1B/ENC28j60</ExpandedNode><ExpandedNode>NikeE1B/HTTP</ExpandedNode><ExpandedNode>NikeE1B/KEYSCAN</ExpandedNode><ExpandedNode>NikeE1B/LCD</ExpandedNode><ExpandedNode>NikeE1B/USART</ExpandedNode><ExpandedNode>NikeE1B/VS</ExpandedNode></NodeDict></Session></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd1></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>G:\AVR\EthRadio_buf_inline\pages.c</Filename><XPos>0</XPos><YPos>115</YPos><SelStart>6686</SelStart><SelEnd>6686</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>G:\AVR\EthRadio_buf_inline\pages.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>G:\AVR\EthRadio_buf_inline\md5cheat.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>G:\AVR\EthRadio_buf_inline\main.c</Filename><XPos>0</XPos><YPos>1641</YPos><SelStart>42469</SelStart><SelEnd>42469</SelEnd></Tab><ActiveTab>3</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-00ab9a28><key>iaridepm.enu1</key></Toolbar-00ab9a28></Sizes></Row0></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>747</Bottom><Right>256</Right><x>-2</x><y>-2</y><xscreen>139</xscreen><yscreen>155</yscreen><sizeHorzCX>108594</sizeHorzCX><sizeHorzCY>164195</sizeHorzCY><sizeVertCX>201563</sizeVertCX><sizeVertCY>793432</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>153</Bottom><Right>1282</Right><x>-2</x><y>-2</y><xscreen>1284</xscreen><yscreen>155</yscreen><sizeHorzCX>1003125</sizeHorzCX><sizeHorzCY>164195</sizeHorzCY><sizeVertCX>108594</sizeVertCX><sizeVertCY>542373</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

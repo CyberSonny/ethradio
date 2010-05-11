@@ -1,0 +1,221 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:31:07 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\station.c                    /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\station.c --cpu=m32 -ms -o   /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\station.s90       /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME station
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?need_segment_init
+
+        PUBWEAK `?<Segment init: NEAR_Z>`
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC stationNum
+        PUBLIC stationNum_EEPROM
+        PUBLIC station_list
+
+// G:\AVR\EthRadio_buf_inline\station.c
+//    1 #include "compiler.h"
+//    2 #include "stdafx.h"
+//    3 #include "station.h"
+//    4 #include "nike_e.h"
+//    5 
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+//    6 volatile UREG stationNum;
+stationNum:
+        DS8 1
+//    7 
+
+        RSEG EEPROM_I:XDATA:NOROOT(0)
+//    8 __eeprom char stationNum_EEPROM=1;
+stationNum_EEPROM:
+        DC8 1
+//    9 
+
+        RSEG EEPROM_I:XDATA:NOROOT(0)
+//   10 __eeprom STATION station_list[16] = {\ 
+station_list:
+        DD 872668226
+        DC16 7016
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "1.FM TOP40"
+        DC8 0, 0, 0, 0, 0
+        DD 2002586952
+        DC16 7070
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "1.FM Classical"
+        DC8 0
+        DD 2002586952
+        DC16 7082
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "1.FM BaySm.Jazz"
+        DD 2002586952
+        DC16 7036
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "1.FM 90's"
+        DC8 0, 0, 0, 0, 0, 0
+        DD 483138120
+        DC16 5324
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "DI.FM Cl.Euro"
+        DC8 0, 0
+        DD 483138120
+        DC16 5194
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "DI.FM Ambient"
+        DC8 0, 0
+        DD 483138120
+        DC16 5744
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "DaTempo Lounge"
+        DC8 0
+        DD 483138120
+        DC16 5834
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "SKY.FM Love"
+        DC8 0, 0, 0, 0
+        DD 2729719626
+        DC16 8020
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "PERUFOLKRADIO"
+        DC8 0, 0
+        DD 413688441
+        DC16 10042
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "NZ TheFlea88.2"
+        DC8 0
+        DD 3829600699
+        DC16 9413
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "BR BAND FM103,3"
+        DD 2363083858
+        DC16 8000
+        DC8 "radiodacha_high.mp3"
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "Radio Dacha"
+        DC8 0, 0, 0, 0
+        DD 64322110
+        DC16 8000
+        DC8 "obogrelov-fm"
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "Obogrelov FM"
+        DC8 0, 0, 0
+        DD 64322110
+        DC16 8000
+        DC8 "melodia128"
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "Rad. Melodiya"
+        DC8 0, 0
+        DD 2391011161
+        DC16 8080
+        DC8 "Radio_Russia"
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "Radio Russia"
+        DC8 0, 0, 0
+        DD 3617073857
+        DC16 8006
+        DC8 ""
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        DC8 "WRN. Russkij"
+        DC8 0, 0, 0
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        RSEG INITTAB:CODE:NOROOT(0)
+`?<Segment init: NEAR_Z>`:
+        DC16    SFE(NEAR_Z) - SFB(NEAR_Z)
+        DC16    SFB(NEAR_Z)
+        DC16    0
+        REQUIRE ?need_segment_init
+
+        END
+//   11   {IP2UINT32(66,220,3,52),7016,"","1.FM TOP40"},/*1.FM TOP40 AAC+ 64*/
+//   12   {IP2UINT32(72,13,93,119),7070,"","1.FM Classical"},/*1.FM Trance AAC+ 64*/
+//   13   {IP2UINT32(72,13,93,119),7082,"","1.FM BaySm.Jazz"},/*1.FM Disco AAC+ 64*/
+//   14   {IP2UINT32(72,13,93,119),7036,"","1.FM 90's"},/*1.FM 90's AAC+ 64*/
+//   15   {IP2UINT32(72,26,204,28),5324,"","DI.FM Cl.Euro"},/*DI FM Classic Eurodance mp396*/
+//   16   {IP2UINT32(72,26,204,28),5194,"","DI.FM Ambient"},\ 
+//   17   {IP2UINT32(72,26,204,28),5744,"","DaTempo Lounge"},\ 
+//   18   {IP2UINT32(72,26,204,28),5834,"","SKY.FM Love"},\ 
+//   19   {IP2UINT32(74,55,180,162),8020,"","PERUFOLKRADIO"},/*DI FM Classical Trance AAC+ 24*/
+//   20   {IP2UINT32(121,98,168,24),10042,"","NZ TheFlea88.2"},/**/\ 
+//   21   {IP2UINT32(187,17,67,228),9413,"","BR BAND FM103,3"},/**/\ 
+//   22   {IP2UINT32(82,204,217,140),8000,"radiodacha_high.mp3","Radio Dacha"/*dacha96*/},\ 
+//   23   {IP2UINT32(62,122,213,3),8000,"obogrelov-fm","Obogrelov FM"},\ 
+//   24   {IP2UINT32(62,122,213,3),8000,"melodia128","Rad. Melodiya"},\ 
+//   25   {IP2UINT32(89,239,131,142),8080,"Radio_Russia","Radio Russia"},\ 
+//   26   {IP2UINT32(193,42,152,215),8006,"","WRN. Russkij"}
+//   27 };
+//   28 //  {IP2UINT32(64,12,61,3),80,"stream/1024"},/**/
+//   29 //  {IP2UINT32(72,26,204,18),6036,""},
+//   30 //  {IP2UINT32(72,26,204,18),6324,"","Cl.Eurodance"},/*DI FM Classic Eurodance MP3 96*/
+//   31 //  {IP2UINT32(192,168,113,2),8021,"","192.168.113.2"},/*DI FM Classic Eurodance MP3 96*/
+// 
+// 865 bytes in segment EEPROM_I
+//   6 bytes in segment INITTAB
+//   1 byte  in segment NEAR_Z
+// 
+//   0 bytes of CODE  memory (+ 6 bytes shared)
+//   1 byte  of DATA  memory
+// 865 bytes of XDATA memory
+//
+//Errors: none
+//Warnings: none

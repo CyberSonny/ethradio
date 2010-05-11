@@ -1,0 +1,1386 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  19:07:03 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\lcd.c                        /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\lcd.c --cpu=m32 -ms -o       /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\lcd.s90           /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME lcd
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?Register_R4_is_cg_reg
+        EXTERN ?S_SHL_L02
+        EXTERN ?need_segment_init
+        EXTERN __eeget8_16
+
+        PUBWEAK `?<Segment init: NEAR_Z>`
+        PUBLIC LCD_CLS
+        PUBLIC LCD_CMD
+        PUBLIC LCD_DATA
+        PUBLIC LCD_XY
+        PUBLIC LCD_fprintline
+        PUBLIC LCD_fprintlineEE
+        PUBLIC LCD_fprintstr
+        PUBLIC LCD_home
+        PUBLIC LCD_init_4
+        PUBLIC LCD_putBR
+        PUBLIC LCD_putMETA
+        PUBLIC LCD_putc
+        PUBLIC LCD_softCLR
+        PUBLIC WIN1251_tab
+        PUBWEAK _A_DDRC
+        PUBWEAK _A_PINC
+        PUBWEAK _A_PORTC
+        PUBWEAK _A_TIMSK
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+
+// G:\AVR\EthRadio_buf_inline\lcd.c
+//    1 
+//    2 #include "compiler.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,033H
+// <__C40> volatile __io _A_PINC
+_A_PINC:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,034H
+// <__C42> volatile __io _A_DDRC
+_A_DDRC:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,035H
+// <__C44> volatile __io _A_PORTC
+_A_PORTC:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,059H
+// <__C118> volatile __io _A_TIMSK
+_A_TIMSK:
+        DS8 1
+//    3 #include "stdafx.h"
+//    4 #include "lcd.h"
+//    5 
+//    6 #define LCD_CLR               0      /* DB0: clear display                  */
+//    7 #define LCD_HOME              1      /* DB1: return to home position        */
+//    8 
+//    9 #define LCD_ENTRY_MODE        2      /* DB2: set entry mode                 */
+//   10 #define LCD_ENTRY_INC         1      /*   DB1: 1=increment, 0=decrement     */
+//   11 #define LCD_ENTRY_SHIFT       0      /*   DB2: 1=display shift on           */
+//   12 
+//   13 #define LCD_ON                3      /* DB3: turn lcd/cursor on             */
+//   14 #define LCD_ON_DISPLAY        2      /*   DB2: turn display on              */
+//   15 #define LCD_ON_CURSOR         1      /*   DB1: turn cursor on               */
+//   16 #define LCD_ON_BLINK          0      /*     DB0: blinking cursor ?          */
+//   17 
+//   18 #define LCD_MOVE              4      /* DB4: move cursor/display            */
+//   19 #define LCD_MOVE_DISP         3      /*   DB3: move display (0-> cursor) ?  */
+//   20 #define LCD_MOVE_RIGHT        2      /*   DB2: move right (0-> left) ?      */
+//   21 
+//   22 #define LCD_FUNCTION          5      /* DB5: function set                   */
+//   23 #define LCD_FUNCTION_8BIT     4      /*   DB4: set 8BIT mode (0->4BIT mode) */
+//   24 #define LCD_FUNCTION_2LINES   3      /*   DB3: two lines (0->one line)      */
+//   25 #define LCD_FUNCTION_10DOTS   2      /*   DB2: 5x10 font (0->5x7 font)      */
+//   26 
+//   27 #define LCD_CGRAM             6      /* DB6: set CG RAM address             */
+//   28 #define LCD_DDRAM             7      /* DB7: set DD RAM address             */
+//   29 #define LCD_BUSY              7      /* DB7: LCD is busy                    */
+//   30 
+//   31 /* set entry mode: display shift on/off, dec/inc cursor move direction */
+//   32 #define LCD_ENTRY_DEC            0x04   /* display shift off, dec cursor move dir */
+//   33 #define LCD_ENTRY_DEC_SHIFT      0x05   /* display shift on,  dec cursor move dir */
+//   34 #define LCD_ENTRY_INC_           0x06   /* display shift off, inc cursor move dir */
+//   35 #define LCD_ENTRY_INC_SHIFT      0x07   /* display shift on,  inc cursor move dir */
+//   36 
+//   37 /* display on/off, cursor on/off, blinking char at cursor position */
+//   38 #define LCD_DISP_OFF             0x08   /* display off                            */
+//   39 #define LCD_DISP_ON              0x0C   /* display on, cursor off                 */
+//   40 #define LCD_DISP_ON_BLINK        0x0D   /* display on, cursor off, blink char     */
+//   41 #define LCD_DISP_ON_CURSOR       0x0E   /* display on, cursor on                  */
+//   42 #define LCD_DISP_ON_CURSOR_BLINK 0x0F   /* display on, cursor on, blink char      */
+//   43 
+//   44 /* move cursor/shift display */
+//   45 #define LCD_MOVE_CURSOR_LEFT     0x10   /* move cursor left  (decrement)          */
+//   46 #define LCD_MOVE_CURSOR_RIGHT    0x14   /* move cursor right (increment)          */
+//   47 #define LCD_MOVE_DISP_LEFT       0x18   /* shift display left                     */
+//   48 #define LCD_MOVE_DISP_RIGHT      0x1C   /* shift display right                    */
+//   49 
+//   50 /* function set: set interface data length and number of display lines */
+//   51 #define LCD_FUNCTION_4BIT_1LINE  0x20   /* 4-bit interface, single line, 5x7 dots */
+//   52 #define LCD_FUNCTION_4BIT_2LINES 0x28   /* 4-bit interface, dual line,   5x7 dots */
+//   53 #define LCD_FUNCTION_8BIT_1LINE  0x30   /* 8-bit interface, single line, 5x7 dots */
+//   54 #define LCD_FUNCTION_8BIT_2LINES 0x38   /* 8-bit interface, dual line,   5x7 dots */
+//   55 
+//   56 #define LCD_MODE_DEFAULT     ((1<<LCD_ENTRY_MODE) | (1<<LCD_ENTRY_INC) )
+//   57 
+//   58 #define LCD_PORT  PORTC
+//   59 #define LCD_DDR   DDRC
+//   60 #define LCD_RS    PC4
+//   61 #define LCD_RW    PC5
+//   62 #define LCD_E     PC6
+//   63 #define LCD_PIN   PINC
+//   64 
+//   65 #define LCD_toggle_e()  sbi(LCD_PORT, LCD_E); __delay_cycles (XTALL/2);  cbi(LCD_PORT, LCD_E);
+//   66 
+//   67 #pragma inline = forced
+//   68 UREG LCD_RD (UREG mode)
+//   69 {  
+//   70   //LCD_PORT|=0x0F;
+//   71   if (mode==0)
+//   72   {
+//   73     cbi (LCD_PORT, LCD_RS); //  Read busy flag (DB7) and address counter (DB0 to DB7)
+//   74   }
+//   75   else
+//   76   {
+//   77     sbi (LCD_PORT, LCD_RS); //  Read data from DDRAM or CGRAM (DDRAM or CGRAM to DR)
+//   78   }    
+//   79   sbi (LCD_PORT, LCD_RW); // read mode
+//   80   
+//   81   LCD_DDR&= ~(0x0F); // D3-D0 as input
+//   82   
+//   83   sbi (LCD_PORT, LCD_E);
+//   84   __delay_cycles (XTALL/2);
+//   85   UREG data = LCD_PIN<<4; //read high nibble
+//   86   cbi (LCD_PORT, LCD_E);  
+//   87   __delay_cycles (XTALL/2);
+//   88   sbi (LCD_PORT, LCD_E);
+//   89   __delay_cycles (XTALL/2);
+//   90   data |= (LCD_PIN&0x0F); //read low nibble  
+//   91   cbi (LCD_PORT, LCD_E);  
+//   92     __delay_cycles (XTALL/2);
+//   93   LCD_PORT|=0x0F;
+//   94   return data;        
+//   95 }
+//   96 
+//   97 #pragma inline = forced
+//   98 void LCD_WR (UREG data, UREG mode)
+//   99 {
+//  100   if (mode) //mode == 1 "Data write"
+//  101   {
+//  102    sbi (LCD_PORT, LCD_RS);
+//  103   }
+//  104   else //mode == 0 "Instruction write"
+//  105   {
+//  106    cbi (LCD_PORT, LCD_RS);
+//  107   }
+//  108   cbi (LCD_PORT, LCD_RW);   
+//  109   LCD_DDR|= 0x0F; // D3-D0 as outputs
+//  110   LCD_PORT = (LCD_PORT & (0xF0))|(data>>4); //output MSB nibble
+//  111   LCD_toggle_e();
+//  112   LCD_PORT = (LCD_PORT & (0xF0))|(data&0x0F); //output LSB nibble
+//  113   LCD_toggle_e();
+//  114   LCD_PORT|=0x0F;
+//  115 }
+//  116 
+//  117 #pragma inline = forced
+//  118 UREG LCD_busy_AC_RD (void)
+//  119 {
+//  120   while (LCD_RD(0)&(1<<7));
+//  121 //  _delay_us(4);
+//  122    return (LCD_RD(0));  // return address counter
+//  123 }
+//  124 
+//  125 //#pragma inline = forced
+
+        RSEG CODE:CODE:NOROOT(1)
+//  126 void LCD_CMD (UREG cmd)
+LCD_CMD:
+??LCD_CMD_0:
+//  127 {
+//  128   LCD_busy_AC_RD();
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R17, 0x14
+        ANDI    R17, 0xF0
+        OUT     0x14, R17
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R18, 0x13
+        SWAP    R18
+        ANDI    R18, 0xF0
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        ANDI    R17, 0x0F
+        OR      R18, R17
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x15
+        ORI     R17, 0x0F
+        OUT     0x15, R17
+        BST     R18, 7
+        BRTS    ??LCD_CMD_0
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R17, 0x14
+        ANDI    R17, 0xF0
+        OUT     0x14, R17
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x15
+        ORI     R17, 0x0F
+        OUT     0x15, R17
+//  129   LCD_WR(cmd,0);  
+        CBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R17, 0x14
+        ORI     R17, 0x0F
+        OUT     0x14, R17
+        IN      R18, 0x15
+        ANDI    R18, 0xF0
+        MOV     R17, R16
+        SWAP    R17
+        ANDI    R17, 0x0F
+        OR      R18, R17
+        OUT     0x15, R18
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R17, 0x15
+        ANDI    R17, 0xF0
+        ANDI    R16, 0x0F
+        OR      R17, R16
+        OUT     0x15, R17
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+//  130 }
+        RET
+        REQUIRE _A_DDRC
+        REQUIRE _A_PORTC
+        REQUIRE _A_PINC
+//  131 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  132 void LCD_DATA (UREG data)
+LCD_DATA:
+//  133 {
+//  134 }
+        RET
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+`?<Constant "Kbs">`:
+        DC8 "Kbs"
+//  135 
+//  136 
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+//  137 __flash char WIN1251_tab[]={'A',0xa0,'B',0xa1,0xe0,'E',0xa3,\ 
+WIN1251_tab:
+        DC8 65, 160, 66, 161, 224, 69, 163, 164, 165, 166, 75, 167, 77, 72, 79
+        DC8 168, 80, 67, 84, 169, 170, 88, 225, 171, 172, 226, 173, 174, 98
+        DC8 175, 176, 177, 97, 178, 179, 180, 227, 101, 182, 183, 184, 185, 186
+        DC8 187, 188, 189, 111, 190, 112, 99, 191, 121, 228, 120, 229, 192, 193
+        DC8 230, 194, 195, 196, 197, 198, 199
+//  138 0xa4,0xa5,0xa6,'K',0xa7,'M','H','O',0xa8,'P','C','T',0xa9,0xaa,'X',0xe1,0xab,0xac,0xe2,0xad,\ 
+//  139 0xae,'b',0xaf,0xb0,0xb1,\ 
+//  140 'a',0xb2,0xb3,0xb4,0xe3,'e',0xb6,0xb7,0xb8,0xb9,0xba,0xbb,0xbc,0xbd,'o',0xbe,'p','c',0xbf,'y',\ 
+//  141 0xe4,'x',0xe5,0xc0,0xc1,0xe6,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7};
+//  142 
+//  143 //#pragma inline = forced
+
+        RSEG CODE:CODE:NOROOT(1)
+//  144 void LCD_putc(char c)
+LCD_putc:
+??LCD_putc_0:
+//  145 {
+//  146     UREG sym;
+//  147     UREG pos;    
+//  148     pos = LCD_busy_AC_RD();   // read busy-flag and address counter     
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R17, 0x14
+        ANDI    R17, 0xF0
+        OUT     0x14, R17
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R18, 0x13
+        SWAP    R18
+        ANDI    R18, 0xF0
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        ANDI    R17, 0x0F
+        OR      R18, R17
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x15
+        ORI     R17, 0x0F
+        OUT     0x15, R17
+        BST     R18, 7
+        BRTS    ??LCD_putc_0
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R17, 0x14
+        ANDI    R17, 0xF0
+        OUT     0x14, R17
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x15
+        ORI     R17, 0x0F
+        OUT     0x15, R17
+//  149     if (c>=0xc0) sym=WIN1251_tab[c-0xc0];
+        CPI     R16, 192
+        BRCS    ??LCD_putc_1
+        LDI     R31, 0
+        MOV     R30, R16
+        SUBI    R30, LOW((-(WIN1251_tab - 192) & 0xFFFF))
+        SBCI    R31, HIGH((-(WIN1251_tab - 192) & 0xFFFF))
+        LPM     R17, Z
+        RJMP    ??LCD_putc_2
+//  150     else if (c==0xa8) sym=0xa2;
+??LCD_putc_1:
+        CPI     R16, 168
+        BRNE    ??LCD_putc_3
+        LDI     R17, 162
+        RJMP    ??LCD_putc_2
+//  151     else if (c==0xb8) sym=0xb5;
+??LCD_putc_3:
+        CPI     R16, 184
+        BRNE    ??LCD_putc_4
+        LDI     R17, 181
+        RJMP    ??LCD_putc_2
+//  152     else sym=c;
+??LCD_putc_4:
+        MOV     R17, R16
+//  153     LCD_WR(sym, 1);
+??LCD_putc_2:
+        SBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R16, 0x14
+        ORI     R16, 0x0F
+        OUT     0x14, R16
+        IN      R18, 0x15
+        ANDI    R18, 0xF0
+        MOV     R16, R17
+        SWAP    R16
+        ANDI    R16, 0x0F
+        OR      R18, R16
+        OUT     0x15, R18
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        ANDI    R17, 0x0F
+        OR      R16, R17
+        OUT     0x15, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+//  154     pos = LCD_busy_AC_RD();   // read busy-flag and address counter       
+??LCD_putc_5:
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R16, 0x14
+        ANDI    R16, 0xF0
+        OUT     0x14, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        SWAP    R17
+        ANDI    R17, 0xF0
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x13
+        ANDI    R16, 0x0F
+        OR      R17, R16
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+        BST     R17, 7
+        BRTS    ??LCD_putc_5
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R16, 0x14
+        ANDI    R16, 0xF0
+        OUT     0x14, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x13
+        SWAP    R16
+        ANDI    R16, 0xF0
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        ANDI    R17, 0x0F
+        OR      R16, R17
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x15
+        ORI     R17, 0x0F
+        OUT     0x15, R17
+//  155 
+//  156         if ( pos == LCD_START_LINE1+LCD_DISP_LENGTH ) {
+        CPI     R16, 16
+        BRNE    ??LCD_putc_6
+//  157             LCD_WR((1<<LCD_DDRAM)+LCD_START_LINE2,0);    
+        CBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R16, 0x14
+        ORI     R16, 0x0F
+        OUT     0x14, R16
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        ORI     R16, 0x0C
+        RJMP    ??LCD_putc_7
+//  158         }else if ( pos == LCD_START_LINE2+LCD_DISP_LENGTH ) {
+??LCD_putc_6:
+        CPI     R16, 80
+        BRNE    ??LCD_putc_8
+//  159             LCD_WR((1<<LCD_DDRAM)+LCD_START_LINE3,0);
+        CBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R16, 0x14
+        ORI     R16, 0x0F
+        OUT     0x14, R16
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        ORI     R16, 0x09
+        RJMP    ??LCD_putc_7
+//  160         }else if ( pos == LCD_START_LINE3+LCD_DISP_LENGTH ) {
+??LCD_putc_8:
+        CPI     R16, 32
+        BRNE    ??LCD_putc_9
+//  161             LCD_WR((1<<LCD_DDRAM)+LCD_START_LINE4,0);
+        CBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R16, 0x14
+        ORI     R16, 0x0F
+        OUT     0x14, R16
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        ORI     R16, 0x0D
+        RJMP    ??LCD_putc_7
+//  162         }else if ( pos == LCD_START_LINE4+LCD_DISP_LENGTH ) {
+??LCD_putc_9:
+        CPI     R16, 96
+        BRNE    ??LCD_putc_10
+//  163             LCD_WR((1<<LCD_DDRAM)+LCD_START_LINE1,0);
+        CBI     0x15, 0x04
+        CBI     0x15, 0x05
+        IN      R16, 0x14
+        ORI     R16, 0x0F
+        OUT     0x14, R16
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        ORI     R16, 0x08
+??LCD_putc_7:
+        OUT     0x15, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R16, 0x15
+        ANDI    R16, 0xF0
+        OUT     0x15, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+//  164         }
+??LCD_putc_10:
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R16, 0x14
+        ANDI    R16, 0xF0
+        OUT     0x14, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R17, 0x13
+        SWAP    R17
+        ANDI    R17, 0xF0
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x13
+        ANDI    R16, 0x0F
+        OR      R17, R16
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+        BST     R17, 7
+        BRTS    ??LCD_putc_10
+        CBI     0x15, 0x04
+        SBI     0x15, 0x05
+        IN      R16, 0x14
+        ANDI    R16, 0xF0
+        OUT     0x14, R16
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x13
+        CBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        IN      R16, 0x15
+        ORI     R16, 0x0F
+        OUT     0x15, R16
+//  165 
+//  166         LCD_busy_AC_RD();
+//  167 
+//  168 }/* lcd_putc */
+        RET
+        REQUIRE _A_DDRC
+        REQUIRE _A_PORTC
+        REQUIRE _A_PINC
+//  169 
+//  170 
+//  171 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  172 void LCD_fprintstr (char __flash* p)
+LCD_fprintstr:
+//  173 {
+        ST      -Y, R25
+        ST      -Y, R24
+        MOVW    R25:R24, R17:R16
+        RJMP    ??LCD_fprintstr_0
+//  174   while (*p)
+//  175   {
+//  176     UREG a=*p++;
+??LCD_fprintstr_1:
+        LPM     R16, Z+
+        MOVW    R25:R24, R31:R30
+//  177     LCD_putc(a);
+        RCALL   LCD_putc
+//  178   }
+??LCD_fprintstr_0:
+        MOVW    R31:R30, R25:R24
+        LPM     R16, Z
+        TST     R16
+        BRNE    ??LCD_fprintstr_1
+//  179 }
+        LD      R24, Y+
+        LD      R25, Y+
+        RET
+//  180 
+//  181 //#pragma inline = forced
+
+        RSEG CODE:CODE:NOROOT(1)
+//  182 void LCD_home(void)
+LCD_home:
+//  183 {
+//  184     LCD_CMD(1<<LCD_HOME);
+        LDI     R16, 2
+        RJMP    LCD_CMD
+//  185 }
+//  186 
+//  187 //#pragma inline = forced
+
+        RSEG CODE:CODE:NOROOT(1)
+//  188 void LCD_CLS(void)
+LCD_CLS:
+//  189 {
+//  190     LCD_CMD(1<<LCD_CLR);
+        LDI     R16, 1
+        RJMP    LCD_CMD
+//  191 }
+//  192 
+//  193 //#pragma inline = forced
+
+        RSEG CODE:CODE:NOROOT(1)
+//  194 void LCD_XY(UINT8 x,UINT8 y)
+LCD_XY:
+//  195 {
+//  196     if ( y==0 )
+        TST     R17
+        BRNE    ??LCD_XY_0
+//  197         LCD_CMD((1<<LCD_DDRAM)+LCD_START_LINE1+x);
+        SUBI    R16, 128
+        RJMP    ??LCD_XY_1
+//  198     else if ( y==1)
+??LCD_XY_0:
+        CPI     R17, 1
+        BRNE    ??LCD_XY_2
+//  199         LCD_CMD((1<<LCD_DDRAM)+LCD_START_LINE2+x);
+        SUBI    R16, 64
+??LCD_XY_1:
+        RJMP    LCD_CMD
+//  200     else if ( y==2)
+??LCD_XY_2:
+        CPI     R17, 2
+        BRNE    ??LCD_XY_3
+//  201         LCD_CMD((1<<LCD_DDRAM)+LCD_START_LINE3+x);
+        SUBI    R16, 112
+        RJMP    ??LCD_XY_1
+//  202     else /* y==3 */
+//  203         LCD_CMD((1<<LCD_DDRAM)+LCD_START_LINE4+x);
+??LCD_XY_3:
+        SUBI    R16, 48
+        RJMP    ??LCD_XY_1
+//  204 }
+//  205 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  206 __z void LCD_fprintlineEE (UINT8 line, char __eeprom* p)
+LCD_fprintlineEE:
+//  207 {
+        ST      -Y, R4
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R25
+        ST      -Y, R24
+        REQUIRE ?Register_R4_is_cg_reg
+        MOV     R4, R16
+        MOVW    R25:R24, R31:R30
+//  208   UINT8 len, k;
+//  209   switch (line)
+        TST     R16
+        BREQ    ??LCD_fprintlineEE_0
+        DEC     R16
+        BREQ    ??LCD_fprintlineEE_1
+        DEC     R16
+        BREQ    ??LCD_fprintlineEE_2
+        DEC     R16
+        BREQ    ??LCD_fprintlineEE_2
+        RJMP    ??LCD_fprintlineEE_3
+//  210   {
+//  211   case 0:
+//  212     len=16;
+??LCD_fprintlineEE_0:
+        LDI     R26, 16
+        RJMP    ??LCD_fprintlineEE_2
+//  213     break;
+//  214   case 1:
+//  215     len=10;
+??LCD_fprintlineEE_1:
+        LDI     R26, 10
+//  216     break;
+//  217   case 2:
+//  218     break;
+//  219   case 3:
+//  220     break;
+//  221   default:
+//  222     return;    
+//  223   }
+//  224   k=0;
+??LCD_fprintlineEE_2:
+        LDI     R27, 0
+//  225   LCD_XY(0,line);
+        MOV     R17, R4
+        LDI     R16, 0
+        RCALL   LCD_XY
+//  226   /*
+//  227   UINT8 i=16;
+//  228   while (i--)
+//  229   {
+//  230     LCD_putc(' ');
+//  231   }
+//  232   */
+//  233   LCD_XY(0,line);
+        MOV     R17, R4
+        LDI     R16, 0
+        RCALL   LCD_XY
+        RJMP    ??LCD_fprintlineEE_4
+//  234   while (*p&&(k<(len-1)))
+//  235   {
+//  236     LCD_putc(*p++);
+??LCD_fprintlineEE_5:
+        MOVW    R21:R20, R25:R24
+        CALL    __eeget8_16
+        RCALL   LCD_putc
+        ADIW    R25:R24, 1
+//  237     k++;
+        INC     R27
+//  238   }
+??LCD_fprintlineEE_4:
+        MOVW    R21:R20, R25:R24
+        CALL    __eeget8_16
+        TST     R16
+        BREQ    ??LCD_fprintlineEE_6
+        MOV     R16, R27
+        LDI     R17, 0
+        MOV     R30, R26
+        LDI     R31, 0
+        SBIW    R31:R30, 1
+        CP      R16, R30
+        CPC     R17, R31
+        BRLT    ??LCD_fprintlineEE_5
+//  239   while ((len-k)>0)
+??LCD_fprintlineEE_6:
+        MOV     R30, R26
+        LDI     R31, 0
+        SUB     R30, R27
+        SBCI    R31, 0
+        SBIW    R31:R30, 1
+        BRLT    ??LCD_fprintlineEE_3
+//  240   {
+//  241     LCD_putc(' ');
+        LDI     R16, 32
+        RCALL   LCD_putc
+//  242     k++;
+        INC     R27
+        RJMP    ??LCD_fprintlineEE_6
+//  243   }
+??LCD_fprintlineEE_3:
+        REQUIRE ?Subroutine0
+        ;               // Fall through to label ?Subroutine0
+//  244 }
+
+        RSEG CODE:CODE:NOROOT(1)
+?Subroutine0:
+        LD      R24, Y+
+        LD      R25, Y+
+        LD      R26, Y+
+        LD      R27, Y+
+        LD      R4, Y+
+        RET
+//  245 
+//  246 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  247 __z void LCD_fprintline (UINT8 line, char __flash* p)
+LCD_fprintline:
+//  248 {
+        ST      -Y, R4
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R25
+        ST      -Y, R24
+        REQUIRE ?Register_R4_is_cg_reg
+        MOV     R4, R16
+        MOVW    R25:R24, R31:R30
+//  249   UINT8 len, k;
+//  250   switch (line)
+        TST     R16
+        BREQ    ??LCD_fprintline_0
+        DEC     R16
+        BREQ    ??LCD_fprintline_1
+        DEC     R16
+        BREQ    ??LCD_fprintline_2
+        DEC     R16
+        BREQ    ??LCD_fprintline_2
+        RJMP    ??LCD_fprintline_3
+//  251   {
+//  252   case 0:
+//  253     len=16;
+??LCD_fprintline_0:
+        LDI     R26, 16
+        RJMP    ??LCD_fprintline_2
+//  254     break;
+//  255   case 1:
+//  256     len=10;
+??LCD_fprintline_1:
+        LDI     R26, 10
+//  257     break;
+//  258   case 2:
+//  259     break;
+//  260   case 3:
+//  261     break;
+//  262   default:
+//  263     return;    
+//  264   }
+//  265   k=0;
+??LCD_fprintline_2:
+        LDI     R27, 0
+//  266   LCD_XY(0,line);
+        MOV     R17, R4
+        LDI     R16, 0
+        RCALL   LCD_XY
+//  267   /*
+//  268   UINT8 i=16;
+//  269   while (i--)
+//  270   {
+//  271     LCD_putc(' ');
+//  272   }
+//  273   */
+//  274   LCD_XY(0,line);
+        MOV     R17, R4
+        LDI     R16, 0
+        RCALL   LCD_XY
+        RJMP    ??LCD_fprintline_4
+//  275   while (*p&&(k<(len-1)))
+//  276   {
+//  277     LCD_putc(*p++);
+??LCD_fprintline_5:
+        MOVW    R31:R30, R25:R24
+        LPM     R16, Z+
+        MOVW    R25:R24, R31:R30
+        RCALL   LCD_putc
+//  278     k++;
+        INC     R27
+//  279   }
+??LCD_fprintline_4:
+        MOVW    R31:R30, R25:R24
+        LPM     R16, Z
+        TST     R16
+        BREQ    ??LCD_fprintline_6
+        MOV     R16, R27
+        LDI     R17, 0
+        MOV     R30, R26
+        LDI     R31, 0
+        SBIW    R31:R30, 1
+        CP      R16, R30
+        CPC     R17, R31
+        BRLT    ??LCD_fprintline_5
+//  280   while ((len-k)>0)
+??LCD_fprintline_6:
+        MOV     R30, R26
+        LDI     R31, 0
+        SUB     R30, R27
+        SBCI    R31, 0
+        SBIW    R31:R30, 1
+        BRLT    ??LCD_fprintline_3
+//  281   {
+//  282     LCD_putc(' ');
+        LDI     R16, 32
+        RCALL   LCD_putc
+//  283     k++;
+        INC     R27
+        RJMP    ??LCD_fprintline_6
+//  284   }
+??LCD_fprintline_3:
+        RJMP    ?Subroutine0
+//  285 }
+//  286 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  287 void LCD_init_4 (void)
+LCD_init_4:
+//  288 {
+//  289   LCD_DDR=(1<<LCD_DDR)|(1<<LCD_RS)|(1<<LCD_RW)|(1<<LCD_E);
+        IN      R20, 0x14
+        LDI     R16, 1
+        LDI     R17, 0
+        CALL    ?S_SHL_L02
+        ORI     R16, 0x70
+        OUT     0x14, R16
+//  290   _delay_ms(20);
+        LDI     R16, 255
+        LDI     R17, 249
+        NOP
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-6
+        RJMP    $+2
+        RJMP    $+2
+//  291   LCD_PORT=(LCD_FUNCTION_8BIT_2LINES>>4);
+        LDI     R16, 3
+        OUT     0x15, R16
+//  292   LCD_toggle_e();
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+//  293   _delay_ms(5);
+        LDI     R16, 31
+        LDI     R17, 78
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  294   LCD_toggle_e();
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+//  295   _delay_us(100); 
+        LDI     R16, 143
+        LDI     R17, 1
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  296   LCD_toggle_e();
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+//  297   _delay_us(100); 
+        LDI     R16, 143
+        LDI     R17, 1
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  298   LCD_PORT=(LCD_FUNCTION_4BIT_2LINES>>4);
+        LDI     R16, 2
+        OUT     0x15, R16
+//  299   LCD_toggle_e();
+        SBI     0x15, 0x06
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        RJMP    $+2
+        CBI     0x15, 0x06
+//  300   _delay_us(100); 
+        LDI     R16, 143
+        LDI     R17, 1
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  301   LCD_CMD(LCD_FUNCTION_4BIT_2LINES);
+        LDI     R16, 40
+        RCALL   LCD_CMD
+//  302   LCD_CMD (1<<LCD_CLR);
+        LDI     R16, 1
+        RCALL   LCD_CMD
+//  303   LCD_CMD ((1<<LCD_ENTRY_MODE) | (1<<LCD_ENTRY_INC));
+        LDI     R16, 6
+        RCALL   LCD_CMD
+//  304   LCD_CMD (LCD_DISP_ON);
+        LDI     R16, 12
+        RCALL   LCD_CMD
+//  305   LCD_CLS();
+        LDI     R16, 1
+        RJMP    LCD_CMD
+        REQUIRE _A_DDRC
+        REQUIRE _A_PORTC
+//  306 }
+//  307 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  308 void LCD_putMETA (UINT8 mode, char c)
+LCD_putMETA:
+//  309 {
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R24
+        MOV     R24, R17
+//  310   static UINT8 pos, prevchar;
+//  311   UINT8 y, pos2;
+//  312   if (mode==0)            // сначала сотрем место под теги
+        TST     R16
+        BRNE    ??LCD_putMETA_0
+//  313   {    
+//  314     pos=0; prevchar=0;
+        LDI     R16, 0
+        STS     ??pos, R16
+        STS     (??pos + 1), R16
+//  315     LCD_XY(0,2);
+        LDI     R17, 2
+        RCALL   LCD_XY
+//  316     for (y=0;y<=31;y++)
+        LDI     R24, 32
+//  317     {
+//  318        LCD_putc(' ');
+??LCD_putMETA_1:
+        LDI     R16, 32
+        RCALL   LCD_putc
+//  319     }
+        DEC     R24
+        BRNE    $+2+2
+        RJMP    ??LCD_putMETA_2
+        RJMP    ??LCD_putMETA_1
+//  320     return;
+//  321   }
+//  322   if (pos==255) return;
+??LCD_putMETA_0:
+        LDS     R16, ??pos
+        CPI     R16, 255
+        BRNE    $+2+2
+        RJMP    ??LCD_putMETA_2
+//  323   if (pos++<13) return; // пропустим первые 13 символов 
+        MOV     R17, R16
+        INC     R17
+        STS     ??pos, R17
+        CPI     R16, 13
+        BRCC    $+2+2
+        RJMP    ??LCD_putMETA_2
+//  324   if (c=='\'')            // пришла одинарная кавычка
+        CPI     R24, 39
+        BRNE    ??LCD_putMETA_3
+//  325   {
+//  326     prevchar = c;         // запомнили, что приходила кавычка
+        LDI     R26, LOW(??pos)
+        LDI     R27, (??pos) >> 8
+        LDI     R16, 39
+        STS     (??pos + 1), R16
+//  327     pos--;
+        MOV     R16, R17
+        DEC     R16
+        ST      X, R16
+//  328     return;
+        RJMP    ??LCD_putMETA_2
+//  329   }
+//  330   if (prevchar=='\'') 
+??LCD_putMETA_3:
+        LDS     R16, (??pos + 1)
+        CPI     R16, 39
+        BRNE    ??LCD_putMETA_4
+//  331   {
+//  332     if (c==';') pos =255; // '; ставим маркер - больше не печатать
+        CPI     R24, 59
+        BRNE    ??LCD_putMETA_5
+        LDI     R16, 255
+        STS     ??pos, R16
+        RJMP    ??LCD_putMETA_2
+//  333     else // напечатаем кавычку с символом
+//  334     {
+//  335          pos2=pos-14;         
+??LCD_putMETA_5:
+        LDS     R16, ??pos
+        SUBI    R16, 14
+//  336          if (pos2>31) return;
+        CPI     R16, 32
+        BRCC    ??LCD_putMETA_2
+//  337          cbi (TIMSK, TOIE2);  
+        IN      R17, 0x39
+        ANDI    R17, 0xBF
+        OUT     0x39, R17
+//  338          LCD_XY((pos2)&0x0F,(pos2>>4)+2); // переместим курсор        
+        MOV     R17, R16
+        SWAP    R17
+        ANDI    R17, 0x0F
+        SUBI    R17, 254
+        ANDI    R16, 0x0F
+        RCALL   LCD_XY
+//  339          LCD_putc(prevchar);         
+        LDI     R26, LOW(??pos)
+        LDI     R27, (??pos) >> 8
+        LDS     R16, (??pos + 1)
+        RCALL   LCD_putc
+//  340          pos++;
+        LD      R16, X
+        INC     R16
+        ST      X, R16
+//  341          sbi (TIMSK, TOIE2);
+        IN      R16, 0x39
+        ORI     R16, 0x40
+        OUT     0x39, R16
+//  342          pos2=pos-14;         
+        LDS     R16, ??pos
+        SUBI    R16, 14
+//  343          if (pos2>31) return;
+        CPI     R16, 32
+        BRCC    ??LCD_putMETA_2
+//  344          cbi (TIMSK, TOIE2);  
+        IN      R17, 0x39
+        ANDI    R17, 0xBF
+        OUT     0x39, R17
+//  345          LCD_XY((pos2)&0x0F,(pos2>>4)+2); // переместим курсор        
+        MOV     R17, R16
+        SWAP    R17
+        ANDI    R17, 0x0F
+        SUBI    R17, 254
+        ANDI    R16, 0x0F
+        RCALL   LCD_XY
+//  346          LCD_putc(c);
+        MOV     R16, R24
+        RCALL   LCD_putc
+//  347          prevchar=0x00;
+        LDI     R16, 0
+        STS     (??pos + 1), R16
+//  348 //         pos++;
+//  349         //  if (pos2<(31+13)) pos++;
+//  350          sbi (TIMSK, TOIE2);
+        RJMP    ??LCD_putMETA_6
+//  351          return;
+//  352     }
+//  353   }
+//  354   // нормальная работа - печатаем 1 символ
+//  355  else
+//  356  {
+//  357          pos2=pos-14;         
+??LCD_putMETA_4:
+        LDS     R16, ??pos
+        SUBI    R16, 14
+//  358          if (pos2>31) return;
+        CPI     R16, 32
+        BRCC    ??LCD_putMETA_2
+//  359          cbi (TIMSK, TOIE2);  
+        IN      R17, 0x39
+        ANDI    R17, 0xBF
+        OUT     0x39, R17
+//  360          LCD_XY((pos2)&0x0F,(pos2>>4)+2); // переместим курсор        
+        MOV     R17, R16
+        SWAP    R17
+        ANDI    R17, 0x0F
+        SUBI    R17, 254
+        ANDI    R16, 0x0F
+        RCALL   LCD_XY
+//  361          LCD_putc(c);         
+        MOV     R16, R24
+        RCALL   LCD_putc
+//  362 //         pos++;
+//  363          sbi (TIMSK, TOIE2);
+??LCD_putMETA_6:
+        IN      R16, 0x39
+        ORI     R16, 0x40
+        OUT     0x39, R16
+??LCD_putMETA_2:
+        LD      R24, Y+
+        LD      R26, Y+
+        LD      R27, Y+
+        RET
+        REQUIRE _A_TIMSK
+//  364  }
+//  365 }
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+??pos:
+        DS8 1
+        DS8 1
+//  366 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  367 __z void LCD_putBR (char* s)
+LCD_putBR:
+//  368 {
+        ST      -Y, R27
+        ST      -Y, R26
+        MOVW    R27:R26, R31:R30
+//  369   LCD_XY(10,1);
+        LDI     R17, 1
+        LDI     R16, 10
+        RCALL   LCD_XY
+        RJMP    ??LCD_putBR_0
+//  370   while (*s)
+//  371   {
+//  372     LCD_putc(*s++);
+??LCD_putBR_1:
+        RCALL   LCD_putc
+//  373   }
+??LCD_putBR_0:
+        LD      R16, X+
+        TST     R16
+        BRNE    ??LCD_putBR_1
+//  374    LCD_fprintstr ("Kbs");
+        LDI     R16, LOW(`?<Constant "Kbs">`)
+        LDI     R17, (`?<Constant "Kbs">`) >> 8
+        RCALL   LCD_fprintstr
+//  375 }
+        LD      R26, Y+
+        LD      R27, Y+
+        RET
+//  376 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  377 void LCD_softCLR()
+LCD_softCLR:
+//  378 {
+        ST      -Y, R24
+//  379   UREG i;
+//  380   LCD_XY(10,1);
+        LDI     R17, 1
+        LDI     R16, 10
+        RCALL   LCD_XY
+//  381   for (i=0;i<=37;i++) LCD_putc(' ');
+        LDI     R24, 38
+??LCD_softCLR_0:
+        LDI     R16, 32
+        RCALL   LCD_putc
+        DEC     R24
+        BRNE    ??LCD_softCLR_0
+//  382 }
+        LD      R24, Y+
+        RET
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        RSEG INITTAB:CODE:NOROOT(0)
+`?<Segment init: NEAR_Z>`:
+        DC16    SFE(NEAR_Z) - SFB(NEAR_Z)
+        DC16    SFB(NEAR_Z)
+        DC16    0
+        REQUIRE ?need_segment_init
+
+        END
+// 
+//     4 bytes in segment ABSOLUTE
+// 1 586 bytes in segment CODE
+//     6 bytes in segment INITTAB
+//    68 bytes in segment NEAR_F
+//     2 bytes in segment NEAR_Z
+// 
+// 1 654 bytes of CODE memory (+ 6 bytes shared)
+//     2 bytes of DATA memory (+ 4 bytes shared)
+//
+//Errors: none
+//Warnings: none

@@ -1,0 +1,43 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+Cache-Control: no-cache
+
+<HTML><HEAD><TITLE>NikeE1B</TITLE></HEAD><BODY>
+<TABLE>
+<TR>
+<TD COLSPAN=2><H2>NikeE1B v1.0</H2></TD>
+</TR>
+<TR>
+<TD>(C)2009 by Rst7/CBSIE</TD><TD><A HREF=/>Main page</A></TD>
+</TR>
+</TABLE>
+
+<HR>
+<H2>Warning! Setup this data only in safe subnet!</H2>
+<FORM METHOD=POST ACTION=z>
+New login: <INPUT TYPE=text NAME=$select_name$> New password: <INPUT TYPE=password NAME=$select_name$><BR>
+<INPUT TYPE=submit VALUE=SET></FORM>
+<HR>
+<FORM METHOD=POST ACTION=z>
+New IP: 
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid0$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid1$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid2$>.
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid3$>
+ New MAC: 
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid4$>-
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid5$>-
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid6$>-
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid7$>-
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid8$>-
+<INPUT TYPE=text NAME=$select_name$ SIZE=3 VALUE=$vlanid9$><BR>
+<INPUT TYPE=submit VALUE=SET></FORM>
+<HR>
+
+<FORM METHOD=POST ACTION=r><INPUT TYPE=submit VALUE="Reboot device and use all new settigns!"></FORM><HR>
+<A HREF=z>
+Configure gate parameters (NOT SAFE!!!)</A><BR>
+<I><b>uNikeE1B v2.0 rev $svn_revision$</b><BR>
+Small hard/soft for Embedded Ethernet</I><BR>
+<A HREF=http://cbsie.dyndns.info>CBSIE HQ</A> - 18 Years of Glory</BODY></HTML>

@@ -1,0 +1,766 @@
+###############################################################################
+#                                                                             #
+#                                                       17/Aug/2009  16:25:34 #
+# IAR Atmel AVR C/C++ Compiler V5.11B/W32, Evaluation Version                 #
+# Copyright 1996-2008 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Source file  =  D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c  #
+#    Command line =  --string_literals_in_flash D:\a-erezeev\AVRProjects\nike #
+#                    E1B\network_routines_avr.c --cpu=m32 -ms -o              #
+#                    D:\a-erezeev\AVRProjects\nikeE1B\Debug\Obj\ -lC          #
+#                    D:\a-erezeev\AVRProjects\nikeE1B\Debug\List\ -lB         #
+#                    D:\a-erezeev\AVRProjects\nikeE1B\Debug\List\             #
+#                    --initializers_in_flash -s9 --no_inline --no_cross_call  #
+#                    --no_clustering --debug -DENABLE_BIT_DEFINITIONS -e -I   #
+#                    "C:\Program Files\IAR Systems\Embedded Workbench 5.0     #
+#                    Evaluation\avr\INC\" -I "C:\Program Files\IAR            #
+#                    Systems\Embedded Workbench 5.0                           #
+#                    Evaluation\avr\INC\CLIB\" --eeprom_size 1024             #
+#                    --lock_regs=1                                            #
+#    List file    =  D:\a-erezeev\AVRProjects\nikeE1B\Debug\List\network_rout #
+#                    ines_avr.lst                                             #
+#    Object file  =  D:\a-erezeev\AVRProjects\nikeE1B\Debug\Obj\network_routi #
+#                    nes_avr.r90                                              #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c
+      1          /* Name: network_routines_avr.c
+      2           * Project: uNikeE - Software Ethernet MAC and upper layers stack
+      3           * Author: Dmitry Oparin aka Rst7/CBSIE
+      4           * Creation Date: 25-Jan-2009
+      5           * Copyright: (C)2008,2009 by Rst7/CBSIE
+      6           * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+      7           */
+      8          
+      9          //---- Процедуры всяческие, оптимизированные под AVR
+     10          static __x_z void _netw_memcpy(char *d, char *s, UREG l, UREG hl);
+                                                                  ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x_z void _netw_memcpy(char *d, char *s, UREG l, UREG hl);
+                                                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",10  Error[Pe020]: 
+          identifier "UREG" is undefined
+     11          
+     12          __x_z void netw_memcpy(void *d, void *s, unsigned int l)
+     13          {
+     14            _netw_memcpy((char*)d,(char*)s,l,l>>8);
+     15          }
+     16          
+     17          static __x_z void _netw_memcpy(char *d, char *s, UREG l, UREG hl)
+                                                                  ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x_z void _netw_memcpy(char *d, char *s, UREG l, UREG hl)
+                                                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",17  Error[Pe020]: 
+          identifier "UREG" is undefined
+     18          {
+     19            char c;
+     20            if (l) hl++;
+     21            do
+     22            {
+     23              do
+     24              {
+     25                c=*s++;
+     26                *d++=c;
+     27              }
+     28              while(--l);
+     29            }
+     30            while(--hl);
+     31          }
+     32          
+     33          static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s);
+                              ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s);
+                             ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",33  Error[Pe020]: 
+          identifier "UINT32" is undefined
+
+  static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s);
+                                        ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",33  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     34          static __x UINT32 *IPcpyIP(UINT32 *d)
+                            ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x UINT32 *IPcpyIP(UINT32 *d)
+                             ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",34  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     35          {
+     36            return IPcpy(d,&IP);
+                                   ^
+Error[Pe020]: identifier "IP" is undefined
+     37          }
+     38          
+     39          static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s)
+                              ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s)
+                             ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",39  Error[Pe020]: 
+          identifier "UINT32" is undefined
+
+  static __x_z UINT32 *IPcpy(UINT32 *d, UINT32 *s)
+                                        ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",39  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     40          {
+     41            *d=*s;
+     42            return d;
+     43          }
+     44          
+     45          #define INT32cpy IPcpy
+     46          
+     47          //------------------------------------------------------------------------
+     48          // Процедуры 32хбитной математики
+     49          //------------------------------------------------------------------------
+     50          static __x_z int _cmp32(UINT32 *a, UINT32 *b);
+                                         ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x_z int _cmp32(UINT32 *a, UINT32 *b);
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",50  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     51          #pragma optimize=no_inline
+     52          static __x_z int cmp_A_S(TCP_PKT *tcp, TCP_SOCK *s)
+                                          ^
+Error[Pe020]: identifier "TCP_PKT" is undefined
+
+  static __x_z int cmp_A_S(TCP_PKT *tcp, TCP_SOCK *s)
+                                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",52  Error[Pe020]: 
+          identifier "TCP_SOCK" is undefined
+     53          {
+     54            return _cmp32(&tcp->tcp.ackno+1,&s->SEQNO+1);
+                                  ^
+Error[Pe132]: expression must have pointer-to-struct-or-union type
+
+    return _cmp32(&tcp->tcp.ackno+1,&s->SEQNO+1);
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",54  Error[Pe132]: 
+          expression must have pointer-to-struct-or-union type
+     55          }
+     56            
+     57          #pragma optimize=no_inline
+     58          static __x_z int cmp_S_A(TCP_PKT *tcp, TCP_SOCK *s)
+                                          ^
+Error[Pe020]: identifier "TCP_PKT" is undefined
+
+  static __x_z int cmp_S_A(TCP_PKT *tcp, TCP_SOCK *s)
+                                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",58  Error[Pe020]: 
+          identifier "TCP_SOCK" is undefined
+     59          {
+     60            return _cmp32(&tcp->tcp.seqno+1,&s->ACKNO+1);
+                                  ^
+Error[Pe132]: expression must have pointer-to-struct-or-union type
+
+    return _cmp32(&tcp->tcp.seqno+1,&s->ACKNO+1);
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",60  Error[Pe132]: 
+          expression must have pointer-to-struct-or-union type
+     61          }
+     62          
+     63          #pragma optimize=no_inline
+     64          static __x_z int _cmp32(UINT32 *a, UINT32 *b)
+                                         ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x_z int _cmp32(UINT32 *a, UINT32 *b)
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",64  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     65          {
+     66          //  asm("ADIW   R27:R26,4");
+     67          //  asm("ADIW   R31:R30,4");
+     68            asm("LD     R16,-X");
+     69            asm("LD     R21,-Z");
+     70            asm("SUB    R16,R21");
+     71            asm("LD     R17,-X");
+     72            asm("LD     R21,-Z");
+     73            asm("SBC    R17,R21");
+     74            asm("LD     R18,-X");
+     75            asm("LD     R21,-Z");
+     76            asm("SBC    R18,R21");
+     77            asm("LD     R19,-X");
+     78            asm("LD     R21,-Z");
+     79            asm("SBC    R19,R21");
+     80          //  asm("BRCS   cmp32i_1");
+     81            asm("OR     R18,R19");
+     82            asm("BRNE   cmp32i_1");
+     83            asm("RET");
+     84            asm("cmp32i_1:");
+     85            return -1;
+     86          }
+     87          
+     88          static __z void inc32i(UINT32 *d, unsigned int i);
+                                        ^
+Error[Pe020]: identifier "UINT32" is undefined
+     89          static __z void inc32(UINT32 *a, UREG i);
+                                       ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __z void inc32(UINT32 *a, UREG i);
+                                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",89  Error[Pe020]: 
+          identifier "UREG" is undefined
+     90          
+     91          static __x_z void inc32cpy(UINT32 *d, UINT32 *s)
+                                            ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __x_z void inc32cpy(UINT32 *d, UINT32 *s)
+                                        ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",91  Error[Pe020]: 
+          identifier "UINT32" is undefined
+     92          {
+     93            inc32(INT32cpy(d,s),1);
+     94          }
+     95          
+     96          #pragma optimize=no_inline
+     97          static __z void inc32(UINT32 *a, UREG i)
+                                       ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+  static __z void inc32(UINT32 *a, UREG i)
+                                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",97  Error[Pe020]: 
+          identifier "UREG" is undefined
+     98          {
+     99            inc32i(a,i);
+    100          }
+    101          
+    102          static __z void inc32i(UINT32 *d, unsigned int i)
+                                        ^
+Error[Pe020]: identifier "UINT32" is undefined
+    103          {
+    104            *d=htonl(ntohl(*d)+i);
+                      ^
+Warning[Pe223]: function "htonl" declared implicitly
+
+    *d=htonl(ntohl(*d)+i);
+             ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",104  Warning[Pe223]: 
+          function "ntohl" declared implicitly
+    105          }
+    106          
+    107          //---------------------------------------------------------------------
+    108          
+    109          #define FAST_CRC32
+    110          //#pragma inline=forced
+    111          #ifdef FAST_CRC32
+    112          static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                            ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UINT8" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                            ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                                              ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                                                                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write);
+                                                                                                  ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",112  Error[Pe020]: 
+          identifier "UREG" is undefined
+    113          static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write);
+                            ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write);
+                        ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",113  Error[Pe020]: 
+          identifier "UINT8" is undefined
+
+  static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write);
+                                                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",113  Error[Pe020]: 
+          identifier "UREG" is undefined
+    114          
+    115          #pragma optimize=no_inline
+    116          static __x UREG CRC32_M4(UINT8 *p, unsigned int len)
+                            ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x UREG CRC32_M4(UINT8 *p, unsigned int len)
+                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",116  Error[Pe020]: 
+          identifier "UINT8" is undefined
+    117          {
+    118            return CRC32(p,len-4,0);
+    119          }
+    120          
+    121          #pragma optimize=no_inline
+    122          static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write)
+                            ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write)
+                        ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",122  Error[Pe020]: 
+          identifier "UINT8" is undefined
+
+  static __x UREG CRC32(UINT8 *p, unsigned int len, UREG do_write)
+                                                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",122  Error[Pe020]: 
+          identifier "UREG" is undefined
+    123          {
+    124            return _CRC32(p,0xFF,0xFF,0xFF,0xFF,len,4,do_write);
+    125          }
+    126          //#pragma diag_suppress=Pe940  
+    127          static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                            ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UINT8" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                            ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                                              ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                                                                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UREG _CRC32(UINT8 *p, UREG c1, UREG c2, UREG c3, UREG c4, unsigned int len, UREG mv, UREG do_write)
+                                                                                                  ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",127  Error[Pe020]: 
+          identifier "UREG" is undefined
+    128          {
+    129            extern char *CRC32_TABLE;
+    130            //const char __flash *z;
+    131            __require(CRC32_TABLE);
+                   ^
+Warning[Pe223]: function "__require" declared implicitly
+    132          //  do
+    133          //  {
+    134            asm("_CRC32_1:");
+    135          //    z=(const __flash char *)(__multiply_unsigned(*p++^c1,mv));
+    136            asm("LD      R3, X+");
+    137            asm("EOR     R3, R16");
+    138            asm("MUL     R3, R22");
+    139            asm("MOVW    R31:R30, R1:R0");
+    140          //    z+=(int)CRC32_TABLE;
+    141            asm("SUBI   R31,-(CRC32_TABLE>>8)");
+    142          //    c1=*z++;
+    143            asm("LPM     R16, Z+");
+    144          //    c1^=c2;
+    145            asm("EOR     R16,R17");
+    146          //    c2=*z++;
+    147            asm("LPM     R17, Z+");
+    148          //    c2^=c3;
+    149            asm("EOR     R17,R18");
+    150          //    c3=*z++;
+    151            asm("LPM     R18, Z+");
+    152          //    c3^=c4;
+    153            asm("EOR     R18,R19");
+    154          //    c4=*z;
+    155            asm("LPM     R19, Z+");
+    156          //  }
+    157            asm("SUBI     R20,1");
+    158            asm("SBCI     R21,0");
+    159          //  while(--len);
+    160            asm("BRNE    _CRC32_1");
+    161          //  c1=~c1;
+    162            asm("COM     R16");
+    163          //  c2=~c2;
+    164            asm("COM     R17");
+    165          //  c3=~c3;
+    166            asm("COM     R18");
+    167          //  c4=~c4;
+    168            asm("COM     R19");
+    169            if (do_write)
+    170            {
+    171              *p++=c1;
+    172              *p++=c2;
+    173              *p++=c3;
+    174              *p++=c4;
+    175            }
+    176            else
+    177            {
+    178              c1-=*p++; if (c1) return 1;
+    179              c2-=*p++; if (c2) return 1;
+    180              c3-=*p++; if (c3) return 1;
+    181              //Для RTL8201BL не производим расчет последнего байта
+    182              //c4-=*p++; if (c4) return 1;
+    183            }
+    184            return 0;
+    185          //  return (((UINT32)c1<<0)|((UINT32)c2<<8)|((UINT32)c3<<16)|((UINT32)c4<<24));
+    186          }
+    187          //#pragma diag_default=Pe940
+    188          #else
+    189          static __z UINT32 _CRC32(UINT8 *p, UREG len, UINT32 crc_poly);
+    190          
+    191          static __z UINT32 CRC32(UINT8 *p, UREG len)
+    192          {
+    193            return _CRC32(p,len,0xEDB88320);
+    194          }
+    195            
+    196          static __z UINT32 _CRC32(UINT8 *p, UREG len, UINT32 crc_poly)
+    197          {
+    198            UREG bitcnt;
+    199            UINT32 crc=0xFFFFFFFFL;
+    200            do
+    201            {
+    202              crc^=*p++;
+    203              bitcnt=2;
+    204              do
+    205              {
+    206                crc>>=1;if (SREG_Bit0) crc^=crc_poly;
+    207                crc>>=1;if (SREG_Bit0) crc^=crc_poly;
+    208                crc>>=1;if (SREG_Bit0) crc^=crc_poly;
+    209                crc>>=1;if (SREG_Bit0) crc^=crc_poly;
+    210              }
+    211              while(--bitcnt);
+    212            }
+    213            while(--len);
+    214            return ~crc;
+    215          }
+    216          #endif    
+    217          /*
+    218          __z UINT16 IPChecksum(UINT16 *data, UINT16 len)
+    219          {
+    220            UINT32 acc=0;
+    221            UINT16 l=len>>1;
+    222            if (l)
+    223            {
+    224              do
+    225              {
+    226                acc+=*data++;
+    227                acc&=(0x10000ULL<<(sizeof(len)*8))-1;
+    228              }
+    229              while(--l);
+    230            }
+    231            if (len&1)
+    232            {
+    233              acc+=*(UINT8 *)data;
+    234              acc&=(0x10000ULL<<(sizeof(len)*8))-1;
+    235            }
+    236            UINT16 acc16=acc;
+    237            acc16+=acc>>16;
+    238            if (SREG_Bit0) acc16++; // Overflow, so we add the carry to acc (i.e., increase by one) 
+    239            // return invert checksum 
+    240            return ~acc16;
+    241          }
+    242          */
+    243          static __x UINT16 IPChecksum(UINT16 *data, unsigned int len)
+                            ^
+Error[Pe020]: identifier "UINT16" is undefined
+
+  static __x UINT16 IPChecksum(UINT16 *data, unsigned int len)
+                               ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",243  Error[Pe020]: 
+          identifier "UINT16" is undefined
+    244          {
+    245            UINT16 acc;
+                   ^
+Error[Pe020]: identifier "UINT16" is undefined
+    246            for(acc = 0; len > 1; len -= 2)
+    247            {
+    248              acc += *data++;
+    249              if (SREG_Bit0) acc++; /* Overflow, so we add the carry to acc (i.e., increase by one) */
+                         ^
+Error[Pe020]: identifier "SREG_Bit0" is undefined
+    250            }
+    251            // add up any odd byte
+    252            if(len == 1)
+    253            {
+    254              acc += *(UCHAR *)data;
+                              ^
+Error[Pe020]: identifier "UCHAR" is undefined
+
+      acc += *(UCHAR *)data;
+                      ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",254  Error[Pe029]: 
+          expected an expression
+
+      acc += *(UCHAR *)data;
+                       ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",254  Error[Pe065]: 
+          expected a ";"
+    255              if (SREG_Bit0) acc++; /* Overflow, so we add the carry to acc (i.e., increase by one) */
+                         ^
+Error[Pe020]: identifier "SREG_Bit0" is undefined
+    256            }
+    257            // return invert checksum
+    258            return ~acc;	
+    259          }
+    260          
+    261          //Обратный порядок, необходимо перед вызовом делать +ETH_HWA_LEN
+    262          static __x_z void MACcpy(UINT8	*d, UINT8 *s)
+                                          ^
+Error[Pe020]: identifier "UINT8" is undefined
+
+  static __x_z void MACcpy(UINT8	*d, UINT8 *s)
+                                	    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",262  Error[Pe020]: 
+          identifier "UINT8" is undefined
+    263          {
+    264            *--d=*--s;
+    265            *--d=*--s;
+    266            *--d=*--s;
+    267            *--d=*--s;
+    268            *--d=*--s;
+    269            *--d=*--s;
+    270          }
+    271          
+    272          static __x_z UREG IPcmp(UINT32 *d, UINT32 *s);
+                              ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x_z UREG IPcmp(UINT32 *d, UINT32 *s);
+                          ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",272  Error[Pe020]: 
+          identifier "UINT32" is undefined
+
+  static __x_z UREG IPcmp(UINT32 *d, UINT32 *s);
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",272  Error[Pe020]: 
+          identifier "UINT32" is undefined
+    273          
+    274          static __x_z UREG MACcmp(UINT8 *d, UINT8 *s)
+                              ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x_z UREG MACcmp(UINT8 *d, UINT8 *s)
+                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",274  Error[Pe020]: 
+          identifier "UINT8" is undefined
+
+  static __x_z UREG MACcmp(UINT8 *d, UINT8 *s)
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",274  Error[Pe020]: 
+          identifier "UINT8" is undefined
+    275          {
+    276            UINT16 vd;
+                   ^
+Error[Pe020]: identifier "UINT16" is undefined
+    277            UINT16 vs;
+                   ^
+Error[Pe020]: identifier "UINT16" is undefined
+    278            vd=*(UINT16*)d;
+                        ^
+Error[Pe020]: identifier "UINT16" is undefined
+
+    vd=*(UINT16*)d;
+                ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",278  Error[Pe029]: 
+          expected an expression
+
+    vd=*(UINT16*)d;
+                 ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",278  Error[Pe065]: 
+          expected a ";"
+    279            d+=2;
+    280            vs=*(UINT16*)s;
+                               ^
+Error[Pe029]: expected an expression
+
+    vs=*(UINT16*)s;
+                 ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",280  Error[Pe065]: 
+          expected a ";"
+    281            s+=2;
+    282            if (vd!=vs) return 1;
+    283            return IPcmp((UINT32*)d,(UINT32*)s);
+                                 ^
+Error[Pe020]: identifier "UINT32" is undefined
+
+    return IPcmp((UINT32*)d,(UINT32*)s);
+                         ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",283  Error[Pe029]: 
+          expected an expression
+
+    return IPcmp((UINT32*)d,(UINT32*)s);
+                          ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",283  Error[Pe165]: 
+          too few arguments in function call
+
+    return IPcmp((UINT32*)d,(UINT32*)s);
+                          ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",283  Error[Pe018]: 
+          expected a ")"
+    284          }
+    285          
+    286          static __x_z UREG IPcmp(UINT32 *d, UINT32 *s)
+                              ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __x_z UREG IPcmp(UINT32 *d, UINT32 *s)
+                          ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",286  Error[Pe020]: 
+          identifier "UINT32" is undefined
+
+  static __x_z UREG IPcmp(UINT32 *d, UINT32 *s)
+                                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",286  Error[Pe020]: 
+          identifier "UINT32" is undefined
+    287          {
+    288            if (*d!=*s) return 1;
+    289            return 0;
+    290          }
+    291          
+    292          static __x_z void _swapmem(char *d, char *s, UREG l);
+                                                              ^
+Error[Pe020]: identifier "UREG" is undefined
+    293          
+    294          static __x void swapmem(void *d, UREG l)
+                                                  ^
+Error[Pe020]: identifier "UREG" is undefined
+    295          {
+    296            _swapmem((char*)d,(char*)d+l,l);
+    297          }
+    298          
+    299          static __x_z void _swapmem(char *d, char *s, UREG l)
+                                                              ^
+Error[Pe020]: identifier "UREG" is undefined
+    300          {
+    301            UREG c;
+                   ^
+Error[Pe020]: identifier "UREG" is undefined
+    302            do
+    303            {
+    304              c=*d;
+    305              *d++=*s;
+    306              *s++=c;
+    307            }
+    308            while(--l);
+    309          }
+    310          
+    311          static __z _netw_memset(char *d, UREG v, UREG n);
+                                                  ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __z _netw_memset(char *d, UREG v, UREG n);
+                                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",311  Error[Pe020]: 
+          identifier "UREG" is undefined
+    312          
+    313          __z netw_memset(void *d, UREG v, UREG n)
+                                          ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  __z netw_memset(void *d, UREG v, UREG n)
+                                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",313  Error[Pe020]: 
+          identifier "UREG" is undefined
+    314          {
+    315            _netw_memset((char*)d,v,n);
+    316          }
+    317          
+    318          static __z _netw_memset(char *d, UREG v, UREG n)
+                                                  ^
+Error[Pe020]: identifier "UREG" is undefined
+
+  static __z _netw_memset(char *d, UREG v, UREG n)
+                                           ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",318  Error[Pe020]: 
+          identifier "UREG" is undefined
+
+  static __x UINT32 *IPcpyIP(UINT32 *d)
+                     ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",34  Warning[Pe177]: 
+          function "IPcpyIP" was declared but never referenced
+
+  static __x_z int cmp_A_S(TCP_PKT *tcp, TCP_SOCK *s)
+                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",52  Warning[Pe177]: 
+          function "cmp_A_S" was declared but never referenced
+
+  static __x_z int cmp_S_A(TCP_PKT *tcp, TCP_SOCK *s)
+                   ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",58  Warning[Pe177]: 
+          function "cmp_S_A" was declared but never referenced
+
+  static __x_z void inc32cpy(UINT32 *d, UINT32 *s)
+                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",91  Warning[Pe177]: 
+          function "inc32cpy" was declared but never referenced
+
+  static __x UREG CRC32_M4(UINT8 *p, unsigned int len)
+                  ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",116  Warning[Pe177]: 
+          function "CRC32_M4" was declared but never referenced
+
+  static __x UINT16 IPChecksum(UINT16 *data, unsigned int len)
+                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",243  Warning[Pe177]: 
+          function "IPChecksum" was declared but never referenced
+
+  static __x_z void MACcpy(UINT8	*d, UINT8 *s)
+                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",262  Warning[Pe177]: 
+          function "MACcpy" was declared but never referenced
+
+  static __x_z UREG MACcmp(UINT8 *d, UINT8 *s)
+                    ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",274  Warning[Pe177]: 
+          function "MACcmp" was declared but never referenced
+
+  static __x void swapmem(void *d, UREG l)
+                  ^
+"D:\a-erezeev\AVRProjects\nikeE1B\network_routines_avr.c",294  Warning[Pe177]: 
+          function "swapmem" was declared but never referenced
+    319          {
+    320            do
+    321            {
+    322              *d++=v;
+    323            }
+    324            while(--n);
+    325          }
+
+Errors: 97
+Warnings: 12

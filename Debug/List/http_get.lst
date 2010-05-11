@@ -1,0 +1,1462 @@
+###############################################################################
+#                                                                             #
+#                                                       17/Feb/2010  19:00:10 #
+# IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR     #
+# Copyright 1996-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Source file  =  G:\AVR\EthRadio_buf_inline\http_get.c                    #
+#    Command line =  --string_literals_in_flash G:\AVR\EthRadio_buf_inline\ht #
+#                    tp_get.c --cpu=m32 -ms -o G:\AVR\EthRadio_buf_inline\Deb #
+#                    ug\Obj\ -lC G:\AVR\EthRadio_buf_inline\Debug\List\ -lB   #
+#                    G:\AVR\EthRadio_buf_inline\Debug\List\                   #
+#                    --initializers_in_flash -s9 --no_code_motion --debug     #
+#                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR     #
+#                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I   #
+#                    "C:\Program Files\IAR Systems\Embedded Workbench         #
+#                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024         #
+#                    --lock_regs=1                                            #
+#    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\http_get.lst       #
+#    Object file  =  G:\AVR\EthRadio_buf_inline\Debug\Obj\http_get.r90        #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+G:\AVR\EthRadio_buf_inline\http_get.c
+      1          /* Name: http_get.c
+      2           * Project: uNikeE - Software Ethernet MAC and upper layers stack
+      3           * Author: Dmitry Oparin aka Rst7/CBSIE
+      4           * Creation Date: 25-Jan-2009
+      5           * Copyright: (C)2008,2009 by Rst7/CBSIE
+      6           * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+      7           */
+      8          
+      9          #include "nike_e.h"
+
+   \                                 In  segment ABSOLUTE, at 0x2e
+   \   <__C30> volatile __io _A_SPSR
+   \                     _A_SPSR:
+   \   00000000                      DS8 1
+
+   \                                 In  segment ABSOLUTE, at 0x2f
+   \   <__C32> volatile __io _A_SPDR
+   \                     _A_SPDR:
+   \   00000000                      DS8 1
+
+   \                                 In  segment ABSOLUTE, at 0x32
+   \   <__C38> volatile __io _A_PORTD
+   \                     _A_PORTD:
+   \   00000000                      DS8 1
+     10          #include "tcp.h"
+     11          #include "pgmspace.h"
+     12          #include "vs.h"
+     13          #include "compiler.h"
+     14          #include "FIFO.h"
+     15          #include "http_get.h"
+     16          #include "LCD.h"
+     17          #include "station.h"
+     18          #include "player.h"
+     19          #include "io.h"
+     20          //#include "network_addr.h"
+     21          
+     22          extern UINT32 IP;
+     23          extern UINT32 MASK_IP;
+     24          extern volatile UREG PLAYER_STATE;
+
+   \                                 In  segment NEAR_Z, align 1, keep-with-next
+   \   00000000                      REQUIRE `?<Segment init: NEAR_Z>`
+     25          GET_SOCK get_sock;
+   \                     get_sock:
+   \   00000000                      DS8 81
+     26          
+
+   \                                 In  segment NEAR_Z, align 1, keep-with-next
+   \   00000000                      REQUIRE `?<Segment init: NEAR_Z>`
+     27          volatile UINT8 GET_WINDOW_STATE=GET_WINDOW_STATE_UPDATE;
+   \                     GET_WINDOW_STATE:
+   \   00000000                      DS8 1
+     28          
+     29          __z void _i2a(char *s, UINT16 v);
+     30          
+     31          extern __eeprom UINT32 OUTG_IP[2];
+     32          //extern UINT32 OUTG_IP[2];
+     33          
+     34          extern void *debug_addr;
+     35          
+     36          
+     37          #pragma inline = forced
+     38          UINT32 _MP3fifo_free(void)
+     39          {
+     40          	UINT32 free;
+     41          	if(MP3fifo_pRD > MP3fifo_pWR)
+     42          	{
+     43          		free = MP3fifo_pRD-MP3fifo_pWR;
+     44          	}
+     45          	else if(MP3fifo_pRD < MP3fifo_pWR)
+     46          	{
+     47          		free = MP3fifo_pEND-MP3fifo_pWR+1+MP3fifo_pRD-MP3fifo_pSTART;
+     48          	}
+     49          	else
+     50          	{
+     51          		free = MP3fifo_pEND-MP3fifo_pSTART+1;
+     52          	}
+     53          	return free-1;
+     54          }
+     55          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     56          void AddGETsocket(void)
+   \                     AddGETsocket:
+     57          {
+     58            __x UREG GET_hook(UREG state, UREG len, UINT8 *data, TCP_SOCK *_s);
+     59            get_sock.sock.type=TCP_TYPE_CLIENT;
+   \   00000000   ....               LDI     R30, LOW(get_sock)
+   \   00000002   ....               LDI     R31, (get_sock) >> 8
+   \   00000004   E002               LDI     R16, 2
+   \   00000006   8302               STD     Z+2, R16
+     60            get_sock.sock.state=TCP_STATE_CLOSED;
+   \   00000008   E000               LDI     R16, 0
+   \   0000000A   8F03               STD     Z+27, R16
+     61            get_sock.sock.hook=GET_hook;
+   \   0000000C   ....               LDI     R16, LOW(GET_hook/2)
+   \   0000000E   ....               LDI     R17, (GET_hook/2) >> 8
+   \   00000010   8303               STD     Z+3, R16
+   \   00000012   8314               STD     Z+4, R17
+     62            get_sock.sock.win=htons(SPEC_MAX_WIN);
+   \   00000014   E830               LDI     R19, 128
+   \   00000016   E324               LDI     R18, 52
+   \   00000018   8F25               STD     Z+29, R18
+   \   0000001A   8F36               STD     Z+30, R19
+     63            debug_addr=&get_sock;
+   \   0000001C   93E0....           STS     debug_addr, R30
+   \   00000020   93F0....           STS     (debug_addr + 1), R31
+     64            AddTCPsocket(&get_sock.sock);
+   \   00000024   ........           JMP     AddTCPsocket
+     65          }
+     66          extern volatile UREG is_playing;
+     67          extern volatile UREG stationNum;
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     68          void StartGET(void)
+   \                     StartGET:
+     69          {  
+   \   00000000   927A               ST      -Y, R7
+   \   00000002   926A               ST      -Y, R6
+   \   00000004   925A               ST      -Y, R5
+   \   00000006   924A               ST      -Y, R4
+   \   00000008   93BA               ST      -Y, R27
+   \   0000000A   93AA               ST      -Y, R26
+   \   0000000C   939A               ST      -Y, R25
+   \   0000000E   938A               ST      -Y, R24
+   \   00000010                      REQUIRE ?Register_R4_is_cg_reg
+   \   00000010                      REQUIRE ?Register_R5_is_cg_reg
+   \   00000010                      REQUIRE ?Register_R6_is_cg_reg
+   \   00000010                      REQUIRE ?Register_R7_is_cg_reg
+     70            if (get_sock.sock.state==TCP_STATE_CLOSED) 
+   \   00000010   9100....           LDS     R16, (get_sock + 27)
+   \   00000014   2300               TST     R16
+   \   00000016   F009               BREQ    $+2+2
+   \   00000018   C06F               RJMP    ??StartGET_0
+     71            {
+     72              MP3fifo_pWR= MP3fifo_pRD= MP3fifo_pSTART; 
+   \   0000001A   E000               LDI     R16, 0
+   \   0000001C   E030               LDI     R19, 0
+   \   0000001E   ....               LDI     R30, LOW(MP3fifo_pRD)
+   \   00000020   ....               LDI     R31, (MP3fifo_pRD) >> 8
+   \   00000022   8300               ST      Z, R16
+   \   00000024   8301               STD     Z+1, R16
+   \   00000026   8302               STD     Z+2, R16
+   \   00000028   8303               STD     Z+3, R16
+   \   0000002A   ....               LDI     R30, LOW(MP3fifo_pWR)
+   \   0000002C   ....               LDI     R31, (MP3fifo_pWR) >> 8
+   \   0000002E   8300               ST      Z, R16
+   \   00000030   8301               STD     Z+1, R16
+   \   00000032   8302               STD     Z+2, R16
+   \   00000034   8303               STD     Z+3, R16
+     73              ETHfifo_pWR= ETHfifo_pRD= ETHfifo_pSTART; 
+   \   00000036   E405               LDI     R16, 69
+   \   00000038   EC19               LDI     R17, 201
+   \   0000003A   E021               LDI     R18, 1
+   \   0000003C   ....               LDI     R30, LOW(ETHfifo_pRD)
+   \   0000003E   ....               LDI     R31, (ETHfifo_pRD) >> 8
+   \   00000040   8300               ST      Z, R16
+   \   00000042   8311               STD     Z+1, R17
+   \   00000044   8322               STD     Z+2, R18
+   \   00000046   8333               STD     Z+3, R19
+   \   00000048   ....               LDI     R30, LOW(ETHfifo_pWR)
+   \   0000004A   ....               LDI     R31, (ETHfifo_pWR) >> 8
+   \   0000004C   8300               ST      Z, R16
+   \   0000004E   8311               STD     Z+1, R17
+   \   00000050   8322               STD     Z+2, R18
+   \   00000052   8333               STD     Z+3, R19
+     74              ETHfifo_CNT=0;
+   \   00000054   9330....           STS     ETHfifo_CNT, R19
+     75              GET_WINDOW_STATE=GET_WINDOW_STATE_UPDATE;
+   \   00000058   9330....           STS     GET_WINDOW_STATE, R19
+     76              PLAYER_STATE=PLAYER_STATE_STOPED;
+   \   0000005C   9330....           STS     PLAYER_STATE, R19
+     77              UINT32 IPsrc=station_list[stationNum].IP;
+   \   00000060   9110....           LDS     R17, stationNum
+   \   00000064   E306               LDI     R16, 54
+   \   00000066   9F10               MUL     R17, R16
+   \   00000068   ....               LDI     R20, LOW(station_list)
+   \   0000006A   ....               LDI     R21, (station_list) >> 8
+   \   0000006C   0D40               ADD     R20, R0
+   \   0000006E   1D51               ADC     R21, R1
+   \   00000070   ........           CALL    __eeget32_16
+   \   00000074   01C8               MOVW    R25:R24, R17:R16
+   \   00000076   01D9               MOVW    R27:R26, R19:R18
+     78              UINT16 port = station_list[stationNum].port;  
+   \   00000078   ....               LDI     R20, LOW((station_list + 4))
+   \   0000007A   ....               LDI     R21, HIGH((station_list + 4))
+   \   0000007C   9110....           LDS     R17, stationNum
+   \   00000080   E306               LDI     R16, 54
+   \   00000082   9F10               MUL     R17, R16
+   \   00000084   0D40               ADD     R20, R0
+   \   00000086   1D51               ADC     R21, R1
+   \   00000088   ........           CALL    __eeget16_16
+   \   0000008C   01B8               MOVW    R23:R22, R17:R16
+     79              if ((IP&MASK_IP)==(IPsrc&MASK_IP)) get_sock.sock.ACKNO=IPsrc;// без шлюза     
+   \   0000008E   ....               LDI     R30, LOW(IP)
+   \   00000090   ....               LDI     R31, (IP) >> 8
+   \   00000092   8100               LD      R16, Z
+   \   00000094   8111               LDD     R17, Z+1
+   \   00000096   8122               LDD     R18, Z+2
+   \   00000098   8133               LDD     R19, Z+3
+   \   0000009A   ....               LDI     R30, LOW(MASK_IP)
+   \   0000009C   ....               LDI     R31, (MASK_IP) >> 8
+   \   0000009E   8000               LD      R0, Z
+   \   000000A0   8011               LDD     R1, Z+1
+   \   000000A2   8022               LDD     R2, Z+2
+   \   000000A4   8033               LDD     R3, Z+3
+   \   000000A6   2100               AND     R16, R0
+   \   000000A8   2111               AND     R17, R1
+   \   000000AA   2122               AND     R18, R2
+   \   000000AC   2133               AND     R19, R3
+   \   000000AE   0120               MOVW    R5:R4, R1:R0
+   \   000000B0   0131               MOVW    R7:R6, R3:R2
+   \   000000B2   010C               MOVW    R1:R0, R25:R24
+   \   000000B4   011D               MOVW    R3:R2, R27:R26
+   \   000000B6   2004               AND     R0, R4
+   \   000000B8   2015               AND     R1, R5
+   \   000000BA   2026               AND     R2, R6
+   \   000000BC   2037               AND     R3, R7
+   \   000000BE   1500               CP      R16, R0
+   \   000000C0   0511               CPC     R17, R1
+   \   000000C2   0522               CPC     R18, R2
+   \   000000C4   0533               CPC     R19, R3
+   \   000000C6   F439               BRNE    ??StartGET_1
+   \   000000C8   ....               LDI     R30, LOW(get_sock)
+   \   000000CA   ....               LDI     R31, (get_sock) >> 8
+   \   000000CC   8B87               STD     Z+23, R24
+   \   000000CE   8F90               STD     Z+24, R25
+   \   000000D0   8FA1               STD     Z+25, R26
+   \   000000D2   8FB2               STD     Z+26, R27
+   \   000000D4   C00A               RJMP    ??StartGET_2
+     80               else get_sock.sock.ACKNO=OUTG_IP[1]; // идем через шлюз
+   \                     ??StartGET_1:
+   \   000000D6   ....               LDI     R20, LOW((OUTG_IP + 4))
+   \   000000D8   ....               LDI     R21, HIGH((OUTG_IP + 4))
+   \   000000DA   ........           CALL    __eeget32_16
+   \   000000DE   ....               LDI     R30, LOW(get_sock)
+   \   000000E0   ....               LDI     R31, (get_sock) >> 8
+   \   000000E2   8B07               STD     Z+23, R16
+   \   000000E4   8F10               STD     Z+24, R17
+   \   000000E6   8F21               STD     Z+25, R18
+   \   000000E8   8F32               STD     Z+26, R19
+     81              TCPconnect(&get_sock.sock,IPsrc,port);     
+   \                     ??StartGET_2:
+   \   000000EA   01AB               MOVW    R21:R20, R23:R22
+   \   000000EC   018C               MOVW    R17:R16, R25:R24
+   \   000000EE   019D               MOVW    R19:R18, R27:R26
+   \   000000F0   ....               LDI     R26, LOW(get_sock)
+   \   000000F2   ....               LDI     R27, (get_sock) >> 8
+   \   000000F4   ........           CALL    TCPconnect
+     82            }
+     83          }
+   \                     ??StartGET_0:
+   \   000000F8   9189               LD      R24, Y+
+   \   000000FA   9199               LD      R25, Y+
+   \   000000FC   91A9               LD      R26, Y+
+   \   000000FE   91B9               LD      R27, Y+
+   \   00000100   9049               LD      R4, Y+
+   \   00000102   9059               LD      R5, Y+
+   \   00000104   9069               LD      R6, Y+
+   \   00000106   9079               LD      R7, Y+
+   \   00000108   9508               RET
+     84          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     85          void StopGET(void)
+   \                     StopGET:
+     86          {
+     87            //is_playing=0;
+     88            CloseTCPsocket(&get_sock.sock);
+   \   00000000   E005               LDI     R16, 5
+   \   00000002   9300....           STS     (get_sock + 27), R16
+     89          }
+   \   00000006   9508               RET
+     90          
+     91          enum HTTP_GET_STATE
+     92          {
+     93            _GET_STOP=0, //Остановленно
+     94            _GET_CONREQ, //Запрос соединения
+     95            _GET_SENDREQ, //Посылка HTTP-запроса
+     96            _GET_WAITACK, //Ожидание подтверждения посылки
+     97            _GET_HEADER, //Прием заголовка
+     98            _GET_BODY, //Прием тела
+     99            _GET_METADATA //Прием метаданных
+    100          };
+    101          
+    102          extern __x_z UREG stricmp_P(const char *s, const char __flash *d);
+    103          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    104          static __z UINT16 a2i(const char *s)
+   \                     a2i:
+    105          {
+    106            UREG c;
+    107            UINT16 i=0;
+   \   00000000   E000               LDI     R16, 0
+   \   00000002   E010               LDI     R17, 0
+   \   00000004   E02A               LDI     R18, 10
+   \   00000006   C009               RJMP    ??a2i_0
+    108            for(;;)
+    109            {
+    110              c=*s++;
+    111              if (c==' ') continue;
+    112              c-='0';
+    113              if (c>9) return i;
+    114              i*=10;
+    115              i+=c;
+   \                     ??a2i_1:
+   \   00000008   9F21               MUL     R18, R17
+   \   0000000A   2D30               MOV     R19, R0
+   \   0000000C   9F20               MUL     R18, R16
+   \   0000000E   0D31               ADD     R19, R1
+   \   00000010   2D00               MOV     R16, R0
+   \   00000012   2F13               MOV     R17, R19
+   \   00000014   E050               LDI     R21, 0
+   \   00000016   0F04               ADD     R16, R20
+   \   00000018   1F15               ADC     R17, R21
+   \                     ??a2i_0:
+   \   0000001A   9141               LD      R20, Z+
+   \   0000001C   3240               CPI     R20, 32
+   \   0000001E   F3E9               BREQ    ??a2i_0
+   \   00000020   5340               SUBI    R20, 48
+   \   00000022   304A               CPI     R20, 10
+   \   00000024   F388               BRCS    ??a2i_1
+   \   00000026   9508               RET
+    116            }
+    117          }
+    118          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    119          static __x UREG GET_hook_DATA_RX(UREG len, UINT8 *data, GET_SOCK *s)
+   \                     GET_hook_DATA_RX:
+    120          {
+   \   00000000   92BA               ST      -Y, R11
+   \   00000002   92AA               ST      -Y, R10
+   \   00000004   929A               ST      -Y, R9
+   \   00000006   928A               ST      -Y, R8
+   \   00000008   927A               ST      -Y, R7
+   \   0000000A   926A               ST      -Y, R6
+   \   0000000C   925A               ST      -Y, R5
+   \   0000000E   924A               ST      -Y, R4
+   \   00000010   939A               ST      -Y, R25
+   \   00000012   938A               ST      -Y, R24
+   \   00000014                      REQUIRE ?Register_R4_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R5_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R6_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R7_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R8_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R9_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R10_is_cg_reg
+   \   00000014                      REQUIRE ?Register_R11_is_cg_reg
+   \   00000014   2E80               MOV     R8, R16
+   \   00000016   015D               MOVW    R11:R10, R27:R26
+   \   00000018   01C9               MOVW    R25:R24, R19:R18
+    121            UREG c;
+    122            UREG state=s->state;
+   \   0000001A   01F9               MOVW    R31:R30, R19:R18
+   \   0000001C   A493               LDD     R9, Z+43
+    123            UINT32 pWR;      
+    124            UINT16 bl;
+    125            pWR = MP3fifo_pWR; // Голова    
+   \   0000001E   ....               LDI     R30, LOW(MP3fifo_pWR)
+   \   00000020   ....               LDI     R31, (MP3fifo_pWR) >> 8
+   \   00000022   8040               LD      R4, Z
+   \   00000024   8051               LDD     R5, Z+1
+   \   00000026   8062               LDD     R6, Z+2
+   \   00000028   8073               LDD     R7, Z+3
+    126              
+    127            if (state==_GET_BODY) // Заходим сюда - если идет прием тела
+   \   0000002A   E005               LDI     R16, 5
+   \   0000002C   1690               CP      R9, R16
+   \   0000002E   F009               BREQ    $+2+2
+   \   00000030   C0DD               RJMP    ??GET_hook_DATA_RX_0
+    128            {    
+    129              if (PLAYER_STATE!=PLAYER_STATE_PLAYING) 
+   \   00000032   9100....           LDS     R16, PLAYER_STATE
+   \   00000036   3002               CPI     R16, 2
+   \   00000038   F061               BREQ    ??GET_hook_DATA_RX_1
+    130              {      
+    131                if (PLAYER_STATE!=PLAYER_STATE_BUFFERING) LCD_fprintline(1,"Buffering");     
+   \   0000003A   9100....           LDS     R16, PLAYER_STATE
+   \   0000003E   3001               CPI     R16, 1
+   \   00000040   F029               BREQ    ??GET_hook_DATA_RX_2
+   \   00000042   ....               LDI     R30, LOW(`?<Constant "Buffering">`)
+   \   00000044   ....               LDI     R31, (`?<Constant "Buffering">`) >> 8
+   \   00000046   E001               LDI     R16, 1
+   \   00000048   ........           CALL    LCD_fprintline
+    132                PLAYER_STATE=PLAYER_STATE_BUFFERING;
+   \                     ??GET_hook_DATA_RX_2:
+   \   0000004C   E001               LDI     R16, 1
+   \   0000004E   9300....           STS     PLAYER_STATE, R16
+    133              }
+    134          L_BODY:
+    135            {
+    136              UREG addr;
+    137              FM_CS_ENABLE();   // Выбираем FRAM
+   \                     ??GET_hook_DATA_RX_1:
+   \   00000052   9894               CBI     0x12, 0x04
+    138              SPDR=FM_WREN;     // Разрешаем запись
+   \   00000054   E006               LDI     R16, 6
+   \   00000056   B90F               OUT     0x0F, R16
+    139              while (!(SPSR & (1<<SPIF)));               
+   \                     ??GET_hook_DATA_RX_3:
+   \   00000058   9B77               SBIS    0x0E, 0x07
+   \   0000005A   CFFE               RJMP    ??GET_hook_DATA_RX_3
+    140              FM_CS_DISABLE();
+   \   0000005C   9A94               SBI     0x12, 0x04
+    141              FM_CS_ENABLE();   // Выбираем FRAM
+   \   0000005E   9894               CBI     0x12, 0x04
+    142              SPDR=FM_WRITE;    // Операция - "запись"
+   \   00000060   E002               LDI     R16, 2
+   \   00000062   B90F               OUT     0x0F, R16
+    143              addr=(UREG)(pWR>>16);
+    144              while (!(SPSR & (1<<SPIF)));
+   \                     ??GET_hook_DATA_RX_4:
+   \   00000064   9B77               SBIS    0x0E, 0x07
+   \   00000066   CFFE               RJMP    ??GET_hook_DATA_RX_4
+    145              SPDR=addr;  // Начальный адрес - голова [24..16]
+   \   00000068   B86F               OUT     0x0F, R6
+    146              addr=(UREG)(pWR>>8);
+    147              while (!(SPSR & (1<<SPIF)));       
+   \                     ??GET_hook_DATA_RX_5:
+   \   0000006A   9B77               SBIS    0x0E, 0x07
+   \   0000006C   CFFE               RJMP    ??GET_hook_DATA_RX_5
+    148              SPDR=addr;  // Начальный адрес - голова [15..8]
+   \   0000006E   B85F               OUT     0x0F, R5
+    149              addr=(UREG)(pWR);
+    150              while (!(SPSR & (1<<SPIF)));
+   \                     ??GET_hook_DATA_RX_6:
+   \   00000070   9B77               SBIS    0x0E, 0x07
+   \   00000072   CFFE               RJMP    ??GET_hook_DATA_RX_6
+    151              SPDR=addr;    //Начальный адрес - голова [7..0]    
+   \   00000074   B84F               OUT     0x0F, R4
+    152              while (!(SPSR & (1<<SPIF)));    
+   \                     ??GET_hook_DATA_RX_7:
+   \   00000076   9B77               SBIS    0x0E, 0x07
+   \   00000078   CFFE               RJMP    ??GET_hook_DATA_RX_7
+    153            }
+    154          L_BODY2:    
+    155              //Быстрая обработка данных тела
+    156              if (!len) goto GET_hook_DATA_RX_exit;
+   \                     ??GET_hook_DATA_RX_8:
+   \   0000007A   2088               TST     R8
+   \   0000007C   F409               BRNE    $+2+2
+   \   0000007E   C054               RJMP    ??GET_hook_DATA_RX_9
+    157              bl=s->block_length; // "вспомним" размер блока мета-данных        
+   \   00000080   01FC               MOVW    R31:R30, R25:R24
+   \   00000082   A5A5               LDD     R26, Z+45
+   \   00000084   A5B6               LDD     R27, Z+46
+    158              do
+    159              {            
+    160                UREG c=*data++; //читаем очередной байт тела
+   \                     ??GET_hook_DATA_RX_10:
+   \   00000086   01F5               MOVW    R31:R30, R11:R10
+   \   00000088   9111               LD      R17, Z+
+   \   0000008A   015F               MOVW    R11:R10, R31:R30
+    161                if (bl) //Только если мы знаем, что метаданные присутствуют
+   \   0000008C   2F0A               MOV     R16, R26
+   \   0000008E   2B0B               OR      R16, R27
+   \   00000090   F0B9               BREQ    ??GET_hook_DATA_RX_11
+    162                {	
+    163          	if (!(--bl))
+   \   00000092   9711               SBIW    R27:R26, 1
+   \   00000094   F4A9               BRNE    ??GET_hook_DATA_RX_11
+    164          	{
+    165          	  //Блок закончился, в c - размер метаданных
+    166                    if (!c)                          // Длина метаданных 0 (их нет)
+   \   00000096   2311               TST     R17
+   \   00000098   F431               BRNE    ??GET_hook_DATA_RX_12
+    167                    {
+    168          //             META_len=0;
+    169          //             pMETA_buf=&META_buf[0];
+    170                       bl=s->metadata_interval;
+   \   0000009A   01FC               MOVW    R31:R30, R25:R24
+   \   0000009C   A5A7               LDD     R26, Z+47
+   \   0000009E   A9B0               LDD     R27, Z+48
+    171                       s->block_length=bl;
+   \   000000A0   A7A5               STD     Z+45, R26
+   \   000000A2   A7B6               STD     Z+46, R27
+    172                       continue;
+   \   000000A4   C03B               RJMP    ??GET_hook_DATA_RX_13
+    173                    }
+    174                    s->state=state=_GET_METADATA;
+   \                     ??GET_hook_DATA_RX_12:
+   \   000000A6   E006               LDI     R16, 6
+   \   000000A8   01FC               MOVW    R31:R30, R25:R24
+   \   000000AA   A703               STD     Z+43, R16
+    175                    s->block_length=c*16;           // рассчитаем и запомним длину блока с мп3 данными
+   \   000000AC   E100               LDI     R16, 16
+   \   000000AE   9F10               MUL     R17, R16
+   \   000000B0   A605               STD     Z+45, R0
+   \   000000B2   A616               STD     Z+46, R1
+    176          	  len--;
+   \   000000B4   948A               DEC     R8
+    177                    LCD_putMETA(0,0); 
+   \   000000B6   E010               LDI     R17, 0
+   \   000000B8   E000               LDI     R16, 0
+   \   000000BA   ........           CALL    LCD_putMETA
+    178          	  goto L_METADATA;                // идем на обработку метаданных
+   \   000000BE   C099               RJMP    ??GET_hook_DATA_RX_14
+    179          	}
+    180                }      
+    181                  UREG f=0;
+   \                     ??GET_hook_DATA_RX_11:
+   \   000000C0   E000               LDI     R16, 0
+    182                  SPDR = c; // Записали байт в FIFO      
+   \   000000C2   B91F               OUT     0x0F, R17
+    183                  pWR += 1; // Сдвигаем голову        
+   \   000000C4   E011               LDI     R17, 1
+   \   000000C6   0E41               ADD     R4, R17
+   \   000000C8   1E50               ADC     R5, R16
+   \   000000CA   1E60               ADC     R6, R16
+   \   000000CC   1E70               ADC     R7, R16
+    184                  if (pWR > MP3fifo_pEND) f=1;
+   \   000000CE   E414               LDI     R17, 68
+   \   000000D0   1641               CP      R4, R17
+   \   000000D2   EC19               LDI     R17, 201
+   \   000000D4   0651               CPC     R5, R17
+   \   000000D6   E011               LDI     R17, 1
+   \   000000D8   0661               CPC     R6, R17
+   \   000000DA   E010               LDI     R17, 0
+   \   000000DC   0670               CPC     R7, R16
+   \   000000DE   F008               BRCS    ??GET_hook_DATA_RX_15
+   \   000000E0   E001               LDI     R16, 1
+    185          	while (!(SPSR & (1<<SPIF))); // wait SPI comm. finished 
+   \                     ??GET_hook_DATA_RX_15:
+   \   000000E2   9B77               SBIS    0x0E, 0x07
+   \   000000E4   CFFE               RJMP    ??GET_hook_DATA_RX_15
+    186          	if (f) 
+   \   000000E6   2300               TST     R16
+   \   000000E8   F0C9               BREQ    ??GET_hook_DATA_RX_13
+    187                  {
+    188                    UREG addr;
+    189                    pWR=MP3fifo_pSTART; // дошли до крайней ячейки - надо перепрыгивать вниз                
+   \   000000EA   2444               CLR     R4
+   \   000000EC   2455               CLR     R5
+   \   000000EE   2466               CLR     R6
+   \   000000F0   2477               CLR     R7
+    190                    FM_CS_DISABLE();
+   \   000000F2   9A94               SBI     0x12, 0x04
+    191                    FM_CS_ENABLE();   // Выбираем FRAM
+   \   000000F4   9894               CBI     0x12, 0x04
+    192                    SPDR=FM_WREN;     // Разрешаем запись
+   \   000000F6   E006               LDI     R16, 6
+   \   000000F8   B90F               OUT     0x0F, R16
+    193                    while (!(SPSR & (1<<SPIF)));               
+   \                     ??GET_hook_DATA_RX_16:
+   \   000000FA   9B77               SBIS    0x0E, 0x07
+   \   000000FC   CFFE               RJMP    ??GET_hook_DATA_RX_16
+    194                    FM_CS_DISABLE();
+   \   000000FE   9A94               SBI     0x12, 0x04
+    195                    FM_CS_ENABLE();   // Выбираем FRAM
+   \   00000100   9894               CBI     0x12, 0x04
+    196                    SPDR=FM_WRITE;    // Операция - "запись"
+   \   00000102   E002               LDI     R16, 2
+   \   00000104   B90F               OUT     0x0F, R16
+    197                    addr=(UREG)(pWR>>16);
+    198                    while (!(SPSR & (1<<SPIF)));
+   \                     ??GET_hook_DATA_RX_17:
+   \   00000106   9B77               SBIS    0x0E, 0x07
+   \   00000108   CFFE               RJMP    ??GET_hook_DATA_RX_17
+    199                    SPDR=addr;  // Начальный адрес - голова [24..16]
+   \   0000010A   B91F               OUT     0x0F, R17
+    200                    addr=(UREG)(pWR>>8);
+    201                    while (!(SPSR & (1<<SPIF)));       
+   \                     ??GET_hook_DATA_RX_18:
+   \   0000010C   9B77               SBIS    0x0E, 0x07
+   \   0000010E   CFFE               RJMP    ??GET_hook_DATA_RX_18
+    202                    SPDR=addr;  // Начальный адрес - голова [15..8]
+   \   00000110   B91F               OUT     0x0F, R17
+    203                    addr=(UREG)(pWR);          
+    204                    while (!(SPSR & (1<<SPIF)));
+   \                     ??GET_hook_DATA_RX_19:
+   \   00000112   9B77               SBIS    0x0E, 0x07
+   \   00000114   CFFE               RJMP    ??GET_hook_DATA_RX_19
+    205                    SPDR=addr;    //Начальный адрес - голова [7..0]    
+   \   00000116   B91F               OUT     0x0F, R17
+    206                    while (!(SPSR & (1<<SPIF)));  
+   \                     ??GET_hook_DATA_RX_20:
+   \   00000118   9B77               SBIS    0x0E, 0x07
+   \   0000011A   CFFE               RJMP    ??GET_hook_DATA_RX_20
+    207                  }	
+    208              }
+    209              while(--len);
+   \                     ??GET_hook_DATA_RX_13:
+   \   0000011C   948A               DEC     R8
+   \   0000011E   F009               BREQ    $+2+2
+   \   00000120   CFB2               RJMP    ??GET_hook_DATA_RX_10
+    210              s->block_length=bl;    
+   \                     ??GET_hook_DATA_RX_21:
+   \   00000122   01FC               MOVW    R31:R30, R25:R24
+   \   00000124   A7A5               STD     Z+45, R26
+   \   00000126   A7B6               STD     Z+46, R27
+    211          
+    212          GET_hook_DATA_RX_exit:
+    213              
+    214              FM_CS_DISABLE();
+   \                     ??GET_hook_DATA_RX_9:
+   \   00000128   9A94               SBI     0x12, 0x04
+    215              MP3fifo_pWR = pWR;        
+   \   0000012A   ....               LDI     R30, LOW(MP3fifo_pWR)
+   \   0000012C   ....               LDI     R31, (MP3fifo_pWR) >> 8
+   \   0000012E   8240               ST      Z, R4
+   \   00000130   8251               STD     Z+1, R5
+   \   00000132   8262               STD     Z+2, R6
+   \   00000134   8273               STD     Z+3, R7
+    216              // Записали пакет
+    217              // Теперь высчитываем оставшееся место в буфере FRAM 
+    218              // Устанавливаем размер окна сокета равный числу свободных байт в буфере FRAM
+    219              UINT32 freeFIFO=_MP3fifo_free();
+   \   00000136   8100               LD      R16, Z
+   \   00000138   8111               LDD     R17, Z+1
+   \   0000013A   8122               LDD     R18, Z+2
+   \   0000013C   8133               LDD     R19, Z+3
+   \   0000013E   ....               LDI     R30, LOW(MP3fifo_pRD)
+   \   00000140   ....               LDI     R31, (MP3fifo_pRD) >> 8
+   \   00000142   8140               LD      R20, Z
+   \   00000144   8151               LDD     R21, Z+1
+   \   00000146   8162               LDD     R22, Z+2
+   \   00000148   8173               LDD     R23, Z+3
+   \   0000014A   1704               CP      R16, R20
+   \   0000014C   0715               CPC     R17, R21
+   \   0000014E   0726               CPC     R18, R22
+   \   00000150   0737               CPC     R19, R23
+   \   00000152   018A               MOVW    R17:R16, R21:R20
+   \   00000154   019B               MOVW    R19:R18, R23:R22
+   \   00000156   ....               LDI     R30, LOW(MP3fifo_pWR)
+   \   00000158   ....               LDI     R31, (MP3fifo_pWR) >> 8
+   \   0000015A   8140               LD      R20, Z
+   \   0000015C   8151               LDD     R21, Z+1
+   \   0000015E   8162               LDD     R22, Z+2
+   \   00000160   8173               LDD     R23, Z+3
+   \   00000162   F428               BRCC    ??GET_hook_DATA_RX_22
+   \   00000164   1B04               SUB     R16, R20
+   \   00000166   0B15               SBC     R17, R21
+   \   00000168   0B26               SBC     R18, R22
+   \   0000016A   0B37               SBC     R19, R23
+   \   0000016C   C017               RJMP    ??GET_hook_DATA_RX_23
+   \                     ??GET_hook_DATA_RX_22:
+   \   0000016E   1704               CP      R16, R20
+   \   00000170   0715               CPC     R17, R21
+   \   00000172   0726               CPC     R18, R22
+   \   00000174   0737               CPC     R19, R23
+   \   00000176   E404               LDI     R16, 68
+   \   00000178   EC19               LDI     R17, 201
+   \   0000017A   E021               LDI     R18, 1
+   \   0000017C   E030               LDI     R19, 0
+   \   0000017E   F470               BRCC    ??GET_hook_DATA_RX_23
+   \   00000180   1B04               SUB     R16, R20
+   \   00000182   0B15               SBC     R17, R21
+   \   00000184   0B26               SBC     R18, R22
+   \   00000186   0B37               SBC     R19, R23
+   \   00000188   ....               LDI     R30, LOW(MP3fifo_pRD)
+   \   0000018A   ....               LDI     R31, (MP3fifo_pRD) >> 8
+   \   0000018C   8140               LD      R20, Z
+   \   0000018E   8151               LDD     R21, Z+1
+   \   00000190   8162               LDD     R22, Z+2
+   \   00000192   8173               LDD     R23, Z+3
+   \   00000194   0F04               ADD     R16, R20
+   \   00000196   1F15               ADC     R17, R21
+   \   00000198   1F26               ADC     R18, R22
+   \   0000019A   1F37               ADC     R19, R23
+   \                     ??GET_hook_DATA_RX_23:
+   \   0000019C   5001               SUBI    R16, 1
+   \   0000019E   4010               SBCI    R17, 0
+   \   000001A0   4020               SBCI    R18, 0
+   \   000001A2   4030               SBCI    R19, 0
+    220              if (freeFIFO < TCP_MAX_DATA_LEN)
+   \   000001A4   3400               CPI     R16, 64
+   \   000001A6   E045               LDI     R20, 5
+   \   000001A8   0714               CPC     R17, R20
+   \   000001AA   E040               LDI     R20, 0
+   \   000001AC   0724               CPC     R18, R20
+   \   000001AE   0734               CPC     R19, R20
+   \   000001B0   F430               BRCC    ??GET_hook_DATA_RX_24
+    221              {   
+    222                // считаем что в FIFO места уже нет - обнуляем окно
+    223                // соответственно можно начать играть в основном цикле
+    224                GET_WINDOW_STATE=GET_WINDOW_STATE_ZERO;
+   \   000001B2   E001               LDI     R16, 1
+   \   000001B4   9300....           STS     GET_WINDOW_STATE, R16
+    225                freeFIFO=0; 
+   \   000001B8   E000               LDI     R16, 0
+   \   000001BA   E010               LDI     R17, 0
+   \   000001BC   C008               RJMP    ??GET_hook_DATA_RX_25
+    226                #ifdef CONSOLE_DEBUG
+    227                _print_fstr("\r\nZEROWIN");
+    228                #endif
+    229              }    
+    230              else if (freeFIFO>=SPEC_MAX_WIN) freeFIFO=SPEC_MAX_WIN;
+   \                     ??GET_hook_DATA_RX_24:
+   \   000001BE   3800               CPI     R16, 128
+   \   000001C0   E344               LDI     R20, 52
+   \   000001C2   0714               CPC     R17, R20
+   \   000001C4   4020               SBCI    R18, 0
+   \   000001C6   4030               SBCI    R19, 0
+   \   000001C8   F010               BRCS    ??GET_hook_DATA_RX_25
+   \   000001CA   E800               LDI     R16, 128
+   \   000001CC   E314               LDI     R17, 52
+    231          //    else if (freeFIFO>=(0xFFFF-512)) freeFIFO=0xFFFF;
+    232          //    else freeFIFO+=512;
+    233              s->sock.win=htons((UINT16)(freeFIFO)); // меняем размер окна
+   \                     ??GET_hook_DATA_RX_25:
+   \   000001CE   01FC               MOVW    R31:R30, R25:R24
+   \   000001D0   8F15               STD     Z+29, R17
+   \   000001D2   8F06               STD     Z+30, R16
+    234              return 0; // Данные тела кончились - выходим...
+   \   000001D4   E000               LDI     R16, 0
+   \   000001D6   9189               LD      R24, Y+
+   \   000001D8   9199               LD      R25, Y+
+   \   000001DA   9049               LD      R4, Y+
+   \   000001DC   9059               LD      R5, Y+
+   \   000001DE   9069               LD      R6, Y+
+   \   000001E0   9079               LD      R7, Y+
+   \   000001E2   9089               LD      R8, Y+
+   \   000001E4   9099               LD      R9, Y+
+   \   000001E6   90A9               LD      R10, Y+
+   \   000001E8   90B9               LD      R11, Y+
+   \   000001EA   9508               RET
+    235            }
+    236            if (state==_GET_METADATA)
+   \                     ??GET_hook_DATA_RX_0:
+   \   000001EC   E006               LDI     R16, 6
+   \   000001EE   1690               CP      R9, R16
+   \   000001F0   F4D9               BRNE    ??GET_hook_DATA_RX_26
+    237            {
+    238            L_METADATA:
+    239              //Быстрая обработка метаданных
+    240              if (!len) goto GET_hook_DATA_RX_exit;//{FM_CS_DISABLE(); return 0;}
+   \                     ??GET_hook_DATA_RX_14:
+   \   000001F2   2088               TST     R8
+   \   000001F4   F409               BRNE    $+2+2
+   \   000001F6   CF98               RJMP    ??GET_hook_DATA_RX_9
+    241              bl=s->block_length;
+   \   000001F8   01FC               MOVW    R31:R30, R25:R24
+   \   000001FA   A5A5               LDD     R26, Z+45
+   \   000001FC   A5B6               LDD     R27, Z+46
+   \   000001FE   C009               RJMP    ??GET_hook_DATA_RX_27
+    242              do
+    243              {
+    244                if (!(--bl))
+    245                {
+    246          	//Блок закончился, в c - размер метаданных
+    247          	s->state=state=_GET_BODY;
+    248          	s->block_length=s->metadata_interval;
+    249          	len--;
+    250          	goto L_BODY2;
+    251                }
+    252                UREG c=*data++;
+   \                     ??GET_hook_DATA_RX_28:
+   \   00000200   01F5               MOVW    R31:R30, R11:R10
+   \   00000202   9111               LD      R17, Z+
+   \   00000204   015F               MOVW    R11:R10, R31:R30
+    253               //Тут можно накапливать байты метаданных, если надо
+    254               //UDR=c; // выводим в консоль
+    255          //     if (META_len++<31) *pMETA_buf++=c;
+    256               LCD_putMETA(1,c); 
+   \   00000206   E001               LDI     R16, 1
+   \   00000208   ........           CALL    LCD_putMETA
+    257              }
+    258              while(--len);
+   \   0000020C   948A               DEC     R8
+   \   0000020E   F409               BRNE    $+2+2
+   \   00000210   CF88               RJMP    ??GET_hook_DATA_RX_21
+   \                     ??GET_hook_DATA_RX_27:
+   \   00000212   9711               SBIW    R27:R26, 1
+   \   00000214   F7A9               BRNE    ??GET_hook_DATA_RX_28
+   \   00000216   E005               LDI     R16, 5
+   \   00000218   01FC               MOVW    R31:R30, R25:R24
+   \   0000021A   A703               STD     Z+43, R16
+   \   0000021C   A507               LDD     R16, Z+47
+   \   0000021E   A910               LDD     R17, Z+48
+   \   00000220   A705               STD     Z+45, R16
+   \   00000222   A716               STD     Z+46, R17
+   \   00000224   948A               DEC     R8
+   \   00000226   CF29               RJMP    ??GET_hook_DATA_RX_8
+    259              s->block_length=bl;
+    260            }
+    261            // Идет прием... 
+    262            if (!len) goto GET_hook_DATA_RX_exit;//{FM_CS_DISABLE();return 0;}
+   \                     ??GET_hook_DATA_RX_26:
+   \   00000228   2088               TST     R8
+   \   0000022A   F409               BRNE    $+2+2
+   \   0000022C   CF7D               RJMP    ??GET_hook_DATA_RX_9
+    263            UREG pos=s->header_pos; // pos - текущая позиция в строке-заголовке
+   \   0000022E   01F9               MOVW    R31:R30, R19:R18
+   \   00000230   A524               LDD     R18, Z+44
+    264            // Пробежимся по заголовкам
+    265            do 
+    266            {
+    267              c=*data++;
+   \                     ??GET_hook_DATA_RX_29:
+   \   00000232   01F5               MOVW    R31:R30, R11:R10
+   \   00000234   9101               LD      R16, Z+
+   \   00000236   015F               MOVW    R11:R10, R31:R30
+    268              switch(state)
+   \   00000238   E014               LDI     R17, 4
+   \   0000023A   1691               CP      R9, R17
+   \   0000023C   F5F1               BRNE    ??GET_hook_DATA_RX_30
+    269              {
+    270                  case _GET_HEADER: 
+    271                  // Если сейчас идет прием заголовка (Header)  
+    272                    if (c==10) // поймали '\n'  (Конец строки)
+   \   0000023E   300A               CPI     R16, 10
+   \   00000240   F579               BRNE    ??GET_hook_DATA_RX_31
+    273                    {      
+    274                      s->req[pos]=0;
+   \   00000242   E000               LDI     R16, 0
+   \   00000244   01FC               MOVW    R31:R30, R25:R24
+   \   00000246   0FE2               ADD     R30, R18
+   \   00000248   1FF0               ADC     R31, R16
+   \   0000024A   AB01               STD     Z+49, R16
+    275                      if (pos) // если позиция в строке не нулевая
+   \   0000024C   2322               TST     R18
+   \   0000024E   F0F9               BREQ    ??GET_hook_DATA_RX_32
+    276                      {       
+    277                        if (!stricmp_P(s->req,"icy-metaint")) // поймали укзатель длины блока метаданных?
+   \   00000250   ....               LDI     R30, LOW((`?<Constant "Buffering">` + 17))
+   \   00000252   ....               LDI     R31, HIGH((`?<Constant "Buffering">` + 17))
+   \   00000254   01DC               MOVW    R27:R26, R25:R24
+   \   00000256   96D1               ADIW    R27:R26, 49
+   \   00000258   ........           CALL    stricmp_P
+   \   0000025C   2300               TST     R16
+   \   0000025E   F449               BRNE    ??GET_hook_DATA_RX_33
+    278                        {
+    279                          //Размер блока между метаданными
+    280                          s->metadata_interval=a2i(s->req+12)+1; //Запомним размер блока метаданных (еще вычитываем байт длинны метаданных)
+   \   00000260   01FC               MOVW    R31:R30, R25:R24
+   \   00000262   96FD               ADIW    R31:R30, 61
+   \   00000264   ....               RCALL   a2i
+   \   00000266   5F0F               SUBI    R16, 255
+   \   00000268   4F1F               SBCI    R17, 255
+   \   0000026A   01FC               MOVW    R31:R30, R25:R24
+   \   0000026C   A707               STD     Z+47, R16
+   \   0000026E   AB10               STD     Z+48, R17
+   \   00000270   C00C               RJMP    ??GET_hook_DATA_RX_34
+    281                        }
+    282                        else if (!stricmp_P(s->req,"icy-br")) // поймали укзатель битрейта
+   \                     ??GET_hook_DATA_RX_33:
+   \   00000272   ....               LDI     R30, LOW((`?<Constant "Buffering">` + 10))
+   \   00000274   ....               LDI     R31, HIGH((`?<Constant "Buffering">` + 10))
+   \   00000276   01DC               MOVW    R27:R26, R25:R24
+   \   00000278   96D1               ADIW    R27:R26, 49
+   \   0000027A   ........           CALL    stricmp_P
+   \   0000027E   2300               TST     R16
+   \   00000280   F421               BRNE    ??GET_hook_DATA_RX_34
+    283                        {
+    284                          //Битрейт
+    285                          LCD_putBR(s->req+7);
+   \   00000282   01FC               MOVW    R31:R30, R25:R24
+   \   00000284   96F8               ADIW    R31:R30, 56
+   \   00000286   ........           CALL    LCD_putBR
+    286                        }
+    287                      }   
+    288                      else // поймали \r\n (Конец заголовков, переключаемся на тело)
+    289                      {              
+    290                        //__no_operation();
+    291                        s->state=state=_GET_BODY;
+    292                        s->block_length=s->metadata_interval; // Запоминаем размер блока между метаданными
+    293                        len--;
+    294                        goto L_BODY; // Перейдем на обработку метаданных
+    295                      }
+    296                      pos=0; //Начинаем новое накопление строки
+   \                     ??GET_hook_DATA_RX_34:
+   \   0000028A   E020               LDI     R18, 0
+    297                      break;
+   \   0000028C   C016               RJMP    ??GET_hook_DATA_RX_30
+   \                     ??GET_hook_DATA_RX_32:
+   \   0000028E   E005               LDI     R16, 5
+   \   00000290   01FC               MOVW    R31:R30, R25:R24
+   \   00000292   A703               STD     Z+43, R16
+   \   00000294   A507               LDD     R16, Z+47
+   \   00000296   A910               LDD     R17, Z+48
+   \   00000298   A705               STD     Z+45, R16
+   \   0000029A   A716               STD     Z+46, R17
+   \   0000029C   948A               DEC     R8
+   \   0000029E   CED9               RJMP    ??GET_hook_DATA_RX_1
+    298                   }
+    299                   if (c==13) break; //Пропускаем
+   \                     ??GET_hook_DATA_RX_31:
+   \   000002A0   300D               CPI     R16, 13
+   \   000002A2   F059               BREQ    ??GET_hook_DATA_RX_30
+    300                   if (pos<(sizeof(s->req)-1))
+   \   000002A4   312F               CPI     R18, 31
+   \   000002A6   F448               BRCC    ??GET_hook_DATA_RX_30
+    301                   {
+    302                      //Если есть куда сохранять символы, сохраняем название заголовка
+    303                     if (c==':') c=0;
+   \   000002A8   330A               CPI     R16, 58
+   \   000002AA   F409               BRNE    ??GET_hook_DATA_RX_35
+   \   000002AC   E000               LDI     R16, 0
+    304                     s->req[pos++]=c;
+   \                     ??GET_hook_DATA_RX_35:
+   \   000002AE   E030               LDI     R19, 0
+   \   000002B0   01FC               MOVW    R31:R30, R25:R24
+   \   000002B2   0FE2               ADD     R30, R18
+   \   000002B4   1FF3               ADC     R31, R19
+   \   000002B6   AB01               STD     Z+49, R16
+   \   000002B8   9523               INC     R18
+    305                    }
+    306                  break;
+    307              }
+    308            }
+    309            while(--len);
+   \                     ??GET_hook_DATA_RX_30:
+   \   000002BA   948A               DEC     R8
+   \   000002BC   F009               BREQ    $+2+2
+   \   000002BE   CFB9               RJMP    ??GET_hook_DATA_RX_29
+    310            s->header_pos=pos;
+   \   000002C0   01FC               MOVW    R31:R30, R25:R24
+   \   000002C2   A724               STD     Z+44, R18
+    311            s->state=state;
+   \   000002C4   A693               STD     Z+43, R9
+    312            goto GET_hook_DATA_RX_exit;
+   \   000002C6   CF30               RJMP    ??GET_hook_DATA_RX_9
+   \   000002C8                      REQUIRE _A_SPSR
+   \   000002C8                      REQUIRE _A_SPDR
+   \   000002C8                      REQUIRE _A_PORTD
+    313          //  FM_CS_DISABLE();
+    314          //  return 0;
+    315          }
+    316          
+    317          //extern volatile UREG stop_req;
+    318          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    319          static __x UREG GET_hook(UREG state, UREG len, UINT8 *data, TCP_SOCK *_s)
+   \                     GET_hook:
+    320          {
+   \   00000000   92AA               ST      -Y, R10
+   \   00000002   929A               ST      -Y, R9
+   \   00000004   928A               ST      -Y, R8
+   \   00000006   927A               ST      -Y, R7
+   \   00000008   926A               ST      -Y, R6
+   \   0000000A   925A               ST      -Y, R5
+   \   0000000C   924A               ST      -Y, R4
+   \   0000000E   939A               ST      -Y, R25
+   \   00000010   938A               ST      -Y, R24
+   \   00000012                      REQUIRE ?Register_R4_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R5_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R6_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R7_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R8_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R9_is_cg_reg
+   \   00000012                      REQUIRE ?Register_R10_is_cg_reg
+   \   00000012   9724               SBIW    R29:R28, 4
+   \   00000014   2F60               MOV     R22, R16
+   \   00000016   2F01               MOV     R16, R17
+   \   00000018   01AD               MOVW    R21:R20, R27:R26
+   \   0000001A   01D9               MOVW    R27:R26, R19:R18
+    321            GET_SOCK *s=(GET_SOCK *)_s;
+    322            UINT32 freeFIFO;
+    323          //  UREG i;
+    324          //  UREG j;
+    325            switch(state)
+   \   0000001C   956A               DEC     R22
+   \   0000001E   F151               BREQ    ??GET_hook_0
+   \   00000020   5062               SUBI    R22, 2
+   \   00000022   F089               BREQ    ??GET_hook_1
+   \   00000024   956A               DEC     R22
+   \   00000026   F079               BREQ    ??GET_hook_1
+   \   00000028   956A               DEC     R22
+   \   0000002A   F409               BRNE    $+2+2
+   \   0000002C   C05C               RJMP    ??GET_hook_2
+   \   0000002E   956A               DEC     R22
+   \   00000030   F409               BRNE    $+2+2
+   \   00000032   C067               RJMP    ??GET_hook_3
+   \   00000034   956A               DEC     R22
+   \   00000036   F409               BRNE    $+2+2
+   \   00000038   C041               RJMP    ??GET_hook_4
+   \   0000003A   956A               DEC     R22
+   \   0000003C   F409               BRNE    $+2+2
+   \   0000003E   C067               RJMP    ??GET_hook_5
+   \   00000040   956A               DEC     R22
+   \   00000042   F0E1               BREQ    ??GET_hook_6
+   \   00000044   C015               RJMP    ??GET_hook_7
+    326            {
+    327            case TCP_EVENT_CLOSE:
+    328            case TCP_EVENT_ABORT:
+    329              s->state=_GET_STOP;
+   \                     ??GET_hook_1:
+   \   00000046   E000               LDI     R16, 0
+   \   00000048   01F9               MOVW    R31:R30, R19:R18
+   \   0000004A   A703               STD     Z+43, R16
+    330              s->header_pos=0;
+   \   0000004C   A704               STD     Z+44, R16
+    331              s->block_length=0;
+   \   0000004E   A705               STD     Z+45, R16
+   \   00000050   A706               STD     Z+46, R16
+    332              s->metadata_interval=0;
+   \   00000052   A707               STD     Z+47, R16
+   \   00000054   AB00               STD     Z+48, R16
+    333              PLAYER_STATE=PLAYER_STATE_STOPED;
+   \   00000056   9300....           STS     PLAYER_STATE, R16
+    334              if (PLAYER_STATE==PLAYER_STATE_STOPED) 
+   \   0000005A   9100....           LDS     R16, PLAYER_STATE
+   \   0000005E   2300               TST     R16
+   \   00000060   F439               BRNE    ??GET_hook_7
+    335              {
+    336                LCD_fprintline(1,"Stoped");     
+   \   00000062   ....               LDI     R30, LOW(`?<Constant "Stoped">`)
+   \   00000064   ....               LDI     R31, (`?<Constant "Stoped">`) >> 8
+   \   00000066   E001               LDI     R16, 1
+   \   00000068   ........           CALL    LCD_fprintline
+    337                LCD_softCLR();     
+   \   0000006C   ........           CALL    LCD_softCLR
+    338              }
+    339              return 0;
+   \                     ??GET_hook_7:
+   \   00000070   E000               LDI     R16, 0
+   \   00000072   C0C0               RJMP    ??GET_hook_8
+    340            case TCP_EVENT_CONREQ:
+    341              s->state=_GET_CONREQ;
+   \                     ??GET_hook_0:
+   \   00000074   E001               LDI     R16, 1
+   \   00000076   01F9               MOVW    R31:R30, R19:R18
+   \                     ??GET_hook_9:
+   \   00000078   A703               STD     Z+43, R16
+    342              return 0;
+   \   0000007A   CFFA               RJMP    ??GET_hook_7
+    343            case TCP_EVENT_ASYNC_REQ:
+    344              s->sock.async_req=0;
+   \                     ??GET_hook_6:
+   \   0000007C   E000               LDI     R16, 0
+   \   0000007E   01F9               MOVW    R31:R30, R19:R18
+   \   00000080   A702               STD     Z+42, R16
+    345              freeFIFO=MP3fifo_free();
+   \   00000082   ........           CALL    MP3fifo_free
+    346              //if (freeFIFO<SPEC_MAX_WIN)
+    347              if (freeFIFO<4*TCP_MAX_DATA_LEN)
+   \   00000086   3000               CPI     R16, 0
+   \   00000088   E145               LDI     R20, 21
+   \   0000008A   0714               CPC     R17, R20
+   \   0000008C   E040               LDI     R20, 0
+   \   0000008E   0724               CPC     R18, R20
+   \   00000090   0734               CPC     R19, R20
+   \   00000092   F420               BRCC    ??GET_hook_10
+    348              {
+    349                // пока нет места для приема полноценного окна не делаем асинхронный старт      
+    350                GET_WINDOW_STATE=GET_WINDOW_STATE_ZERO;
+   \   00000094   E001               LDI     R16, 1
+   \   00000096   9300....           STS     GET_WINDOW_STATE, R16
+    351                #ifdef CONSOLE_DEBUG
+    352                _print_fstr("\r\nNO_Async_start");
+    353                #endif
+    354                return 0;
+   \   0000009A   CFEA               RJMP    ??GET_hook_7
+    355              }
+    356              #ifdef CONSOLE_DEBUG
+    357              _print_fstr("\r\nAsync_start");
+    358              #endif
+    359              GET_WINDOW_STATE=GET_WINDOW_STATE_UPDATE;
+   \                     ??GET_hook_10:
+   \   0000009C   9340....           STS     GET_WINDOW_STATE, R20
+    360              if (freeFIFO>=SPEC_MAX_WIN) freeFIFO=SPEC_MAX_WIN;
+   \   000000A0   3800               CPI     R16, 128
+   \   000000A2   E344               LDI     R20, 52
+   \   000000A4   0714               CPC     R17, R20
+   \   000000A6   4020               SBCI    R18, 0
+   \   000000A8   4030               SBCI    R19, 0
+   \   000000AA   F010               BRCS    ??GET_hook_11
+   \   000000AC   E800               LDI     R16, 128
+   \   000000AE   E314               LDI     R17, 52
+    361              s->sock.win=htons((UINT16)freeFIFO); // запишем фактическое окно
+   \                     ??GET_hook_11:
+   \   000000B0   01FD               MOVW    R31:R30, R27:R26
+   \   000000B2   8F15               STD     Z+29, R17
+   \   000000B4   8F06               STD     Z+30, R16
+    362              s->sock.txreq=TCP_TXREQ_SEND;
+   \   000000B6   E003               LDI     R16, 3
+   \   000000B8   A701               STD     Z+41, R16
+    363              return 0;
+   \   000000BA   CFDA               RJMP    ??GET_hook_7
+    364            case TCP_EVENT_DATA:
+    365              if (PLAYER_STATE==PLAYER_STATE_STOPREQ)
+   \                     ??GET_hook_4:
+   \   000000BC   9110....           LDS     R17, PLAYER_STATE
+   \   000000C0   3013               CPI     R17, 3
+   \   000000C2   F421               BRNE    ??GET_hook_12
+    366              {
+    367                StopGET();
+   \                     ??GET_hook_13:
+   \   000000C4   E005               LDI     R16, 5
+   \   000000C6   9300....           STS     (get_sock + 27), R16
+    368                return 0;
+   \   000000CA   CFD2               RJMP    ??GET_hook_7
+    369              }
+    370              if (s->state==_GET_CONREQ)
+   \                     ??GET_hook_12:
+   \   000000CC   01F9               MOVW    R31:R30, R19:R18
+   \   000000CE   A513               LDD     R17, Z+43
+   \   000000D0   3011               CPI     R17, 1
+   \   000000D2   F421               BRNE    ??GET_hook_14
+    371              {
+    372                s->state=_GET_SENDREQ;
+   \   000000D4   E002               LDI     R16, 2
+   \   000000D6   A703               STD     Z+43, R16
+    373                return 1; //Запрос передачи
+   \   000000D8   E001               LDI     R16, 1
+   \   000000DA   C08C               RJMP    ??GET_hook_8
+    374              }
+    375              if (s->state<_GET_HEADER) return 0;
+   \                     ??GET_hook_14:
+   \   000000DC   3014               CPI     R17, 4
+   \   000000DE   F240               BRCS    ??GET_hook_7
+    376              return GET_hook_DATA_RX(len,data,s);
+   \   000000E0   01DA               MOVW    R27:R26, R21:R20
+   \   000000E2   ....               RCALL   GET_hook_DATA_RX
+   \   000000E4   C087               RJMP    ??GET_hook_8
+    377            case TCP_EVENT_ACK:
+    378              //Подтверждение данных
+    379              if (PLAYER_STATE==PLAYER_STATE_STOPREQ)
+   \                     ??GET_hook_2:
+   \   000000E6   9110....           LDS     R17, PLAYER_STATE
+   \   000000EA   3013               CPI     R17, 3
+   \   000000EC   F359               BREQ    ??GET_hook_13
+    380              {
+    381                StopGET();
+    382                return 0;
+    383              }
+    384              if (s->state==_GET_WAITACK&&len)
+   \   000000EE   01F9               MOVW    R31:R30, R19:R18
+   \   000000F0   A513               LDD     R17, Z+43
+   \   000000F2   3013               CPI     R17, 3
+   \   000000F4   F009               BREQ    $+2+2
+   \   000000F6   CFBC               RJMP    ??GET_hook_7
+   \   000000F8   2300               TST     R16
+   \   000000FA   F409               BRNE    $+2+2
+   \   000000FC   CFB9               RJMP    ??GET_hook_7
+    385              {
+    386                s->state=_GET_HEADER;
+   \   000000FE   E004               LDI     R16, 4
+   \   00000100   CFBB               RJMP    ??GET_hook_9
+    387              }
+    388              return 0;
+    389            case TCP_EVENT_REGENERATE:
+    390              if (s->state==_GET_WAITACK) s->state=_GET_SENDREQ;
+   \                     ??GET_hook_3:
+   \   00000102   01F9               MOVW    R31:R30, R19:R18
+   \   00000104   A503               LDD     R16, Z+43
+   \   00000106   3003               CPI     R16, 3
+   \   00000108   F411               BRNE    ??GET_hook_5
+   \   0000010A   E002               LDI     R16, 2
+   \   0000010C   A703               STD     Z+43, R16
+    391            case TCP_EVENT_SEND:
+    392            if (s->state==_GET_SENDREQ)
+   \                     ??GET_hook_5:
+   \   0000010E   01F9               MOVW    R31:R30, R19:R18
+   \   00000110   A503               LDD     R16, Z+43
+   \   00000112   3002               CPI     R16, 2
+   \   00000114   F009               BREQ    $+2+2
+   \   00000116   CFAC               RJMP    ??GET_hook_7
+    393              {
+    394                s->state=_GET_WAITACK;
+   \   00000118   E003               LDI     R16, 3
+   \   0000011A   A703               STD     Z+43, R16
+    395                static __flash char req1[]="GET /";     
+    396                static __flash char req2[]=" HTTP/1.0\r\nHost:";        
+    397                static __flash char req3[]="\r\nIcy-MetaData:1\r\nUser-Agent: uEthRadio/0.1\r\nConnection: close\r\n\r\n";
+    398                UREG i=sizeof(req1)-1;
+    399                char __flash *s=req1;
+   \   0000011C   ....               LDI     R16, LOW(??req1)
+   \   0000011E   ....               LDI     R17, (??req1) >> 8
+    400                UINT8 *d=data;
+   \   00000120   013A               MOVW    R7:R6, R21:R20
+   \   00000122   E025               LDI     R18, 5
+    401                do
+    402                {
+    403          	*d++=*s++;// "GET/"
+   \                     ??GET_hook_15:
+   \   00000124   01F8               MOVW    R31:R30, R17:R16
+   \   00000126   9135               LPM     R19, Z+
+   \   00000128   018F               MOVW    R17:R16, R31:R30
+   \   0000012A   01F3               MOVW    R31:R30, R7:R6
+   \   0000012C   9331               ST      Z+, R19
+   \   0000012E   013F               MOVW    R7:R6, R31:R30
+    404                }
+    405                while(--i);
+   \   00000130   952A               DEC     R18
+   \   00000132   F7C1               BRNE    ??GET_hook_15
+    406                UREG s1=0;      
+   \   00000134   2488               CLR     R8
+    407                char __eeprom *es;
+    408                es=station_list[stationNum].req;
+   \   00000136   ....               LDI     R20, LOW((station_list + 6))
+   \   00000138   ....               LDI     R21, HIGH((station_list + 6))
+   \   0000013A   9110....           LDS     R17, stationNum
+   \   0000013E   E306               LDI     R16, 54
+   \   00000140   9F10               MUL     R17, R16
+   \   00000142   0D40               ADD     R20, R0
+   \   00000144   1D51               ADC     R21, R1
+   \   00000146   C008               RJMP    ??GET_hook_16
+    409                
+    410                 while(*es)      
+    411                {
+    412                      *d++=*es++;//  "запрос"
+   \                     ??GET_hook_17:
+   \   00000148   ........           CALL    __eeget8_16
+   \   0000014C   01F3               MOVW    R31:R30, R7:R6
+   \   0000014E   9301               ST      Z+, R16
+   \   00000150   013F               MOVW    R7:R6, R31:R30
+   \   00000152   5F4F               SUBI    R20, 255
+   \   00000154   4F5F               SBCI    R21, 255
+    413                      s1++;
+   \   00000156   9483               INC     R8
+    414                 };
+   \                     ??GET_hook_16:
+   \   00000158   ........           CALL    __eeget8_16
+   \   0000015C   2300               TST     R16
+   \   0000015E   F7A1               BRNE    ??GET_hook_17
+    415                    
+    416                i=sizeof(req2)-1;
+   \   00000160   E100               LDI     R16, 16
+   \   00000162   2EA0               MOV     R10, R16
+    417                s=req2;
+   \   00000164   ....               LDI     R16, LOW((??req1 + 6))
+   \   00000166   ....               LDI     R17, HIGH((??req1 + 6))
+    418                do
+    419                {
+    420          	*d++=*s++;// "/HTTP1.0 Host:"
+   \                     ??GET_hook_18:
+   \   00000168   01F8               MOVW    R31:R30, R17:R16
+   \   0000016A   9125               LPM     R18, Z+
+   \   0000016C   018F               MOVW    R17:R16, R31:R30
+   \   0000016E   01F3               MOVW    R31:R30, R7:R6
+   \   00000170   9321               ST      Z+, R18
+   \   00000172   013F               MOVW    R7:R6, R31:R30
+    421                }
+    422                while(--i);     
+   \   00000174   94AA               DEC     R10
+   \   00000176   F7C1               BRNE    ??GET_hook_18
+    423                
+    424                __no_init char i2a_buf[4];
+    425                char *sIP = i2a_buf;
+   \   00000178   012E               MOVW    R5:R4, R29:R28
+    426                UINT32 sockIP = station_list[stationNum].IP;
+   \   0000017A   9110....           LDS     R17, stationNum
+   \   0000017E   E306               LDI     R16, 54
+   \   00000180   9F10               MUL     R17, R16
+   \   00000182   ....               LDI     R20, LOW(station_list)
+   \   00000184   ....               LDI     R21, (station_list) >> 8
+   \   00000186   0D40               ADD     R20, R0
+   \   00000188   1D51               ADC     R21, R1
+   \   0000018A   ........           CALL    __eeget32_16
+   \   0000018E   01C8               MOVW    R25:R24, R17:R16
+   \   00000190   01D9               MOVW    R27:R26, R19:R18
+    427                UREG s2=0;
+   \   00000192   2499               CLR     R9
+    428                i=0;
+   \                     ??GET_hook_19:
+   \   00000194   94A3               INC     R10
+    429                
+    430                while (i++<4)
+    431                {
+    432                  _i2a(i2a_buf, (UREG)(sockIP));
+   \   00000196   2F08               MOV     R16, R24
+   \   00000198   E010               LDI     R17, 0
+   \   0000019A   01FE               MOVW    R31:R30, R29:R28
+   \   0000019C   ........           CALL    _i2a
+    433                  do
+    434                  {
+    435            	  *d++=*sIP++;// "IP"
+   \                     ??GET_hook_20:
+   \   000001A0   01F2               MOVW    R31:R30, R5:R4
+   \   000001A2   8100               LD      R16, Z
+   \   000001A4   01F3               MOVW    R31:R30, R7:R6
+   \   000001A6   9301               ST      Z+, R16
+   \   000001A8   013F               MOVW    R7:R6, R31:R30
+    436                    s2++;
+   \   000001AA   9493               INC     R9
+    437                  }
+    438                  while (*sIP);                
+   \   000001AC   E001               LDI     R16, 1
+   \   000001AE   0E40               ADD     R4, R16
+   \   000001B0   E000               LDI     R16, 0
+   \   000001B2   1E50               ADC     R5, R16
+   \   000001B4   01F2               MOVW    R31:R30, R5:R4
+   \   000001B6   8100               LD      R16, Z
+   \   000001B8   2300               TST     R16
+   \   000001BA   F791               BRNE    ??GET_hook_20
+    439                  sIP=i2a_buf;
+   \   000001BC   012E               MOVW    R5:R4, R29:R28
+    440                  if (i<4) {*d++='.';s2++;}
+   \   000001BE   E004               LDI     R16, 4
+   \   000001C0   16A0               CP      R10, R16
+   \   000001C2   F428               BRCC    ??GET_hook_21
+   \   000001C4   E20E               LDI     R16, 46
+   \   000001C6   01F3               MOVW    R31:R30, R7:R6
+   \   000001C8   9301               ST      Z+, R16
+   \   000001CA   013F               MOVW    R7:R6, R31:R30
+   \   000001CC   9493               INC     R9
+    441                  sockIP=sockIP>>8;
+   \                     ??GET_hook_21:
+   \   000001CE   2F89               MOV     R24, R25
+   \   000001D0   2F9A               MOV     R25, R26
+   \   000001D2   2FAB               MOV     R26, R27
+   \   000001D4   E0B0               LDI     R27, 0
+    442                };           
+   \   000001D6   F2F0               BRCS    ??GET_hook_19
+    443                
+    444                i=sizeof(req3)-1;
+    445                s=req3;
+   \   000001D8   ....               LDI     R16, LOW((??req1 + 23))
+   \   000001DA   ....               LDI     R17, HIGH((??req1 + 23))
+   \   000001DC   E422               LDI     R18, 66
+    446                do
+    447                {
+    448          	*d++=*s++;// ""
+   \                     ??GET_hook_22:
+   \   000001DE   01F8               MOVW    R31:R30, R17:R16
+   \   000001E0   9135               LPM     R19, Z+
+   \   000001E2   018F               MOVW    R17:R16, R31:R30
+   \   000001E4   01F3               MOVW    R31:R30, R7:R6
+   \   000001E6   9331               ST      Z+, R19
+   \   000001E8   013F               MOVW    R7:R6, R31:R30
+    449                }
+    450                while(--i);                  
+   \   000001EA   952A               DEC     R18
+   \   000001EC   F7C1               BRNE    ??GET_hook_22
+    451                return (sizeof(req1)-1)+s1+s2+(sizeof(req2)-1)+(sizeof(req3)-1);
+   \   000001EE   0C89               ADD     R8, R9
+   \   000001F0   E507               LDI     R16, 87
+   \   000001F2   0D08               ADD     R16, R8
+   \                     ??GET_hook_8:
+   \   000001F4   9624               ADIW    R29:R28, 4
+   \   000001F6   9189               LD      R24, Y+
+   \   000001F8   9199               LD      R25, Y+
+   \   000001FA   9049               LD      R4, Y+
+   \   000001FC   9059               LD      R5, Y+
+   \   000001FE   9069               LD      R6, Y+
+   \   00000200   9079               LD      R7, Y+
+   \   00000202   9089               LD      R8, Y+
+   \   00000204   9099               LD      R9, Y+
+   \   00000206   90A9               LD      R10, Y+
+   \   00000208   9508               RET
+    452              }
+    453              return 0;
+    454            }
+    455            return 0;
+    456          }
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     ??req1:
+   \   00000000   45472054002F       DC8 "GET /"
+   \   00000006   482054542F50       DC8 " HTTP/1.0\015\012Host:"
+   \              2E310D30480A
+   \              736F3A7400  
+   \   00000017   0A0D63492D79       DC8 0DH, 0AH, 49H, 63H, 79H, 2DH, 4DH, 65H
+   \              654D        
+   \   0000001F   617461446174       DC8 74H, 61H, 44H, 61H, 74H, 61H, 3AH, 31H
+   \              313A        
+   \   00000027   0A0D73557265       DC8 0DH, 0AH, 55H, 73H, 65H, 72H, 2DH, 41H
+   \              412D        
+   \   0000002F   6567746E203A       DC8 67H, 65H, 6EH, 74H, 3AH, 20H, 75H, 45H
+   \              4575        
+   \   00000037   687461526964       DC8 74H, 68H, 52H, 61H, 64H, 69H, 6FH, 2FH
+   \              2F6F        
+   \   0000003F   2E300D31430A       DC8 30H, 2EH, 31H, 0DH, 0AH, 43H, 6FH, 6EH
+   \              6E6F        
+   \   00000047   656E74636F69       DC8 6EH, 65H, 63H, 74H, 69H, 6FH, 6EH, 3AH
+   \              3A6E        
+   \   0000004F   63206F6C6573       DC8 20H, 63H, 6CH, 6FH, 73H, 65H, 0DH, 0AH
+   \              0A0D        
+   \   00000057   0A0D00             DC8 0DH, 0AH, 0
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     `?<Constant "Buffering">`:
+   \   00000000   754266667265       DC8 "Buffering"
+   \              6E690067    
+   \   0000000A   63692D797262       DC8 "icy-br"
+   \              00          
+   \   00000011   63692D79656D       DC8 "icy-metaint"
+   \              61746E690074
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     `?<Constant "Stoped">`:
+   \   00000000   7453706F6465       DC8 "Stoped"
+   \              00          
+
+   Maximum stack usage in bytes:
+
+     Function              CSTACK RSTACK
+     --------              ------ ------
+     AddGETsocket              0      2
+       -> AddTCPsocket         0      2
+     GET_hook                 13      4
+       -> LCD_fprintline      13      2
+       -> LCD_softCLR         13      2
+       -> MP3fifo_free        13      2
+       -> GET_hook_DATA_RX    13      2
+       -> _i2a                13      2
+     GET_hook_DATA_RX         10      2
+       -> LCD_fprintline      10      2
+       -> LCD_putMETA         10      2
+       -> LCD_putMETA         10      2
+       -> stricmp_P           10      2
+       -> a2i                 10      2
+       -> stricmp_P           10      2
+       -> LCD_putBR           10      2
+     StartGET                  8      4
+       -> TCPconnect           8      2
+     StopGET                   0      2
+     a2i                       0      2
+
+
+   Segment part sizes:
+
+     Function/Label          Bytes
+     --------------          -----
+     _A_SPSR                    1
+     _A_SPDR                    1
+     _A_PORTD                   1
+     get_sock                  81
+     GET_WINDOW_STATE           1
+     AddGETsocket              40
+     StartGET                 266
+     StopGET                    8
+     a2i                       40
+     GET_hook_DATA_RX         712
+     GET_hook                 522
+     req1                      90
+     req2
+     req3
+     ?<Constant "Buffering">   29
+     ?<Constant "Stoped">       7
+      Others                    6
+
+ 
+     3 bytes in segment ABSOLUTE
+ 1 588 bytes in segment CODE
+     6 bytes in segment INITTAB
+   126 bytes in segment NEAR_F
+    82 bytes in segment NEAR_Z
+ 
+ 1 714 bytes of CODE memory (+ 6 bytes shared)
+    82 bytes of DATA memory (+ 3 bytes shared)
+
+Errors: none
+Warnings: none

@@ -1,0 +1,364 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:31:04 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\kb.c                         /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\kb.c --cpu=m32 -ms -o        /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\kb.s90            /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME kb
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?need_segment_init
+
+        PUBWEAK `?<Segment init: NEAR_Z>`
+        PUBWEAK `??T2_TASK??INTVEC 20`
+        PUBLIC Keyboard_task
+        PUBLIC LCD_PLAYERstate
+        PUBLIC LCD_TCPstate
+        PUBLIC T2_TASK
+        PUBWEAK _A_PINA
+        PUBWEAK _A_PORTA
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+
+T2_TASK             SYMBOL "T2_TASK"
+`??T2_TASK??INTVEC 20` SYMBOL "??INTVEC 20", T2_TASK
+
+        EXTERN LCD_fprintline
+        EXTERN PLAYER_STATE
+        EXTERN get_sock
+
+// G:\AVR\EthRadio_buf_inline\kb.c
+//    1 #include "compiler.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,039H
+// <__C52> volatile __io _A_PINA
+_A_PINA:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,03bH
+// <__C56> volatile __io _A_PORTA
+_A_PORTA:
+        DS8 1
+//    2 #include "stdafx.h"
+//    3 #include "tcp.h"
+//    4 #include "http_get.h"
+//    5 #include "station.h"
+//    6 #include "FIFO.h"
+//    7 #include "lcd.h"
+//    8 #include "player.h"
+//    9 #include "kb.h"
+//   10 
+//   11 
+//   12 extern volatile UREG PLAYER_STATE;
+
+        RSEG CODE:CODE:NOROOT(1)
+//   13 void LCD_TCPstate(UINT8 sock_state)
+LCD_TCPstate:
+//   14 {   
+//   15   switch (sock_state)
+        TST     R16
+        BREQ    ??LCD_TCPstate_0
+        SUBI    R16, 3
+        BREQ    ??LCD_TCPstate_1
+        SUBI    R16, 2
+        BREQ    ??LCD_TCPstate_2
+        DEC     R16
+        BREQ    ??LCD_TCPstate_3
+        RET
+//   16     {
+//   17       case TCP_STATE_CLOSED:
+//   18         LCD_fprintline(1,"Closed");
+??LCD_TCPstate_0:
+        LDI     R30, LOW(`?<Constant "Closed">`)
+        LDI     R31, (`?<Constant "Closed">`) >> 8
+        RJMP    ??LCD_TCPstate_4
+//   19         //LCD_putMETA(0,0);
+//   20         break;
+//   21       case TCP_STATE_CONNECTING:
+//   22         LCD_fprintline(1,"Connecting");
+??LCD_TCPstate_1:
+        LDI     R30, LOW((`?<Constant "Closed">` + 7))
+        LDI     R31, HIGH((`?<Constant "Closed">` + 7))
+??LCD_TCPstate_4:
+        LDI     R16, 1
+        JMP     LCD_fprintline
+//   23         break;
+//   24       case TCP_STATE_FINW1:
+//   25         LCD_fprintline(1,"Closing");
+??LCD_TCPstate_2:
+        LDI     R30, LOW((`?<Constant "Closed">` + 18))
+        LDI     R31, HIGH((`?<Constant "Closed">` + 18))
+        RJMP    ??LCD_TCPstate_4
+//   26         break;
+//   27       case TCP_STATE_CONNECTED:
+//   28         LCD_fprintline(1,"Connected");
+??LCD_TCPstate_3:
+        LDI     R30, LOW((`?<Constant "Closed">` + 26))
+        LDI     R31, HIGH((`?<Constant "Closed">` + 26))
+        RJMP    ??LCD_TCPstate_4
+//   29         break;
+//   30     }
+//   31 }      
+//   32 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   33 void LCD_PLAYERstate(UINT8 player_state)
+LCD_PLAYERstate:
+//   34 {
+//   35    switch (player_state)
+        TST     R16
+        BREQ    ??LCD_PLAYERstate_0
+        DEC     R16
+        BREQ    ??LCD_PLAYERstate_1
+        DEC     R16
+        BREQ    ??LCD_PLAYERstate_2
+        DEC     R16
+        BREQ    ??LCD_PLAYERstate_3
+        RET
+//   36    {
+//   37         case PLAYER_STATE_STOPED:
+//   38         LCD_fprintline(1,"Stoped");
+??LCD_PLAYERstate_0:
+        LDI     R30, LOW(`?<Constant "Stoped">`)
+        LDI     R31, (`?<Constant "Stoped">`) >> 8
+        RJMP    ??LCD_PLAYERstate_4
+//   39         //LCD_putMETA(0,0);
+//   40         break;
+//   41       case PLAYER_STATE_BUFFERING:
+//   42         LCD_fprintline(1,"Buffering");
+??LCD_PLAYERstate_1:
+        LDI     R30, LOW((`?<Constant "Stoped">` + 7))
+        LDI     R31, HIGH((`?<Constant "Stoped">` + 7))
+??LCD_PLAYERstate_4:
+        LDI     R16, 1
+        JMP     LCD_fprintline
+//   43         break;
+//   44       case PLAYER_STATE_PLAYING:
+//   45         LCD_fprintline(1,"Playing");
+??LCD_PLAYERstate_2:
+        LDI     R30, LOW((`?<Constant "Stoped">` + 17))
+        LDI     R31, HIGH((`?<Constant "Stoped">` + 17))
+        RJMP    ??LCD_PLAYERstate_4
+//   46         break;
+//   47      case PLAYER_STATE_STOPREQ:
+//   48         LCD_fprintline(1,"Stop Request");
+??LCD_PLAYERstate_3:
+        LDI     R30, LOW((`?<Constant "Stoped">` + 25))
+        LDI     R31, HIGH((`?<Constant "Stoped">` + 25))
+        RJMP    ??LCD_PLAYERstate_4
+//   49         break;
+//   50    }
+//   51 }
+//   52 
+//   53 volatile UINT8 Keyboard_task;
+//   54 
+//   55 #pragma vector = TIMER2_OVF_vect
+
+        RSEG CODE:CODE:NOROOT(1)
+//   56 __interrupt  void T2_TASK(void)
+T2_TASK:
+//   57 {
+        ST      -Y, R18
+        ST      -Y, R17
+        ST      -Y, R16
+        IN      R18, 0x3F
+//   58   static UINT8 T2INTdiv;
+//   59   if (T2INTdiv++ != 3) return;
+        LDS     R16, (Keyboard_task + 1)
+        MOV     R17, R16
+        INC     R17
+        STS     (Keyboard_task + 1), R17
+        CPI     R16, 3
+        BRNE    ??T2_TASK_0
+//   60   T2INTdiv=0;
+        LDI     R16, 0
+        STS     (Keyboard_task + 1), R16
+//   61   /*
+//   62   if (get_sock.sock.state != sock_state)
+//   63   {
+//   64       LCD_TCPstate(get_sock.sock.state);   
+//   65       sock_state=get_sock.sock.state;
+//   66   }
+//   67   if (player_state!=PLAYER_STATE)
+//   68   {
+//   69     LCD_PLAYERstate(PLAYER_STATE);
+//   70     player_state=PLAYER_STATE;
+//   71   }
+//   72     */
+//   73   if (!PORTA_Bit0)
+        SBIC    0x1B, 0x00
+        RJMP    ??T2_TASK_1
+//   74   {
+//   75     if (!PINA_Bit0) // but1 is pressed
+        SBIC    0x19, 0x00
+        RJMP    ??T2_TASK_2
+//   76     {
+//   77       sbi(PORTA, PA0);
+        SBI     0x1B, 0x00
+        RJMP    ??T2_TASK_2
+//   78     }
+//   79   }
+//   80   else
+//   81   {
+//   82     if (PINA_Bit0) //but1 was released
+??T2_TASK_1:
+        SBIS    0x19, 0x00
+        RJMP    ??T2_TASK_2
+//   83     {
+//   84       cbi(PORTA, PA0);      
+        CBI     0x1B, 0x00
+//   85       if (get_sock.sock.state==TCP_STATE_CLOSED)
+        LDS     R16, (get_sock + 27)
+        TST     R16
+        BRNE    ??T2_TASK_3
+//   86       {
+//   87         /*
+//   88         LCD_fprintline(1,"Connecting");
+//   89         StartGET();
+//   90         */
+//   91         Keyboard_task=Keyboard_task_startget;
+        LDI     R16, 1
+        RJMP    ??T2_TASK_4
+//   92       }
+//   93       else
+//   94       {
+//   95         //если сокет в любом состоянии кроме "закрыт" то даем запрос на закрытие
+//   96         // и останавливаем воспроизведение
+//   97 //        PLAYER_STATE= PLAYER_STATE_STOPREQ;
+//   98         Keyboard_task=Keyboard_task_stopget;
+??T2_TASK_3:
+        LDI     R16, 2
+??T2_TASK_4:
+        STS     Keyboard_task, R16
+//   99       }
+//  100     }
+//  101   }
+//  102   if (!PORTA_Bit1)
+??T2_TASK_2:
+        SBIC    0x1B, 0x01
+        RJMP    ??T2_TASK_5
+//  103   {
+//  104     if (!PINA_Bit1) // but1 is pressed
+        SBIC    0x19, 0x01
+        RJMP    ??T2_TASK_0
+//  105     {
+//  106       sbi(PORTA, PA1);
+        SBI     0x1B, 0x01
+        RJMP    ??T2_TASK_0
+//  107     }
+//  108   }
+//  109   else
+//  110   {
+//  111     if (PINA_Bit1) // but1 is pressed
+??T2_TASK_5:
+        SBIS    0x19, 0x01
+        RJMP    ??T2_TASK_0
+//  112     {
+//  113       cbi(PORTA, PA1);      
+        CBI     0x1B, 0x01
+//  114       if (PLAYER_STATE==PLAYER_STATE_STOPED)
+        LDS     R16, PLAYER_STATE
+        TST     R16
+        BRNE    ??T2_TASK_0
+//  115       {
+//  116         Keyboard_task=Keyboard_task_stationchange;
+        LDI     R16, 3
+        STS     Keyboard_task, R16
+??T2_TASK_0:
+        OUT     0x3F, R18
+        LD      R16, Y+
+        LD      R17, Y+
+        LD      R18, Y+
+        RETI
+        REQUIRE _A_PINA
+        REQUIRE _A_PORTA
+//  117         /*
+//  118         stationNum++;
+//  119         if (stationNum>20) stationNum=0;
+//  120         stationNum_EEPROM=stationNum;
+//  121         LCD_fprintline(0,&station_list[stationNum].LCD_ID[0]);
+//  122         */
+//  123       }
+//  124     }
+//  125   }
+//  126 }
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+Keyboard_task:
+        DS8 1
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        COMMON INTVEC:CODE:ROOT(1)
+        ORG 20
+`??T2_TASK??INTVEC 20`:
+        JMP     T2_TASK
+
+        RSEG INITTAB:CODE:NOROOT(0)
+`?<Segment init: NEAR_Z>`:
+        DC16    SFE(NEAR_Z) - SFB(NEAR_Z)
+        DC16    SFB(NEAR_Z)
+        DC16    0
+        REQUIRE ?need_segment_init
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+`?<Constant "Closed">`:
+        DC8 "Closed"
+        DC8 "Connecting"
+        DC8 "Closing"
+        DC8 "Connected"
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+`?<Constant "Stoped">`:
+        DC8 "Stoped"
+        DC8 "Buffering"
+        DC8 "Playing"
+        DC8 "Stop Request"
+
+        END
+// 
+//   2 bytes in segment ABSOLUTE
+// 200 bytes in segment CODE
+//   6 bytes in segment INITTAB
+//   4 bytes in segment INTVEC
+//  74 bytes in segment NEAR_F
+//   2 bytes in segment NEAR_Z
+// 
+// 274 bytes of CODE memory (+ 10 bytes shared)
+//   2 bytes of DATA memory (+  2 bytes shared)
+//
+//Errors: none
+//Warnings: none

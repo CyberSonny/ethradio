@@ -1,0 +1,3849 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:41:43 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\network.c                    /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\network.c --cpu=m32 -ms -o   /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\network.s90       /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME network
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?Register_R10_is_cg_reg
+        EXTERN ?Register_R11_is_cg_reg
+        EXTERN ?Register_R4_is_cg_reg
+        EXTERN ?Register_R5_is_cg_reg
+        EXTERN ?Register_R6_is_cg_reg
+        EXTERN ?Register_R7_is_cg_reg
+        EXTERN ?Register_R8_is_cg_reg
+        EXTERN ?Register_R9_is_cg_reg
+        EXTERN ?need_segment_init
+
+        PUBWEAK `?<Segment init: NEAR_Z>`
+        PUBWEAK `??INT_ETH_PROCESS_PKT??INTVEC 68`
+        PUBWEAK `??INT_TIMER_DISPATCH??INTVEC 40`
+        PUBLIC AddTCPsocket
+        PUBLIC ETH_PKT_len
+        PUBLIC ETH_PKT_mode
+        PUBLIC INT_ETH_PROCESS_PKT
+        PUBLIC INT_ETH_PROCESS_PKT2
+        PUBLIC INT_TIMER_DISPATCH
+        PUBLIC IP
+        PUBLIC IPSEQ
+        PUBLIC MAC0
+        PUBLIC MASK_IP
+        PUBLIC QUE_sock
+        PUBLIC RemoveTCPsocket
+        PUBLIC TCPconnect
+        PUBLIC TIMER_TASK
+        PUBWEAK _A_PORTD
+        PUBWEAK _A_SPDR
+        PUBWEAK _A_SPSR
+        PUBWEAK _A_SREG
+        PUBWEAK _A_TWAR
+        PUBLIC _A_count_200ms_low
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC debug_addr
+        PUBLIC netw_memcpy
+        PUBLIC netw_memset
+
+INT_ETH_PROCESS_PKT SYMBOL "INT_ETH_PROCESS_PKT"
+`??INT_ETH_PROCESS_PKT??INTVEC 68` SYMBOL "??INTVEC 68", INT_ETH_PROCESS_PKT
+INT_TIMER_DISPATCH  SYMBOL "INT_TIMER_DISPATCH"
+`??INT_TIMER_DISPATCH??INTVEC 40` SYMBOL "??INTVEC 40", INT_TIMER_DISPATCH
+
+        EXTERN ETH_STOP_BACK_PRESSURE
+        EXTERN enc28j60PacketSend
+        EXTERN ETHfifo_free
+        EXTERN BufferPKT
+        EXTERN ETH_PKT
+        EXTERN ETHfifo_CNT
+        EXTERN ETHfifo_pWR
+        EXTERN FIFO_pkt_TS
+
+// G:\AVR\EthRadio_buf_inline\network.c
+//    1 /* Name: network.c
+//    2  * Project: uNikeE - Software Ethernet MAC and upper layers stack
+//    3  * Author: Dmitry Oparin aka Rst7/CBSIE
+//    4  * Creation Date: 25-Jan-2009
+//    5  * Copyright: (C)2008,2009 by Rst7/CBSIE
+//    6  * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+//    7  */
+//    8 
+//    9 #include "nike_e.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,022H
+// <__C6> volatile __io _A_TWAR
+_A_TWAR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02eH
+// <__C30> volatile __io _A_SPSR
+_A_SPSR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02fH
+// <__C32> volatile __io _A_SPDR
+_A_SPDR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,032H
+// <__C38> volatile __io _A_PORTD
+_A_PORTD:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,05fH
+// <__C130> volatile __io _A_SREG
+_A_SREG:
+        DS8 1
+//   10 #include "enc28j60.h"
+//   11 #include "io.h"
+//   12 #include "FIFO.h"
+//   13 #include "compiler.h"
+//   14 
+//   15 #pragma inline=forced
+//   16 UINT16 _READ_U16(volatile UINT8 *p)
+//   17 {
+//   18 #pragma diag_suppress=Pa082
+//   19   return p[0]|(p[1]<<8);
+//   20 #pragma diag_default=Pa082
+//   21 }
+//   22 #define READ_U16(VAR) (_READ_U16((volatile UINT8 *)(&VAR)))
+//   23 //#define READ_U16(VAR) (VAR)
+//   24 
+//   25 #pragma inline=forced
+//   26 UINT16 _READ_U16_REV(volatile UINT8 *p)
+//   27 {
+//   28 #pragma diag_suppress=Pa082
+//   29   return p[1]|(p[0]<<8);
+//   30 #pragma diag_default=Pa082
+//   31 }
+//   32 
+//   33 //Определяет, использовать ли номер IP-пакета
+//   34 #define USE_IPSEQ
+//   35 //#define IPSEQ_DEBUG
+//   36 
+//   37 #include "arp.h"
+//   38 #include "ip.h"
+//   39 #include "icmp.h"
+//   40 #include "tcp.h"
+//   41 #include "network_addr.h"
+//   42 #include "network.h"
+//   43 
+//   44 #define TOTAL_INLINE
+//   45 
+//   46 //__no_init ETH_FRAME ETH_PKT @ ETH_PKT_BASE;
+//   47 
+//   48 /*volatile */UINT16 ETH_PKT_len;
+//   49 /*volatile */UINT8 ETH_PKT_mode; //0 - свободен, 1 - занят приемником, 2-16 - счетчик передач
+//   50 
+//   51 volatile union
+//   52 {
+//   53   struct
+//   54   {
+//   55     UINT8 count_200ms_low;
+//   56     UINT8 count_200ms_high;
+//   57     UINT16 irs_high;
+//   58   };
+//   59   struct
+//   60   {
+//   61     UINT16 IRS_L;
+//   62     UINT16 IRS_H;
+//   63   };
+//   64 };
+//   65 
+//   66 //static UINT8 MAC_BROADCAST[6]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+//   67 
+//   68 #ifdef CPU8BIT
+//   69 #include "network_routines_avr.c"
+
+        RSEG CODE:CODE:NOROOT(1)
+// __nearfunc __version_3 __x_z void netw_memcpy(void *, void *, unsigned int)
+netw_memcpy:
+        REQUIRE _netw_memcpy
+        ;               // Fall through to label _netw_memcpy
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z void _netw_memcpy(char *, char *, UREG, UREG)
+_netw_memcpy:
+        TST     R16
+        BREQ    ??_netw_memcpy_0
+        INC     R17
+??_netw_memcpy_0:
+        LD      R18, Z+
+        ST      X+, R18
+        DEC     R16
+        BRNE    ??_netw_memcpy_0
+        DEC     R17
+        BRNE    ??_netw_memcpy_0
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z int cmp_A_S(TCP_PKT *, TCP_SOCK *)
+cmp_A_S:
+        ADIW    R31:R30, 23
+        ADIW    R27:R26, 12
+        RJMP    _cmp32
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z int cmp_S_A(TCP_PKT *, TCP_SOCK *)
+cmp_S_A:
+        ADIW    R31:R30, 27
+        ADIW    R27:R26, 8
+        REQUIRE _cmp32
+        ;               // Fall through to label _cmp32
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z int _cmp32(unsigned long *, unsigned long *)
+_cmp32:
+        LD     R16,-X
+        LD     R21,-Z
+        SUB    R16,R21
+        LD     R17,-X
+        LD     R21,-Z
+        SBC    R17,R21
+        LD     R18,-X
+        LD     R21,-Z
+        SBC    R18,R21
+        LD     R19,-X
+        LD     R21,-Z
+        SBC    R19,R21
+        OR     R18,R19
+        BRNE   cmp32i_1
+        RET
+cmp32i_1:
+        LDI     R16, 255
+        LDI     R17, 255
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __z void inc32(unsigned long *, UREG)
+inc32:
+        LDI     R17, 0
+        REQUIRE inc32i
+        ;               // Fall through to label inc32i
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __z void inc32i(unsigned long *, unsigned int)
+inc32i:
+        LD      R23, Z
+        LDD     R22, Z+1
+        LDD     R21, Z+2
+        LDD     R20, Z+3
+        LDI     R18, 0
+        ADD     R20, R16
+        ADC     R21, R17
+        ADC     R22, R18
+        ADC     R23, R18
+        ST      Z, R23
+        STD     Z+1, R22
+        STD     Z+2, R21
+        STD     Z+3, R20
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x UINT16 IPChecksum(UINT16 *, unsigned int)
+IPChecksum:
+        MOVW    R21:R20, R25:R24
+        MOVW    R25:R24, R17:R16
+        LDI     R16, 0
+        LDI     R17, 0
+        CPI     R24, 2
+        CPC     R25, R16
+        BRCS    ??IPChecksum_0
+??IPChecksum_1:
+        LD      R18, X+
+        LD      R19, X+
+        ADD     R16, R18
+        ADC     R17, R19
+        BRBC    0, ??IPChecksum_2
+        SUBI    R16, 255
+        SBCI    R17, 255
+??IPChecksum_2:
+        SBIW    R25:R24, 2
+        CPI     R24, 2
+        LDI     R18, 0
+        CPC     R25, R18
+        BRCC    ??IPChecksum_1
+??IPChecksum_0:
+        CPI     R24, 1
+        SBCI    R25, 0
+        BRNE    ??IPChecksum_3
+        LD      R18, X
+        LDI     R19, 0
+        ADD     R16, R18
+        ADC     R17, R19
+        BRBC    0, ??IPChecksum_3
+        SUBI    R16, 255
+        SBCI    R17, 255
+??IPChecksum_3:
+        COM     R16
+        COM     R17
+        MOVW    R25:R24, R21:R20
+        RET
+        REQUIRE _A_SREG
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z void MACcpy(UINT8 *, UINT8 *)
+MACcpy:
+        LD      R16, -Z
+        ST      -X, R16
+        LD      R16, -Z
+        ST      -X, R16
+        LD      R16, -Z
+        ST      -X, R16
+        LD      R16, -Z
+        ST      -X, R16
+        LD      R16, -Z
+        ST      -X, R16
+        LD      R16, -Z
+        ST      -X, R16
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z UREG MACcmp(UINT8 *, UINT8 *)
+MACcmp:
+        MOVW    R17:R16, R27:R26
+        MOVW    R27:R26, R31:R30
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        LDD     R19, Z+1
+        LD      R20, X+
+        LD      R21, X
+        SBIW    R27:R26, 1
+        CP      R18, R20
+        CPC     R19, R21
+        BRNE    ??MACcmp_0
+        LDD     R16, Z+2
+        LDD     R17, Z+3
+        LDD     R18, Z+4
+        LDD     R19, Z+5
+        MOVW    R31:R30, R27:R26
+        LDD     R20, Z+2
+        LDD     R21, Z+3
+        LDD     R22, Z+4
+        LDD     R23, Z+5
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BREQ    ??MACcmp_1
+??MACcmp_0:
+        LDI     R16, 1
+        RET
+??MACcmp_1:
+        LDI     R16, 0
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// static __nearfunc __version_3 __x_z void _swapmem(char *, char *, UREG)
+_swapmem:
+??_swapmem_0:
+        LD      R17, X
+        LD      R18, Z
+        ST      X+, R18
+        ST      Z+, R17
+        DEC     R16
+        BRNE    ??_swapmem_0
+        RET
+
+        RSEG CODE:CODE:NOROOT(1)
+// __nearfunc __version_3 __z int netw_memset(void *, UREG, UREG)
+netw_memset:
+        MOV     R19, R27
+        MOV     R20, R26
+        MOV     R18, R17
+        MOVW    R27:R26, R31:R30
+??netw_memset_0:
+        ST      X+, R16
+        DEC     R18
+        BRNE    ??netw_memset_0
+        MOV     R26, R20
+        MOV     R27, R19
+        RET
+//   70 #else
+//   71 #include "network_routines_arm.c"
+//   72 #endif
+//   73 
+//   74 extern __eeprom UINT32 OUTG_IP[2];
+//   75 //extern char MAC_GATE0[ETH_HWA_LEN];
+//   76 
+//   77 TCP_SOCK *QUE_sock;
+//   78 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   79 __z void AddTCPsocket(TCP_SOCK *s)
+AddTCPsocket:
+//   80 {
+//   81   TCP_SOCK *p;
+//   82  // UREG save_lock=ETH_TASK_LOCK_PORT;
+//   83  // ETH_TASK_LOCK=1;
+//   84   s->timer_init=0;
+        LDI     R16, 0
+        STD     Z+40, R16
+//   85   p=QUE_sock;
+//   86   s->next=p;
+        LDS     R16, (IP + 10)
+        LDS     R17, (IP + 11)
+        ST      Z, R16
+        STD     Z+1, R17
+//   87   QUE_sock=s;
+        STS     (IP + 10), R30
+        STS     (IP + 11), R31
+//   88  // if (!(save_lock&ETH_TASK_LOCK_MASK)) ETH_TASK_LOCK=0;
+//   89 }
+        RET
+//   90 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   91 __x UREG RemoveTCPsocket(TCP_SOCK *s)
+RemoveTCPsocket:
+//   92 {
+//   93   TCP_SOCK *p=(TCP_SOCK *)(&QUE_sock);
+        LDI     R30, LOW((IP + 10))
+        LDI     R31, HIGH((IP + 10))
+//   94   TCP_SOCK *n;
+//   95   UREG f=0;
+        LDI     R16, 0
+        RJMP    ??RemoveTCPsocket_0
+//   96  // UREG save_lock=ETH_TASK_LOCK_PORT;
+//   97  // ETH_TASK_LOCK=1;
+//   98   while((n=p->next))
+//   99   {
+//  100     if (n==s)
+//  101     {
+//  102       p->next=s->next;
+//  103       f=1;
+//  104       break;
+//  105     }
+//  106     p=n;
+??RemoveTCPsocket_1:
+        MOVW    R31:R30, R19:R18
+??RemoveTCPsocket_0:
+        LD      R18, Z
+        LDD     R19, Z+1
+        MOV     R17, R18
+        OR      R17, R19
+        BREQ    ??RemoveTCPsocket_2
+        CP      R18, R26
+        CPC     R19, R27
+        BRNE    ??RemoveTCPsocket_1
+        LD      R16, X+
+        LD      R17, X
+        SBIW    R27:R26, 1
+        ST      Z, R16
+        STD     Z+1, R17
+        LDI     R16, 1
+//  107   }
+//  108   //if (!(save_lock&ETH_TASK_LOCK_MASK)) ETH_TASK_LOCK=0;
+//  109   return f;
+??RemoveTCPsocket_2:
+        RET
+//  110 }
+//  111 
+//  112 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  113 static __z void prepare_sock(TCP_SOCK *s, UREG state, UREG tmr)
+prepare_sock:
+//  114 {
+        MOVW    R19:R18, R27:R26
+//  115   s->state=state;
+        STD     Z+27, R16
+//  116   s->flags=state==TCP_STATE_CONNECTING?TCP_FLAG_SYN:TCP_FLAG_SYN | TCP_FLAG_ACK;
+        CPI     R16, 3
+        BRNE    ??prepare_sock_0
+        LDI     R16, 2
+        RJMP    ??prepare_sock_1
+??prepare_sock_0:
+        LDI     R16, 18
+??prepare_sock_1:
+        STD     Z+28, R16
+//  117   s->timer=tmr;
+        STD     Z+39, R17
+//  118   
+//  119   UINT16 irs_l;
+//  120   UINT16 irs_h;
+//  121   irs_l=IRS_L;
+        LDI     R26, LOW((IP + 4))
+        LDI     R27, HIGH((IP + 4))
+        LD      R16, X+
+        LD      R17, X+
+//  122   irs_h=IRS_H;
+        LD      R22, X+
+        LD      R23, X
+        SBIW    R27:R26, 1
+//  123   irs_h^=irs_l;
+//  124   irs_h+=irs_l;
+        EOR     R22, R16
+        EOR     R23, R17
+        ADD     R22, R16
+        ADC     R23, R17
+//  125   IRS_H=irs_h;
+        ST      X+, R22
+        ST      X, R23
+//  126   s->SEQNO=((UINT32)irs_h<<16)|irs_l;
+        STD     Z+19, R16
+        STD     Z+20, R17
+        STD     Z+21, R22
+        STD     Z+22, R23
+//  127   
+//  128   s->timer_init=TCP_TIMER_INITV;
+        LDI     R16, 4
+        STD     Z+40, R16
+//  129   s->sended_len=0;
+        LDI     R16, 0
+        STD     Z+35, R16
+        STD     Z+36, R16
+//  130   s->send_disp=0;
+        STD     Z+37, R16
+        STD     Z+38, R16
+//  131 }
+        MOVW    R27:R26, R19:R18
+        RET
+//  132 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  133 __x void TCPconnect(TCP_SOCK *s, UINT32 ip, UINT16 port)
+TCPconnect:
+//  134 {
+        ST      -Y, R24
+//  135   TCP_SOCK *ss;
+//  136 //  UREG save_lock=ETH_TASK_LOCK_PORT;
+//  137 //  ETH_TASK_LOCK=1;
+//  138   s->rport=htons(port);
+        MOVW    R31:R30, R27:R26
+        STD     Z+17, R21
+        STD     Z+18, R20
+//  139   s->lport=0;
+        LDI     R20, 0
+        STD     Z+15, R20
+        STD     Z+16, R20
+//  140   port=IRS_L;
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LDD     R20, Z+4
+        LDD     R21, Z+5
+//  141   port^=IRS_H;
+        LDD     R22, Z+6
+        LDD     R23, Z+7
+        EOR     R20, R22
+        EOR     R21, R23
+//  142   port=(port&0x3FF)+1024;
+        ANDI    R21, 0x03
+        SUBI    R21, 252
+        RJMP    ??TCPconnect_0
+//  143 L1:
+//  144   ss=QUE_sock;
+//  145   while(ss)
+//  146   {
+//  147     if ((ss->state>TCP_STATE_LISTENING)&&port==ntohs(ss->lport))
+??TCPconnect_1:
+        MOVW    R31:R30, R23:R22
+        LDD     R24, Z+27
+        CPI     R24, 2
+        BRCS    ??TCPconnect_2
+        LDD     R3, Z+15
+        LDD     R2, Z+16
+        CP      R20, R2
+        CPC     R21, R3
+        BRNE    ??TCPconnect_2
+//  148     {
+//  149       port++;
+        SUBI    R20, 255
+        SBCI    R21, 255
+//  150       goto L1;
+//  151     }
+??TCPconnect_0:
+        LDS     R22, (IP + 10)
+        LDS     R23, (IP + 11)
+        RJMP    ??TCPconnect_3
+//  152     ss=ss->next;
+??TCPconnect_2:
+        LD      R22, Z
+        LDD     R23, Z+1
+//  153   }
+??TCPconnect_3:
+        MOV     R0, R22
+        OR      R0, R23
+        BRNE    ??TCPconnect_1
+//  154   s->lport=htons(port);
+        MOVW    R31:R30, R27:R26
+        STD     Z+15, R21
+        STD     Z+16, R20
+//  155   s->rip=ip;
+        STD     Z+11, R16
+        STD     Z+12, R17
+        STD     Z+13, R18
+        STD     Z+14, R19
+//  156   //s->ACKNO=0; //Начинаем с 0
+//  157   prepare_sock(s,TCP_STATE_CONNECTING,0);
+        LDI     R17, 0
+        LDI     R16, 3
+        RCALL   prepare_sock
+//  158   ETH_TASK_WAKEUP=1;
+        SBI     0x02, 0x01
+//  159  // if (!(save_lock&ETH_TASK_LOCK_MASK)) ETH_TASK_LOCK=0;
+//  160 }
+        LD      R24, Y+
+        RET
+        REQUIRE _A_TWAR
+//  161 
+//  162 static __x UREG CallTCPhook_null(UREG code, TCP_SOCK *s);
+//  163 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  164 static __x UREG ClosingTCP(UREG ev, TCP_SOCK *s)
+ClosingTCP:
+//  165 {
+//  166   s->timer_init=0;
+        LDI     R17, 0
+        ADIW    R27:R26, 40
+        ST      X+, R17
+//  167   s->txreq=TCP_TXREQ_NONE;
+        ST      X, R17
+        SBIW    R27:R26, 39
+//  168   if (s->type&TCP_TYPE_SERVER)
+        LD      R17, X
+        SBIW    R27:R26, 2
+        SBRS    R17, 0
+        RJMP    ??ClosingTCP_0
+//  169   {
+//  170     s->state=TCP_STATE_LISTENING;
+        LDI     R17, 1
+        RJMP    ??ClosingTCP_1
+//  171   }
+//  172   else
+//  173     s->state=TCP_STATE_CLOSED;
+??ClosingTCP_0:
+        LDI     R17, 0
+??ClosingTCP_1:
+        ADIW    R27:R26, 27
+        ST      X, R17
+        SBIW    R27:R26, 27
+//  174   return CallTCPhook_null(ev,s);
+        REQUIRE CallTCPhook_null
+        ;               // Fall through to label CallTCPhook_null
+//  175 }
+//  176 
+//  177 static __x_z UREG CallTCPhook(UREG code, UREG len, void *p, TCP_SOCK *s);
+//  178 
+//  179 #pragma optimize=no_inline
+
+        RSEG CODE:CODE:NOROOT(1)
+//  180 static __x UREG CallTCPhook_null(UREG code, TCP_SOCK *s)
+CallTCPhook_null:
+//  181 {
+//  182   return CallTCPhook(code,0,NULL,s);
+        MOVW    R31:R30, R27:R26
+        LDI     R26, 0
+        LDI     R27, 0
+        LDI     R17, 0
+        REQUIRE CallTCPhook
+        ;               // Fall through to label CallTCPhook
+//  183 }
+//  184 
+//  185 #pragma optimize=no_inline
+
+        RSEG CODE:CODE:NOROOT(1)
+//  186 static __x_z UREG CallTCPhook(UREG code, UREG len, void *p, TCP_SOCK *s)
+CallTCPhook:
+//  187 {
+//  188   return s->hook(code,len,p,s);
+        MOVW    R19:R18, R31:R30
+        LDD     R20, Z+3
+        LDD     R31, Z+4
+        MOV     R30, R20
+        IJMP
+//  189 }
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+// UINT32 __near IP
+IP:
+        DS8 4
+_A_count_200ms_low:
+        DS8 4
+ETH_PKT_len:
+        DS8 2
+QUE_sock:
+        DS8 2
+//  190 
+//  191 #define __get_eth_root(VAR) ((ETH_FRAME *)(&ETH_PKT))
+//  192 
+//  193 extern __monitor void ETH_STOP_BACK_PRESSURE(void);
+//  194 extern __monitor __x UREG ETH_TRANSMIT_PACKET(ETH_FRAME *ep, unsigned int l);
+//  195 
+//  196 #ifdef USE_IPSEQ
+//  197 int IPSEQ;
+IPSEQ:
+        DS8 2
+ETH_PKT_mode:
+        DS8 1
+// UINT8 __near MAC0[6]
+MAC0:
+        DS8 6
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+// UINT32 __near MASK_IP
+MASK_IP:
+        DS8 4
+//  198 #endif
+//  199 
+//  200 #pragma optimize=no_inline
+
+        RSEG CODE:CODE:NOROOT(1)
+//  201 static __z unsigned int ExtractMSS(TCP_PKT *tcp)
+ExtractMSS:
+//  202 {
+//  203   unsigned int mss=TCP_MAX_DATA_LEN>536?536:TCP_MAX_DATA_LEN;
+        LDI     R16, 24
+        LDI     R17, 2
+//  204   if (tcp->tcp.hlen<(TCP_HEADER_LEN+4)) return mss;
+        LDD     R18, Z+12
+        CPI     R18, 24
+        BRCC    ??ExtractMSS_0
+        RET
+//  205   if (tcp->data[0]==2&&tcp->data[1]==4)
+??ExtractMSS_0:
+        LDD     R18, Z+20
+        CPI     R18, 2
+        BRNE    ??ExtractMSS_1
+        LDD     R18, Z+21
+        CPI     R18, 4
+        BRNE    ??ExtractMSS_1
+//  206   {
+//  207     unsigned int rmss=ntohs(*((UINT16*)(tcp->data+2)));
+        LDD     R19, Z+22
+        LDD     R18, Z+23
+//  208     mss=TCP_MAX_DATA_LEN;
+        LDI     R16, 64
+        LDI     R17, 5
+//  209     if (rmss<mss) mss=rmss;
+        CPI     R18, 64
+        CPC     R19, R17
+        BRCC    ??ExtractMSS_1
+        MOVW    R17:R16, R19:R18
+//  210   }
+//  211   return mss;
+??ExtractMSS_1:
+        RET
+//  212 }
+//  213 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  214 __x static void set_state_SYN_RECEIVED(TCP_SOCK *s, UINT32 *ackno, unsigned int mss)
+set_state_SYN_RECEIVED:
+//  215 {
+        ST      -Y, R25
+        ST      -Y, R24
+        MOVW    R25:R24, R17:R16
+//  216   s->rmss=mss;
+        MOVW    R31:R30, R27:R26
+        STD     Z+33, R18
+        STD     Z+34, R19
+//  217   prepare_sock(s,TCP_STATE_SYN_RECEIVED,TCP_TIMER_INITV);
+        LDI     R17, 4
+        LDI     R16, 2
+        RCALL   prepare_sock
+//  218   inc32cpy(&s->ACKNO,ackno);
+        ADIW    R27:R26, 23
+        MOVW    R31:R30, R27:R26
+        MOVW    R27:R26, R25:R24
+        LD      R16, X+
+        LD      R17, X+
+        LD      R18, X+
+        LD      R19, X
+        SBIW    R27:R26, 3
+        ST      Z, R16
+        STD     Z+1, R17
+        STD     Z+2, R18
+        STD     Z+3, R19
+        LDI     R16, 1
+        RCALL   inc32
+//  219 }
+        LD      R24, Y+
+        LD      R25, Y+
+        RET
+//  220 
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+//  221 void *debug_addr;
+debug_addr:
+        DS8 2
+//  222 
+//  223 //char const __flash _DecByteNum[]="%04X";
+//  224 //char const __flash _Razer2[]="\r\n";
+//  225 extern volatile UINT8 BufferPKT;
+//  226 extern volatile UINT8 FIFO_pkt_TS;
+//  227 extern char const __flash _EthWRlen[];
+//  228 extern char const __flash _EthTS[]; 
+//  229 extern char const __flash _EthCNT[];
+//  230 extern char const __flash _EthpWRH[];
+//  231 extern char const __flash _EthpWRL[];
+//  232 
+//  233 extern char const __flash _EthRDlen[];
+//  234 extern char const __flash _EthpRDH[];
+//  235 extern char const __flash _EthpRDL[];
+//  236 
+//  237 #pragma inline = forced
+//  238 void ETHfifo_write(UINT8 *data, UINT16 len, UINT8 TS)
+//  239 {
+//  240 	UINT32 pWR; //локальный указатель на запись
+//  241         UINT16 len1;        
+//  242 	UINT8 c;
+//  243 	if(len == 0)  return;
+//  244         if (ETHfifo_free() < ETH_MAX_PACKET_SIZE+3) return; // если пакет+длина+таймаут не влезут - не пишем
+//  245 	UINT8 header_cnt=0;
+//  246        	pWR = ETHfifo_pWR;
+//  247         len+=3; //  к длине Ethernet пакета добавим 2 байта его длины и 1 байт метки времени
+//  248         #ifdef CONSOLE_DEBUG
+//  249            _print_num (_EthWRlen,len); _print_num (_EthTS,(UINT16)TS);
+//  250            _print_num (_EthpWRH,(UINT16)(pWR>>16)); _print_num (_EthpWRL,(UINT16)pWR);
+//  251         #endif
+//  252         len1=len;
+//  253         {
+//  254           UREG addr;
+//  255           FM_CS_ENABLE();
+//  256           SPDR=FM_WREN;        
+//  257           while (!(SPSR & (1<<SPIF)));        
+//  258           FM_CS_DISABLE();        
+//  259           FM_CS_ENABLE();
+//  260           SPDR=FM_WRITE;       
+//  261           addr= (UREG) (pWR>>16);        
+//  262           while (!(SPSR & (1<<SPIF)));  
+//  263           SPDR= addr;
+//  264           addr= (UREG)(pWR>>8);
+//  265           while (!(SPSR & (1<<SPIF)));  
+//  266           SPDR=addr;  
+//  267           addr= (UREG)(pWR);
+//  268           while (!(SPSR & (1<<SPIF)));          
+//  269           SPDR=addr;        
+//  270           while (!(SPSR & (1<<SPIF)));          
+//  271         }  
+//  272         // Открыли сессию записи в FIFO                                       
+//  273         do
+//  274         {
+//  275           switch (header_cnt)
+//  276           {
+//  277            case 0:
+//  278             c=(UINT8) ((len-3) >>8);
+//  279             header_cnt++;
+//  280             break;
+//  281            case 1:
+//  282             c=(UINT8) (len-3);
+//  283             header_cnt++;
+//  284             break;
+//  285           case 2:  
+//  286             c= TS;
+//  287             header_cnt++;
+//  288             break;
+//  289           default:
+//  290             c = *data++;
+//  291             break;
+//  292           }             		
+//  293           SPDR = c;                     // записали байт в FRAM
+//  294           UREG f=0;
+//  295           if (++pWR>ETHfifo_pEND) f=1;// при записи след. ячейки упремся в потолок
+//  296           while (!(SPSR & (1<<SPIF))); // wait SPI comm. finished                 
+//  297           if (f) // при записи след. ячейки упремся в потолок... начнем с начала
+//  298           {
+//  299             UREG addr;
+//  300        	    FM_CS_DISABLE(); // закроем старую сессию    
+//  301             pWR=ETHfifo_pSTART;
+//  302             FM_CS_ENABLE();  // откроем новую сессию записи с начального адреса
+//  303             SPDR=FM_WREN;        
+//  304             while (!(SPSR & (1<<SPIF)));              
+//  305 	    FM_CS_DISABLE();
+//  306   	    FM_CS_ENABLE();
+//  307             SPDR=FM_WRITE;        
+//  308             addr=(UREG)(pWR>>16);
+//  309             while (!(SPSR & (1<<SPIF)));  
+//  310             SPDR=addr;        
+//  311             addr=(UREG)(pWR>>8);        
+//  312             while (!(SPSR & (1<<SPIF)));  
+//  313             SPDR=addr;
+//  314             addr=(UREG)(pWR);
+//  315             while (!(SPSR & (1<<SPIF)));          
+//  316             SPDR=addr;        
+//  317             while (!(SPSR & (1<<SPIF)));    // Открыли сессию записи в FIFO                                   
+//  318           }
+//  319         }
+//  320         while (len1--);
+//  321         FM_CS_DISABLE();
+//  322      	ETHfifo_pWR = pWR;
+//  323         ETHfifo_CNT++;// увеличиваем счетчик пакетов в FIFO
+//  324         #ifdef CONSOLE_DEBUG
+//  325             _print_num (_EthCNT,(UINT16)ETHfifo_CNT);
+//  326         #endif       
+//  327 }
+//  328 
+//  329 
+//  330 #pragma diag_suppress=Ta006
+
+        RSEG CODE:CODE:NOROOT(1)
+//  331 void INT_ETH_PROCESS_PKT2(void)
+INT_ETH_PROCESS_PKT2:
+//  332 {
+        ST      -Y, R11
+        ST      -Y, R10
+        ST      -Y, R9
+        ST      -Y, R8
+        ST      -Y, R7
+        ST      -Y, R6
+        ST      -Y, R5
+        ST      -Y, R4
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R25
+        ST      -Y, R24
+        REQUIRE ?Register_R4_is_cg_reg
+        REQUIRE ?Register_R5_is_cg_reg
+        REQUIRE ?Register_R6_is_cg_reg
+        REQUIRE ?Register_R7_is_cg_reg
+        REQUIRE ?Register_R8_is_cg_reg
+        REQUIRE ?Register_R9_is_cg_reg
+        REQUIRE ?Register_R10_is_cg_reg
+        REQUIRE ?Register_R11_is_cg_reg
+        RJMP    ??INT_ETH_PROCESS_PKT2_0
+//  333   unsigned int len;
+//  334   TCP_SOCK *s;
+//  335   ETH_FRAME *ep;
+//  336   ARP_FRAME *ap;
+//  337   ARP_FRAME *apo;
+//  338   IP_FRAME *ip;
+//  339   ICMP_PKT *icmp;
+//  340   TCP_PKT *tcp;
+//  341   TCP_HEADER *ptcp;
+//  342   TCP_FRAME *tcpf;
+//  343   void *ipdata;
+//  344   
+//  345   for(;;)
+//  346   {
+//  347   L_CHECK_INCOMING:
+//  348     if (ETH_PKT_mode>=2)
+//  349     {
+//  350       //if (ETH_TRANSMIT_PACKET(&ETH_PKT,READ_U16(ETH_PKT_len))) continue;
+//  351      // print_dump((unsigned char *)&ETH_PKT,READ_U16(ETH_PKT_len));
+//  352       if ((enc28j60PacketSend((unsigned char *)&ETH_PKT,READ_U16(ETH_PKT_len)))==0) ETH_PKT_mode=0;
+//  353       else ETH_PKT_mode=16;
+??INT_ETH_PROCESS_PKT2_1:
+        LDI     R16, 16
+??INT_ETH_PROCESS_PKT2_2:
+        STS     (IP + 14), R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_3
+//  354     }
+//  355     if (ETH_PKT_mode!=1) break;
+??INT_ETH_PROCESS_PKT2_4:
+        CPI     R16, 1
+        BREQ    ??INT_ETH_PROCESS_PKT2_5
+//  356     ep=&ETH_PKT;
+//  357     len=READ_U16(ETH_PKT_len);
+//  358     ap=(ARP_FRAME*)ep;
+//  359     ip=(IP_FRAME*)ep;
+//  360     switch(ep->hdr.type)
+//  361     {
+//  362     case ETH_PROTOCOL_ARP:
+//  363       if (ap->arp.proto!=ARP_ETHCODE) break;
+//  364       if (ap->arp.hw_type!=ARP_HARDWARE) break;
+//  365       switch(ap->arp.opcode)
+//  366       {
+//  367       case ARP_REQUEST:
+//  368 	if (IPcmp(&ap->arp.dst_ip,&IP)) break;
+//  369 	if ((ep->hdr.dst_mac[0]&ep->hdr.dst_mac[1]&ep->hdr.dst_mac[2]&ep->hdr.dst_mac[3]&ep->hdr.dst_mac[4]&ep->hdr.dst_mac[5])!=0xFF) break;
+//  370 	//if (CRC32_M4((UINT8*)ep,READ_U16(ETH_PKT_len))) break;
+//  371 	apo=(ARP_FRAME*)ep;
+//  372 	IPcpy(&apo->arp.dst_ip,&ap->arp.src_ip);
+//  373 	MACcpy(apo->arp.dst_mac+ETH_HWA_LEN,ap->arp.src_mac+ETH_HWA_LEN);
+//  374 	MACcpy(apo->arp.src_mac+ETH_HWA_LEN,MAC0+ETH_HWA_LEN);
+//  375 	MACcpy(apo->eth.dst_mac+ETH_HWA_LEN,apo->eth.src_mac+ETH_HWA_LEN);
+//  376 	MACcpy(apo->eth.src_mac+ETH_HWA_LEN,MAC0+ETH_HWA_LEN);
+//  377 	apo->arp.opcode=ARP_RESPONSE;
+//  378 	IPcpyIP(&apo->arp.src_ip);
+//  379 	len=ARP_FRAME_LEN;
+//  380 	ep=(ETH_FRAME*)apo;
+//  381 	goto L_SENDETH;
+//  382       case ARP_RESPONSE:
+//  383 	if (IPcmp(&ap->arp.dst_ip,&IP)) break;
+//  384 	if (MACcmp(ep->hdr.dst_mac,MAC0)) break;
+//  385 	//if (CRC32_M4((UINT8*)ep,READ_U16(ETH_PKT_len))) break;
+//  386 	MACcpy(ap->eth.src_mac+ETH_HWA_LEN,ap->arp.src_mac+ETH_HWA_LEN); //Именно тот MAC, который внутри пакета
+//  387 	{
+//  388 	  //Ищем клиента, который находится в состоянии CONNECTING
+//  389 	  s=QUE_sock;
+//  390 	  while(s)
+//  391 	  {
+//  392 	      if ((s->state==TCP_STATE_CONNECTING)&&(!IPcmp(&ap->arp.src_ip,&s->ACKNO)))
+//  393             //if ((s->state==TCP_STATE_CONNECTING))
+//  394 	    {
+//  395 	      //Наш клиент ;)
+//  396 	      s->state=TCP_STATE_SYN_SENT;
+//  397               s->ACKNO=0;
+//  398 	      ip=(IP_FRAME*)ep;
+//  399 	      tcpf=(TCP_FRAME*)ip;
+//  400 	      IPcpy(&tcpf->ip.dest_ip,&s->rip);
+//  401 	      MACcpy(s->dst_mac+ETH_HWA_LEN,ip->eth.src_mac+ETH_HWA_LEN); //Сохраним нужный MAC-адрес
+//  402 	      ptcp=(TCP_HEADER*)&s->lport;
+//  403 	      len=0;
+//  404 	      goto L_SENDTCPWITHDATA;
+//  405 	    }
+//  406 	    s=s->next;
+//  407 	  }
+//  408 	}
+//  409 	break;
+//  410       }
+//  411       break;
+//  412     case ETH_PROTOCOL_IP:      
+//  413       if (IPcmp(&ip->ip.dest_ip,&IP)) break;
+//  414       if (MACcmp(ep->hdr.dst_mac,MAC0)) break;
+//  415       {
+//  416         //print_lenRX((unsigned char *)&ETH_PKT, len);	
+//  417 	unsigned int i=len;  
+//  418 	UREG ip_hlen;
+//  419 	len=ntohs(ip->ip.tlen);
+//  420 	//i-=((ETH_HEADER_LEN)+4); //Без заголовка и CRC32
+//  421         i-=((ETH_HEADER_LEN)); //enc28j60 port
+//  422 	if ((ip->ip.vihl&0xF0)!=0x40) break;
+//  423 	ip_hlen=((ip->ip.vihl&0x0F)<<2);
+//  424 	if (ip_hlen>IP_MAX_OPTLEN) break;
+//  425 	if (ip_hlen>=i) break;
+//  426 	if (len>i) break;
+//  427 	if (len<ip_hlen) break;
+//  428 	len-=ip_hlen;
+//  429 	ipdata=(void*)((UINT8*)(&ip->ip)+ip_hlen);
+//  430         if (!BufferPKT)
+//  431         {
+//  432 	  if (ip->ip.frags&htons(IP_MOREFRAGS | IP_FRAGOFF)) break;// тут вылетело
+//  433         }
+//  434 	//if (CRC32_M4((UINT8*)ep,READ_U16(ETH_PKT_len))) break;
+//  435         if (!BufferPKT)
+//  436         {
+//  437           if (IPChecksum((UINT16 *)&ip->ip, IP_HEADER_LEN)!=IP_GOOD_CS) break;
+//  438         }	
+//  439       }
+//  440       switch(ip->ip.proto)
+//  441       {
+//  442       case IP_ICMP:
+//  443 	icmp=ipdata;
+//  444 	if (len<ICMP_HEADER_LEN) break;
+//  445 	if (IPChecksum((UINT16*)icmp,len)!=IP_GOOD_CS) break;
+//  446 	if (icmp->icmp.code) break;
+//  447 	if (icmp->icmp.type!=ICMP_ECHO_REQUEST) break;
+//  448 	ep=__get_eth_root(ip);
+//  449 	IPcpy(&((IP_FRAME*)ep)->ip.dest_ip,&ip->ip.src_ip);
+//  450 	ip=(IP_FRAME*)ep;
+//  451 	if (len) netw_memcpy(ip->data,icmp,len);
+//  452 	icmp=(ICMP_PKT*)ip->data;
+//  453 	//netw_memcpy(icmp->data+2*sizeof(TCP_SOCK),debug_addr,16); //DEBUG - можно пингом подсмотреть RAM, например ;)
+//  454 	//netw_memcpy(icmp->data+0*sizeof(TCP_SOCK),QUE_sock,sizeof(TCP_SOCK));
+//  455 	//netw_memcpy(icmp->data+1*sizeof(TCP_SOCK),QUE_sock->next,sizeof(TCP_SOCK));
+//  456 	icmp->icmp.type=ICMP_ECHO_RESPONSE;
+//  457 	icmp->icmp.checksum=0;
+//  458 	icmp->icmp.checksum=IPChecksum((UINT16*)icmp,len);
+//  459 	goto L_CREATEIP;
+//  460       case IP_TCP:
+//  461 	{
+//  462 	  UREG tcp_hlen;
+//  463 	  tcp=ipdata;
+//  464 	  if (len<TCP_HEADER_LEN) break;
+//  465           if (!BufferPKT)
+//  466           {
+//  467 	    ip->ip.checksum=htons((UINT16)len);
+//  468 	    ip->ip.frags=~IPChecksum((UINT16*)tcp,len);
+//  469 	    tcp_hlen=tcp->tcp.hlen=(tcp->tcp.hlen&0xF0)>>2;
+//  470           }
+//  471           else  tcp_hlen=tcp->tcp.hlen;
+//  472             if (tcp_hlen<TCP_HEADER_LEN) break;
+//  473 	    if (tcp_hlen>(TCP_MAX_OPT_LEN+TCP_HEADER_LEN)) break;
+//  474 	    if (len<tcp_hlen) break;
+//  475 	    len-=tcp_hlen;
+//  476 	}
+//  477 	ip->ip.ttl=0;
+//  478         if (!BufferPKT)
+//  479         {
+//  480 	  if (IPChecksum((UINT16*)&ip->ip.frags,14)!=IP_GOOD_CS) break;
+//  481         }
+//  482 	//Ищем нужный сокет
+//  483 	s=QUE_sock;
+//  484 	while(s)
+//  485 	{
+//  486 	  if (s->lport==tcp->tcp.dest_port)
+//  487 	  {
+//  488 	    //Локальный порт совпадает
+//  489 	    if (s->state==TCP_STATE_LISTENING)
+//  490 	    {
+//  491 	      //Сокет в состоянии LISTENING, делаем bind
+//  492 	      if((tcp->tcp.flags&(TCP_FLAG_SYN|TCP_FLAG_ACK|TCP_FLAG_RESET|TCP_FLAG_FIN))!=TCP_FLAG_SYN) break; //Это не SYN
+//  493 	      IPcpy(&s->rip,&ip->ip.src_ip);
+//  494 	      s->rport=tcp->tcp.src_port;
+//  495 	      MACcpy(s->dst_mac+ETH_HWA_LEN,__get_eth_root(ip)->hdr.src_mac+ETH_HWA_LEN);
+//  496 	      goto L_FOUND_SOCKET;
+//  497 	    }
+//  498 	    else
+//  499 	    {
+//  500 	      //Этот сокет не в состоянии LISTENING, проверяем необходимость добавления в очередь
+//  501 	      if (s->rport==tcp->tcp.src_port && !IPcmp(&s->rip, &ip->ip.src_ip) /*s->rip==ip->ip.src_ip*/) goto L_FOUND_SOCKET; //Найден сокет в открытом состоянии
+//  502 	      //Попробуем добавить ломящегося клиента в очередь (только если сокет не закрыт (и только серверный сокет))
+//  503 	      if (
+//  504 		  (tcp->tcp.flags&(TCP_FLAG_SYN|TCP_FLAG_ACK|TCP_FLAG_RESET|TCP_FLAG_FIN))==TCP_FLAG_SYN
+//  505 		    &&
+//  506 		  (s->state!=TCP_STATE_CLOSED)
+//  507 		    //&&
+//  508 		  //(s->type&TCP_TYPE_SERVER)
+//  509 		    )
+//  510 	      {
+//  511 		//Сначала проверяем, а не ожидается ли такой в очереди
+//  512 		TCP_QUE_CLIENT *p;
+//  513 		UREG i=CallTCPhook(TCP_EVENT_QUE_GET,0,(TCP_QUE_CLIENT**)(&tcp->tcp.ackno),s);
+//  514 		p=*((TCP_QUE_CLIENT **)(&tcp->tcp.ackno));
+//  515 		while(i)
+//  516 		{
+//  517 		  if (p->rport==tcp->tcp.src_port && !IPcmp(&p->rip,&ip->ip.src_ip)) goto L_TCPDROP; //Такой мы уже запомнили
+//  518 		  p++;
+//  519 		  i--;
+//  520 		}
+//  521 		//Используем tcp.ackno как переменную для хранения адреса TCP_QUE_CLIENT
+//  522 		if (CallTCPhook(TCP_EVENT_QUE_ALLOC,0,(TCP_QUE_CLIENT**)(&tcp->tcp.ackno),s))
+//  523 		{
+//  524 		  p=*((TCP_QUE_CLIENT **)(&tcp->tcp.ackno));
+//  525 		  MACcpy(p->dst_mac+ETH_HWA_LEN,__get_eth_root(ip)->hdr.src_mac+ETH_HWA_LEN);
+//  526 		  p->mss=ExtractMSS(tcp);
+//  527 		  p->rport=tcp->tcp.src_port;
+//  528 		  IPcpy(&p->rip,&ip->ip.src_ip);
+//  529 		  //p->seqno=tcp->tcp.seqno;
+//  530 		  IPcpy(&p->seqno,&tcp->tcp.seqno);
+//  531 		  goto L_TCPDROP;
+//  532 		}
+//  533 	      }
+//  534 	    }
+//  535 	  }
+//  536 	  s=s->next;
+//  537 	}
+//  538 	//Не нашли ничего подходящего
+//  539         goto L_FAST_FIN;
+//  540       L_FOUND_SOCKET:
+//  541 	if (tcp->tcp.flags & TCP_FLAG_RESET)
+//  542 	{
+//  543 	  //Обрабатываем флаг сброса
+//  544 	  switch(s->state)
+//  545 	  {
+//  546 	    //Для всех состояний, кроме SYN-SENT, все сегменты с сигналом перезагрузки (RST) проходят проверку полей SEQ.
+//  547 	  default:
+//  548 	    //Сигнал перезагрузки признается, если его номер очереди попадает в окно
+//  549 	    if (cmp_S_A(tcp,s)) goto L_TCPDROP;
+//  550 	    break;
+//  551 	    //Если получатель находился в состоянии LISTENING
+//  552 	  case TCP_STATE_LISTENING:
+//  553 	    goto L_TCPDROP; //то он игнорирует сигнал
+//  554 	    //В состоянии SYN SENT 
+//  555 	  case TCP_STATE_SYN_SENT:
+//  556 	    //сигнал RST признается, если поле ACK подтверждает ранее сделанную посылку сигнала SYN.
+//  557 	    if (cmp_A_S(tcp,s)!=1) goto L_TCPDROP;
+//  558 	    break;
+//  559 	  }
+//  560 	  if (ClosingTCP(TCP_EVENT_ABORT,s)) s->state=TCP_STATE_QUE_CLIENT;//Будем имитировать приход SYN-пакета
+//  561 	L_TCPDROP:
+//  562 	  break;
+//  563 	}
+//  564 	if (tcp->tcp.flags & TCP_FLAG_SYN)
+//  565 	{
+//  566 	  //Обрабатываем флаг SYN
+//  567 	  switch(s->state)
+//  568 	  {
+//  569 	  default:
+//  570 	    if (cmp_S_A(tcp,s)||(len>ntohs(s->win))) goto L_TCPDROP;//break; //Не попадаем в окно приема
+//  571 	    if (ClosingTCP(TCP_EVENT_ABORT,s)) s->state=TCP_STATE_QUE_CLIENT;//Будем имитировать приход SYN-пакета
+//  572 	    goto L_SENDRESET;
+//  573 	  case TCP_STATE_SYN_SENT:
+//  574 	    //Нам ответили, проверяем
+//  575 	    if (cmp_A_S(tcp,s)!=1) goto L_TCPDROP; //Не наш
+//  576 	    inc32cpy(&s->ACKNO,&tcp->tcp.seqno);
+//  577 	    s->rmss=ExtractMSS(tcp);
+//  578 	    CallTCPhook_null(TCP_EVENT_CONREQ,s);
+//  579 	    goto L_CONNECTED;
+//  580 	  case TCP_STATE_LISTENING:
+//  581 	    if (tcp->tcp.flags & TCP_FLAG_ACK) goto L_SENDRESET;
+//  582 	    CallTCPhook_null(TCP_EVENT_CONREQ,s);
+//  583 	    set_state_SYN_RECEIVED(s,&tcp->tcp.seqno,ExtractMSS(tcp));
+//  584 	    break;
+//  585 	  }
+//  586 	}
+//  587 	else
+//  588 	{
+//  589           #ifdef CONSOLE_DEBUG         
+//  590           _print_fstr("\r\nTCP");
+//  591           _print_num("FLG:",(UINT16)BufferPKT);
+//  592           #endif
+//  593 	  int d;
+//  594 	  if (!(tcp->tcp.flags & TCP_FLAG_ACK)) goto L_TCPDROP; //Drop packets without ACK
+//  595 	  if (s->state==TCP_STATE_SYN_SENT) goto L_TCPDROP;
+//  596 	  d=cmp_S_A(tcp,s);
+//  597 	  if (len>ntohs(s->win)) goto L_TCPACK;
+//  598 //	  if (d==1 && s->state==TCP_STATE_FINW1) goto L_LINUX_BUG;
+//  599           if (d && s->state==TCP_STATE_FINW1) goto L_LINUX_BUG;
+//  600 //          ->>> Вот тут надо сделать следующую фигню <<<-
+//  601  //         собственно фигня:
+//  602              #ifdef CONSOLE_DEBUG
+//  603             _print_num("\r\nd:",d);
+//  604             _print_num("ID:",_READ_U16_REV (((UINT8*)(&ip->ip.id))));
+//  605             #endif
+//  606           if (d>0)
+//  607           {
+//  608             
+//  609             //Слишком свежий пакет
+//  610             if (BufferPKT)//флаг, что обрабатываемый пакет достали из буфера
+//  611             {
+//  612                 #ifdef CONSOLE_DEBUG
+//  613                 //_print_num("\r\nSave'n'drop#",_READ_U16_REV (((UINT8*)(&tcp->tcp.seqno))+2)); // дампим записанный SEQ#
+//  614                 _print_fstr("Save'n'drop"); 
+//  615                 #endif
+//  616                 ETHfifo_write(ETH_PKT.hdr.dst_mac,ETH_PKT_len, FIFO_pkt_TS);
+//  617                 //сохраняем пакет в буфер; //Ибо его достали в основном цикле, таймаут не трогаем
+//  618                 goto L_TCPDROP; //Нафиг пока
+//  619             }
+//  620                 #ifdef CONSOLE_DEBUG
+//  621                 //_print_num("\r\nSave'n'ACK#:", _READ_U16_REV (((UINT8*)(&tcp->tcp.seqno))+2)); // дампим записанный SEQ#
+//  622                 _print_fstr("Save'n'ACK"); 
+//  623                 #endif
+//  624                //инициализируем таймаут для пакета, который пойдет в буфер;
+//  625                //сохраняем пакет в буфер; //Ибо его достали в основном цикле
+//  626                 ETHfifo_write(ETH_PKT.hdr.dst_mac,ETH_PKT_len, (UINT8)(irs_high+20));
+//  627                 goto L_TCPACK;
+//  628           }          
+//  629 	  if (d) goto L_TCPACK;
+//  630 	  switch(s->state)
+//  631 	  {
+//  632 	  case TCP_STATE_SYN_RECEIVED:
+//  633 	    if (cmp_A_S(tcp,s)!=1) //Если же подтверждение в сегменте оказалось неприемлемым,
+//  634 	      goto L_SENDRESET; //то сформировать сегмент с сигналом перезагрузки
+//  635 	  L_CONNECTED:
+//  636 	    inc32(&s->SEQNO,1);
+//  637 	    s->state=TCP_STATE_CONNECTED;
+//  638 	    s->flags=TCP_FLAG_ACK;
+//  639 //	    s->type&=~TCP_TYPE_FLAG_DELAYED_ACK;
+//  640              s->type|=TCP_TYPE_FLAG_DELAYED_ACK;
+//  641 	    goto L_TCP_CHECK_INCOMING;
+//  642 	  case TCP_STATE_CONNECTED:
+//  643 	    if ((d=cmp_A_S(tcp,s))<0) goto L_TCPDROP; //Очень древнее подтверждение, или уж очень новое
+//  644 	    {
+//  645 	      unsigned int i;
+//  646 	      unsigned int o;
+//  647 	      i=s->sended_len;
+//  648 	      if (d>i)
+//  649 	      {
+//  650 #ifdef IPSEQ_DEBUG
+//  651 		IPSEQ=1;
+//  652 #endif
+//  653 		 goto L_TCPACK; //Мы столько никогда не посылали, посылаем ACK
+//  654 	      }
+//  655 	      i-=d;
+//  656 	      s->sended_len=i; //Уменьшаем общее количество посланного на количество подтвержденного
+//  657 	      //Расчитываем новое смещение относительно SEQ
+//  658 	      o=i=s->send_disp;
+//  659 	      if (d>i)
+//  660 	      {
+//  661 		i=0;
+//  662 	      }
+//  663 	      else
+//  664 	      {
+//  665 		i-=d;
+//  666 	      }
+//  667 	      s->send_disp=i;
+//  668 	      if (i==0&&o!=0)
+//  669 	      {
+//  670 		//Пробуем расчитать новый RTT
+//  671 		UREG i=s->timer_init;
+//  672 		if (s->timer>(__multiply_unsigned(i,64)>>8))
+//  673 		{
+//  674 		  if (i==255)
+//  675 		  {
+//  676 		    //Специальный случай
+//  677 		    i=128;
+//  678 		  }
+//  679 		  else
+//  680 		    i>>=1;
+//  681 		  if (i<TCP_TIMER_INITV) i=TCP_TIMER_INITV;
+//  682 		}
+//  683 		s->timer=i;
+//  684 		s->timer_init=i;
+//  685 	      }
+//  686 	    }
+//  687 	    inc32i(&s->SEQNO,d);
+//  688 	    {
+//  689 	      UREG i;
+//  690 	      for(;;)
+//  691 	      {
+//  692 		i=255; if (d<i) i=d; d-=i;
+//  693 		if (!i) break;
+//  694 		CallTCPhook(TCP_EVENT_ACK,i,NULL,s);
+//  695 	      }
+//  696 	    }
+//  697 	  L_TCP_CHECK_INCOMING:
+//  698 	    {
+//  699 	      UREG is_data_for_send;
+//  700 	      {
+//  701 		//Окно на другой стороне
+//  702 		unsigned int rw=ntohs(tcp->tcp.window);
+//  703 		if (rw>(TCP_MAX_DATA_LEN*4)) rw=TCP_MAX_DATA_LEN*4; //Не надо больше 4х пакетов за раз ;)
+//  704 		s->rwin=rw;
+//  705 	      }
+//  706 	      inc32i(&s->ACKNO,len);
+//  707 	      {
+//  708 		unsigned int d=0;
+//  709 		unsigned int j;
+//  710 		do
+//  711 		{
+//  712 		  j=len-d; //Сколько осталось
+//  713 		  if (j>255) j=255; //Слишком много ;)
+//  714 		  is_data_for_send=CallTCPhook(TCP_EVENT_DATA,j,tcp->data-TCP_HEADER_LEN+tcp->tcp.hlen+d,s);
+//  715 		  j=len-d;
+//  716 		  if (j>255) j=255;
+//  717 		  d+=j;
+//  718 		}
+//  719 		while(d!=len);
+//  720 	      }
+//  721 	      if (tcp->tcp.flags & TCP_FLAG_FIN)
+//  722 	      {
+//  723 		inc32(&s->ACKNO,1); //Подтвердим FIN
+//  724 		s->state=TCP_STATE_FINW1;
+//  725 	      }
+//  726 	      if (s->state==TCP_STATE_FINW1)
+//  727 	      {
+//  728 		//Кто-то инициировал закрытие сокета
+//  729 		s->flags=TCP_FLAG_ACK|TCP_FLAG_FIN;
+//  730                 s->timer=0;
+//  731                 //Попробуем послать чуть позже
+//  732 		goto L_TCPDROP; //А вдруг там в другом пакете уже нас FIN дожидается?
+//  733 	      }
+//  734               if (!s->win) goto L_TCPACK; //Если окно стало равным 0, посылаем подтверждение в принудительном порядке
+//  735 	      if (is_data_for_send&&(s->send_disp==0)) //Если запрос передачи - передаем через REQ
+//  736 	      {
+//  737 		//Кроме того, необходимо, чтобы у нас не было неподтвержденных пакетов
+//  738 		s->txreq=TCP_TXREQ_SEND; //Продолжаем посылать
+//  739 	      }
+//  740 	      else 
+//  741 	      {
+//  742 		if (len)
+//  743 		{
+//  744 		  s->timer=s->timer_init; //Нам пришли данные, начинаем отсчет сначала
+//  745 		  UREG fda=s->type;
+//  746 		  //Надо подтвердить данные, проверяем на delayed ack
+//  747 		  if (fda&TCP_TYPE_FLAG_DELAYED_ACK)
+//  748 		  {
+//  749 		    //Принудительный ответ на каждый второй пакет с данными
+//  750 		    s->type=fda&~TCP_TYPE_FLAG_DELAYED_ACK;
+//  751 		    //Отключаем таймер delayed ack
+//  752 		    if (s->txreq>TCP_TXREQ_SEND) s->txreq=TCP_TXREQ_NONE;
+//  753 #ifdef IPSEQ_DEBUG
+//  754 		    IPSEQ=4;
+//  755 #endif
+//  756 		    goto L_TCPACK;
+//  757 		  }
+//  758 		  s->txreq=TCP_TXREQ_DACK2;
+//  759 		  s->type=fda|TCP_TYPE_FLAG_DELAYED_ACK;
+//  760 		}
+//  761 	      }
+//  762 	    }
+//  763 	    goto L_TCPDROP;
+//  764 	  case TCP_STATE_CLOSED:
+//  765 	    goto L_SENDRESET;
+//  766 	  case TCP_STATE_FINW1:
+//  767 	    if ((!(tcp->tcp.flags & TCP_FLAG_FIN)) && cmp_A_S(tcp,s)<=0) goto L_TCPDROP;//Если же подтверждение в сегменте оказалось неприемлемым,
+//  768 	  L_LINUX_BUG:
+//  769 	    if (ClosingTCP(TCP_EVENT_CLOSE,s)) s->state=TCP_STATE_QUE_CLIENT;//Будем имитировать приход SYN-пакета
+//  770 	    if (tcp->tcp.flags & TCP_FLAG_FIN) goto L_FAST_FIN;
+//  771 	    goto L_TCPDROP;
+//  772 	  default:
+//  773             {
+//  774             L_SENDRESET:
+//  775             L_FAST_FIN:
+//  776               if(tcp->tcp.flags & TCP_FLAG_ACK)
+//  777               {
+//  778                 swapmem(&tcp->tcp.seqno,4);
+//  779                 if (tcp->tcp.flags & TCP_FLAG_FIN)
+//  780                 {
+//  781                   inc32(&tcp->tcp.ackno,1);
+//  782                   tcp->tcp.flags = TCP_FLAG_ACK | TCP_FLAG_FIN;
+//  783                 }
+//  784                 else
+//  785                 {
+//  786                   tcp->tcp.flags = TCP_FLAG_RESET;
+//  787                 }
+//  788               }
+//  789               else
+//  790               {
+//  791                 inc32cpy(&tcp->tcp.ackno,&tcp->tcp.seqno);
+//  792                 tcp->tcp.seqno=0;
+//  793                 tcp->tcp.flags = TCP_FLAG_RESET | TCP_FLAG_ACK;	
+//  794               }
+//  795               swapmem(&tcp->tcp.src_port,2);
+//  796               ptcp=&tcp->tcp;
+//  797             }
+//  798 	    goto L_SENDTCP;
+//  799 	  }
+//  800 	}
+//  801       L_TCPACK:
+//  802 	ptcp=(TCP_HEADER*)&s->lport;
+//  803       L_SENDTCP:
+//  804 	len=0; //Нет данных
+//  805 	//Костыль, копирование ip_dest из старого в новый
+//  806 	IPcpy(&(tcpf=(TCP_FRAME*)__get_eth_root(ip))->ip.dest_ip,&ip->ip.src_ip);
+//  807       L_SENDTCPWITHDATA:
+//  808 	IPcpyIP(&tcpf->ip.src_ip); //Для правильного расчета контрольной суммы псевдозаголовка
+//  809 	tcpf->ip.ttl=0;
+//  810 	tcpf->ip.proto=IP_TCP;
+//  811 	netw_memcpy(&tcpf->tcp.src_port,ptcp,16);
+//  812 	tcpf->tcp.hlen=(TCP_HEADER_LEN << 2) & 0xfc;
+//  813 	if (s)
+//  814 	{
+//  815 	  unsigned int d=s->send_disp;
+//  816 	  if (s->txreq==TCP_TXREQ_DUPACK)
+//  817 	  {
+//  818 	    d=0;
+//  819 	    s->txreq=TCP_TXREQ_NONE;
+//  820 	  }
+//  821 	  inc32i(&tcpf->tcp.seqno,d);
+//  822 	  d=s->send_disp;
+//  823 	  d+=len;
+//  824 	  s->send_disp=d;
+//  825 	  if (d>s->sended_len) s->sended_len=d;
+//  826 	  //Если посылаем SYN, то добавляем опцию MSS
+//  827 	  if (tcpf->tcp.flags & TCP_FLAG_SYN)
+//  828 	  {
+//  829 	    tcpf->tcp.hlen=((TCP_HEADER_LEN+4) << 2) & 0xfc;
+//  830 	    tcpf->data[0]=0x02;
+//  831 	    tcpf->data[1]=0x04;
+//  832 	    tcpf->data[2]=(TCP_MAX_DATA_LEN)>>8;
+//  833 	    tcpf->data[3]=(TCP_MAX_DATA_LEN)&0xFF;
+//  834 	    len+=4;
+//  835 	  }
+//  836 	}
+//  837 	len+=TCP_HEADER_LEN;
+//  838 	tcpf->ip.checksum=htons(len);
+//  839 	tcpf->tcp.urgent=0;
+//  840 	tcpf->tcp.checksum=0; //~IPChecksum((UINT16*)&tcpf->ip.ttl,12);
+//  841 	tcpf->tcp.checksum=IPChecksum((UINT16*)&tcpf->ip.ttl,len+12);  //IPChecksum((UINT16*)&tcpf->tcp,len);
+//  842 	ip=(IP_FRAME *)tcpf;
+//  843       L_CREATEIP:
+//  844 	len+=IP_HEADER_LEN;
+//  845 	MACcpy(ip->eth.dst_mac+ETH_HWA_LEN,ip->eth/*ep->hdr*/.src_mac+ETH_HWA_LEN); //Временно, тут нужен ARP кеш
+//  846 	MACcpy(ip->eth.src_mac+ETH_HWA_LEN,MAC0+ETH_HWA_LEN);
+//  847 	ip->eth.type=ETH_PROTOCOL_IP;
+//  848 	/* Make IP header	*/
+//  849 	ip->ip.vihl = IP_DEF_VIHL;
+//  850 	ip->ip.tos = IP_DEF_TOS;
+//  851 	ip->ip.tlen = htons(len);
+//  852 #ifdef USE_IPSEQ
+//  853 #ifdef IPSEQ_DEBUG
+//  854 	ip->ip.id = htons(IPSEQ);
+//  855 	IPSEQ=0;
+//  856 #else
+//  857 	ip->ip.id = htons(++IPSEQ);
+//  858 #endif
+//  859 #else
+//  860 	ip->ip.id=0;
+//  861 #endif
+//  862 	ip->ip.frags = htons(IP_DONT_FRAGMENT);
+//  863 	ip->ip.ttl = 0x80;	/* ttl */
+//  864 	ip->ip.checksum = 0;	/* prepare checksum */
+//  865 	IPcpyIP(&ip->ip.src_ip);	/* My IP */
+//  866 	/* Make checksum */
+//  867 	ip->ip.checksum = IPChecksum((UINT16 *)&ip->ip, IP_HEADER_LEN);	/* create checksum */
+//  868 	len+=ETH_HEADER_LEN;
+//  869 	ep=(ETH_FRAME *)ip;
+//  870       L_SENDETH:
+//  871 	if (len<60) len=60;
+//  872 	//CRC32((UINT8*)ep,len,1);
+//  873 	ETH_PKT_len=len;//+4;
+//  874 	ETH_PKT_mode=16;
+//  875 	continue;
+//  876       }
+//  877       break;
+//  878     }
+//  879     //Освобождение пакета
+//  880     ETH_PKT_mode=0;
+//  881     ETH_STOP_BACK_PRESSURE();
+//  882   }
+//  883   // Проверка таймера
+//  884   if (TIMER_200ms)
+??INT_ETH_PROCESS_PKT2_3:
+        SBIS    0x02, 0x04
+        RJMP    ??INT_ETH_PROCESS_PKT2_6
+//  885   {
+//  886     TIMER_200ms=0;
+        CBI     0x02, 0x04
+//  887     s=((TCP_SOCK *)&QUE_sock);
+        LDI     R24, LOW((IP + 10))
+        LDI     R25, HIGH((IP + 10))
+        RJMP    ??INT_ETH_PROCESS_PKT2_7
+??INT_ETH_PROCESS_PKT2_5:
+        LDS     R10, (IP + 8)
+        LDS     R11, (IP + 9)
+        LDI     R16, LOW(ETH_PKT)
+        MOV     R4, R16
+        LDI     R16, (ETH_PKT) >> 8
+        MOV     R5, R16
+        LDI     R24, LOW(ETH_PKT)
+        LDI     R25, (ETH_PKT) >> 8
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R26, Z+12
+        LDD     R27, Z+13
+        SBIW    R27:R26, 8
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_8
+        SUBI    R26, 0
+        SBCI    R27, 6
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R16, (ETH_PKT + 16)
+        LDS     R17, (ETH_PKT + 17)
+        CPI     R16, 8
+        SBCI    R17, 0
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R16, (ETH_PKT + 14)
+        LDS     R17, (ETH_PKT + 15)
+        CPI     R16, 0
+        SBCI    R17, 1
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R30, (ETH_PKT + 20)
+        LDS     R31, (ETH_PKT + 21)
+        SUBI    R30, 0
+        SBCI    R31, 1
+        BREQ    ??INT_ETH_PROCESS_PKT2_10
+        SUBI    R30, 0
+        SBCI    R31, 1
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_11
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_10:
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+38
+        LDD     R17, Z+39
+        LDD     R18, Z+40
+        LDD     R19, Z+41
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R20, Z
+        LDD     R21, Z+1
+        LDD     R22, Z+2
+        LDD     R23, Z+3
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R16, ETH_PKT
+        LDS     R17, (ETH_PKT + 1)
+        AND     R16, R17
+        LDS     R17, (ETH_PKT + 2)
+        AND     R16, R17
+        LDS     R17, (ETH_PKT + 3)
+        AND     R16, R17
+        LDS     R17, (ETH_PKT + 4)
+        AND     R16, R17
+        LDS     R17, (ETH_PKT + 5)
+        AND     R16, R17
+        CPI     R16, 255
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+28
+        LDD     R17, Z+29
+        LDD     R18, Z+30
+        LDD     R19, Z+31
+        STD     Z+38, R16
+        STD     Z+39, R17
+        STD     Z+40, R18
+        STD     Z+41, R19
+        ADIW    R31:R30, 28
+        LDI     R26, LOW((ETH_PKT + 38))
+        LDI     R27, HIGH((ETH_PKT + 38))
+        RCALL   MACcpy
+        LDI     R30, LOW((IP + 21))
+        LDI     R31, HIGH((IP + 21))
+        LDI     R26, LOW((ETH_PKT + 28))
+        LDI     R27, HIGH((ETH_PKT + 28))
+        RCALL   MACcpy
+        LDI     R30, LOW((ETH_PKT + 12))
+        LDI     R31, HIGH((ETH_PKT + 12))
+        LDI     R26, LOW((ETH_PKT + 6))
+        LDI     R27, HIGH((ETH_PKT + 6))
+        RCALL   MACcpy
+        LDI     R30, LOW((IP + 21))
+        LDI     R31, HIGH((IP + 21))
+        LDI     R26, LOW((ETH_PKT + 12))
+        LDI     R27, HIGH((ETH_PKT + 12))
+        RCALL   MACcpy
+        LDI     R16, 0
+        LDI     R17, 2
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+20, R16
+        STD     Z+21, R17
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+28, R16
+        STD     Z+29, R17
+        STD     Z+30, R18
+        STD     Z+31, R19
+        RJMP    ??INT_ETH_PROCESS_PKT2_12
+??INT_ETH_PROCESS_PKT2_11:
+        MOVW    R31:R30, R5:R4
+        LDD     R16, Z+38
+        LDD     R17, Z+39
+        LDD     R18, Z+40
+        LDD     R19, Z+41
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R20, Z
+        LDD     R21, Z+1
+        LDD     R22, Z+2
+        LDD     R23, Z+3
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R30, LOW((IP + 15))
+        LDI     R31, HIGH((IP + 15))
+        MOVW    R27:R26, R5:R4
+        RCALL   MACcmp
+        TST     R16
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R5:R4
+        ADIW    R31:R30, 28
+        LDI     R16, 12
+        ADD     R4, R16
+        LDI     R16, 0
+        ADC     R5, R16
+        MOVW    R27:R26, R5:R4
+        RCALL   MACcpy
+        LDS     R24, (IP + 10)
+        LDS     R25, (IP + 11)
+        RJMP    ??INT_ETH_PROCESS_PKT2_13
+??INT_ETH_PROCESS_PKT2_14:
+        LD      R24, Z
+        LDD     R25, Z+1
+??INT_ETH_PROCESS_PKT2_13:
+        MOV     R16, R24
+        OR      R16, R25
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        CPI     R16, 3
+        BRNE    ??INT_ETH_PROCESS_PKT2_14
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+28
+        LDD     R17, Z+29
+        LDD     R18, Z+30
+        LDD     R19, Z+31
+        MOVW    R31:R30, R25:R24
+        LDD     R20, Z+23
+        LDD     R21, Z+24
+        LDD     R22, Z+25
+        LDD     R23, Z+26
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BRNE    ??INT_ETH_PROCESS_PKT2_14
+        LDI     R16, 4
+        STD     Z+27, R16
+        LDI     R16, 0
+        STD     Z+23, R16
+        STD     Z+24, R16
+        STD     Z+25, R16
+        STD     Z+26, R16
+        LDI     R16, LOW(ETH_PKT)
+        MOV     R4, R16
+        LDI     R16, (ETH_PKT) >> 8
+        MOV     R5, R16
+        MOV     R6, R4
+        MOV     R7, R16
+        LDD     R16, Z+11
+        LDD     R17, Z+12
+        LDD     R18, Z+13
+        LDD     R19, Z+14
+        MOVW    R31:R30, R5:R4
+        STD     Z+30, R16
+        STD     Z+31, R17
+        STD     Z+32, R18
+        STD     Z+33, R19
+        LDI     R16, 12
+        ADD     R4, R16
+        LDI     R16, 0
+        ADC     R5, R16
+        MOVW    R31:R30, R5:R4
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 11
+        RCALL   MACcpy
+        MOVW    R9:R8, R25:R24
+        LDI     R16, 15
+        ADD     R8, R16
+        LDI     R16, 0
+        ADC     R9, R16
+        CLR     R10
+        CLR     R11
+        RJMP    ??INT_ETH_PROCESS_PKT2_15
+??INT_ETH_PROCESS_PKT2_8:
+        LDD     R16, Z+30
+        LDD     R17, Z+31
+        LDD     R18, Z+32
+        LDD     R19, Z+33
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R20, Z
+        LDD     R21, Z+1
+        LDD     R22, Z+2
+        LDD     R23, Z+3
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R30, LOW((IP + 15))
+        LDI     R31, HIGH((IP + 15))
+        MOVW    R27:R26, R5:R4
+        RCALL   MACcmp
+        TST     R16
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R11:R10
+        LDS     R11, (ETH_PKT + 16)
+        LDS     R10, (ETH_PKT + 17)
+        SBIW    R31:R30, 14
+        LDS     R16, (ETH_PKT + 14)
+        ANDI    R16, 0xF0
+        CPI     R16, 64
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R16, (ETH_PKT + 14)
+        ANDI    R16, 0x0F
+        LSL     R16
+        LSL     R16
+        CPI     R16, 41
+        BRCS    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R17, 0
+        CP      R16, R30
+        CPC     R17, R31
+        BRCS    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        CP      R30, R10
+        CPC     R31, R11
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        CP      R10, R16
+        CPC     R11, R17
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        SUB     R10, R16
+        SBC     R11, R17
+        LDI     R17, LOW((ETH_PKT + 14))
+        MOV     R6, R17
+        LDI     R17, HIGH((ETH_PKT + 14))
+        MOV     R7, R17
+        LDI     R17, 0
+        ADD     R6, R16
+        ADC     R7, R17
+        LDS     R16, BufferPKT
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_16
+        LDS     R16, (ETH_PKT + 20)
+        LDS     R17, (ETH_PKT + 21)
+        ANDI    R16, 0x3F
+        OR      R16, R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_16:
+        LDS     R16, BufferPKT
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_17
+        LDI     R16, 20
+        LDI     R17, 0
+        LDI     R26, LOW((ETH_PKT + 14))
+        LDI     R27, HIGH((ETH_PKT + 14))
+        RCALL   IPChecksum
+        OR      R16, R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_17:
+        LDS     R16, (ETH_PKT + 23)
+        DEC     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_18
+        SUBI    R16, 5
+        BREQ    ??INT_ETH_PROCESS_PKT2_19
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_18:
+        LDI     R16, 8
+        CP      R10, R16
+        LDI     R16, 0
+        CPC     R11, R16
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R17:R16, R11:R10
+        MOVW    R27:R26, R7:R6
+        RCALL   IPChecksum
+        OR      R16, R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+1
+        TST     R16
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LD      R16, Z
+        CPI     R16, 8
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+26
+        LDD     R17, Z+27
+        LDD     R18, Z+28
+        LDD     R19, Z+29
+        STD     Z+30, R16
+        STD     Z+31, R17
+        STD     Z+32, R18
+        STD     Z+33, R19
+        MOVW    R17:R16, R11:R10
+        MOVW    R31:R30, R7:R6
+        LDI     R26, LOW((ETH_PKT + 34))
+        LDI     R27, HIGH((ETH_PKT + 34))
+        RCALL   _netw_memcpy
+        LDI     R16, 0
+        STS     (ETH_PKT + 34), R16
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+36, R16
+        STD     Z+37, R16
+        MOVW    R17:R16, R11:R10
+        LDI     R26, LOW((ETH_PKT + 34))
+        LDI     R27, HIGH((ETH_PKT + 34))
+        RCALL   IPChecksum
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+36, R16
+        STD     Z+37, R17
+        RJMP    ??INT_ETH_PROCESS_PKT2_20
+??INT_ETH_PROCESS_PKT2_19:
+        LDI     R16, 20
+        CP      R10, R16
+        LDI     R16, 0
+        CPC     R11, R16
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDS     R16, BufferPKT
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_21
+        MOVW    R31:R30, R5:R4
+        STD     Z+24, R11
+        STD     Z+25, R10
+        MOVW    R17:R16, R11:R10
+        MOVW    R27:R26, R7:R6
+        RCALL   IPChecksum
+        COM     R16
+        COM     R17
+        MOVW    R31:R30, R5:R4
+        STD     Z+20, R16
+        STD     Z+21, R17
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+12
+        ANDI    R16, 0xF0
+        LSR     R16
+        LSR     R16
+        STD     Z+12, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_22
+??INT_ETH_PROCESS_PKT2_21:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+12
+??INT_ETH_PROCESS_PKT2_22:
+        CPI     R16, 20
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        CPI     R16, 61
+        BRCS    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R17, 0
+        CP      R10, R16
+        CPC     R11, R17
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        SUB     R10, R16
+        SBC     R11, R17
+        STS     (ETH_PKT + 22), R17
+        LDS     R16, BufferPKT
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_23
+        LDI     R16, 14
+        LDI     R26, LOW((ETH_PKT + 20))
+        LDI     R27, HIGH((ETH_PKT + 20))
+        RCALL   IPChecksum
+        OR      R16, R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_23:
+        LDS     R24, (IP + 10)
+        LDS     R25, (IP + 11)
+        RJMP    ??INT_ETH_PROCESS_PKT2_24
+??INT_ETH_PROCESS_PKT2_25:
+        MOVW    R31:R30, R25:R24
+        LD      R24, Z
+        LDD     R25, Z+1
+??INT_ETH_PROCESS_PKT2_24:
+        MOV     R16, R24
+        OR      R16, R25
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+15
+        LDD     R17, Z+16
+        MOVW    R31:R30, R7:R6
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        CP      R16, R18
+        CPC     R17, R19
+        BRNE    ??INT_ETH_PROCESS_PKT2_25
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        CPI     R16, 1
+        BRNE    ??INT_ETH_PROCESS_PKT2_27
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        ANDI    R16, 0x17
+        CPI     R16, 2
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+        MOVW    R31:R30, R5:R4
+        LDD     R16, Z+26
+        LDD     R17, Z+27
+        LDD     R18, Z+28
+        LDD     R19, Z+29
+        MOVW    R31:R30, R25:R24
+        STD     Z+11, R16
+        STD     Z+12, R17
+        STD     Z+13, R18
+        STD     Z+14, R19
+        MOVW    R31:R30, R7:R6
+        LD      R16, Z
+        LDD     R17, Z+1
+        MOVW    R31:R30, R25:R24
+        STD     Z+17, R16
+        STD     Z+18, R17
+        LDI     R16, 12
+        ADD     R4, R16
+        LDI     R16, 0
+        ADC     R5, R16
+        MOVW    R31:R30, R5:R4
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 11
+        RCALL   MACcpy
+??INT_ETH_PROCESS_PKT2_28:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRS    R16, 2
+        RJMP    ??INT_ETH_PROCESS_PKT2_29
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        DEC     R16
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        SUBI    R16, 3
+        MOVW    R27:R26, R7:R6
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_30
+        RCALL   cmp_S_A
+        OR      R16, R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        RJMP    ??INT_ETH_PROCESS_PKT2_31
+??INT_ETH_PROCESS_PKT2_27:
+        LDD     R16, Z+17
+        LDD     R17, Z+18
+        MOVW    R31:R30, R7:R6
+        LD      R18, Z
+        LDD     R19, Z+1
+        CP      R16, R18
+        CPC     R17, R19
+        BRNE    ??INT_ETH_PROCESS_PKT2_32
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+11
+        LDD     R17, Z+12
+        LDD     R18, Z+13
+        LDD     R19, Z+14
+        MOVW    R31:R30, R5:R4
+        LDD     R20, Z+26
+        LDD     R21, Z+27
+        LDD     R22, Z+28
+        LDD     R23, Z+29
+        CP      R16, R20
+        CPC     R17, R21
+        CPC     R18, R22
+        CPC     R19, R23
+        BREQ    ??INT_ETH_PROCESS_PKT2_28
+??INT_ETH_PROCESS_PKT2_32:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        ANDI    R16, 0x17
+        CPI     R16, 2
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_25
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        TST     R16
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_25
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 8
+        LDI     R17, 0
+        LDI     R16, 11
+        RCALL   CallTCPhook
+        MOV     R26, R16
+        MOVW    R31:R30, R7:R6
+        LDD     R8, Z+8
+        LDD     R9, Z+9
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_33
+??INT_ETH_PROCESS_PKT2_34:
+        MOVW    R31:R30, R9:R8
+        LDD     R16, Z+8
+        LDD     R17, Z+9
+        MOVW    R31:R30, R7:R6
+        LD      R18, Z
+        LDD     R19, Z+1
+        CP      R16, R18
+        CPC     R17, R19
+        BRNE    ??INT_ETH_PROCESS_PKT2_35
+        MOVW    R31:R30, R9:R8
+        LDD     R20, Z+10
+        LDD     R21, Z+11
+        LDD     R22, Z+12
+        LDD     R23, Z+13
+        MOVW    R31:R30, R5:R4
+        LDD     R16, Z+26
+        LDD     R17, Z+27
+        LDD     R18, Z+28
+        LDD     R19, Z+29
+        CP      R20, R16
+        CPC     R21, R17
+        CPC     R22, R18
+        CPC     R23, R19
+        BREQ    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_35:
+        LDI     R16, 18
+        ADD     R8, R16
+        LDI     R16, 0
+        ADC     R9, R16
+        DEC     R26
+        BRNE    ??INT_ETH_PROCESS_PKT2_34
+??INT_ETH_PROCESS_PKT2_33:
+        MOVW    R31:R30, R25:R24
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 8
+        LDI     R17, 0
+        LDI     R16, 10
+        RCALL   CallTCPhook
+        TST     R16
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_25
+        MOVW    R31:R30, R7:R6
+        LDD     R8, Z+8
+        LDD     R9, Z+9
+        LDI     R30, LOW((ETH_PKT + 12))
+        LDI     R31, HIGH((ETH_PKT + 12))
+        MOVW    R27:R26, R9:R8
+        ADIW    R27:R26, 6
+        RCALL   MACcpy
+        MOVW    R31:R30, R7:R6
+        RCALL   ExtractMSS
+        MOVW    R31:R30, R9:R8
+        STD     Z+6, R16
+        STD     Z+7, R17
+        MOVW    R31:R30, R7:R6
+        LD      R16, Z
+        LDD     R17, Z+1
+        MOVW    R31:R30, R9:R8
+        STD     Z+8, R16
+        STD     Z+9, R17
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+26
+        LDD     R17, Z+27
+        LDD     R18, Z+28
+        LDD     R19, Z+29
+        MOVW    R31:R30, R9:R8
+        STD     Z+10, R16
+        STD     Z+11, R17
+        STD     Z+12, R18
+        STD     Z+13, R19
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+4
+        LDD     R17, Z+5
+        LDD     R18, Z+6
+        LDD     R19, Z+7
+        MOVW    R31:R30, R9:R8
+        STD     Z+14, R16
+        STD     Z+15, R17
+        STD     Z+16, R18
+        STD     Z+17, R19
+??INT_ETH_PROCESS_PKT2_9:
+        LDI     R16, 0
+        STS     (IP + 14), R16
+        CALL    ETH_STOP_BACK_PRESSURE
+??INT_ETH_PROCESS_PKT2_0:
+        LDS     R16, (IP + 14)
+        CPI     R16, 2
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_4
+??INT_ETH_PROCESS_PKT2_36:
+        LDS     R18, (IP + 8)
+        LDS     R19, (IP + 9)
+        LDI     R16, LOW(ETH_PKT)
+        LDI     R17, (ETH_PKT) >> 8
+        CALL    enc28j60PacketSend
+        TST     R16
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_1
+        LDI     R16, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_2
+??INT_ETH_PROCESS_PKT2_30:
+        RCALL   cmp_A_S
+        CPI     R16, 1
+        SBCI    R17, 0
+        BRNE    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_31:
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 4
+        RCALL   ClosingTCP
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_9
+        LDI     R16, 8
+        MOVW    R31:R30, R25:R24
+        STD     Z+27, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_29:
+        SBRS    R16, 1
+        RJMP    ??INT_ETH_PROCESS_PKT2_37
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        DEC     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_38
+        SUBI    R16, 3
+        MOVW    R27:R26, R7:R6
+        BREQ    ??INT_ETH_PROCESS_PKT2_39
+        RCALL   cmp_S_A
+        OR      R16, R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R25:R24
+        LDD     R19, Z+29
+        LDD     R18, Z+30
+        CP      R18, R10
+        CPC     R19, R11
+        BRCS    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 4
+        RCALL   ClosingTCP
+        TST     R16
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+        LDI     R16, 8
+        MOVW    R31:R30, R25:R24
+        STD     Z+27, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+??INT_ETH_PROCESS_PKT2_39:
+        RCALL   cmp_A_S
+        CPI     R16, 1
+        SBCI    R17, 0
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R21:R20, R25:R24
+        SUBI    R20, 233
+        SBCI    R21, 255
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+4
+        LDD     R17, Z+5
+        LDD     R18, Z+6
+        LDD     R19, Z+7
+        MOVW    R31:R30, R21:R20
+        ST      Z, R16
+        STD     Z+1, R17
+        STD     Z+2, R18
+        STD     Z+3, R19
+        LDI     R16, 1
+        RCALL   inc32
+        MOVW    R31:R30, R7:R6
+        RCALL   ExtractMSS
+        MOVW    R31:R30, R25:R24
+        STD     Z+33, R16
+        STD     Z+34, R17
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 1
+        RCALL   CallTCPhook_null
+        RJMP    ??INT_ETH_PROCESS_PKT2_40
+??INT_ETH_PROCESS_PKT2_38:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRC    R16, 4
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 1
+        RCALL   CallTCPhook_null
+        MOVW    R31:R30, R7:R6
+        RCALL   ExtractMSS
+        MOVW    R19:R18, R17:R16
+        LDI     R16, 4
+        ADD     R6, R16
+        LDI     R16, 0
+        ADC     R7, R16
+        MOVW    R17:R16, R7:R6
+        MOVW    R27:R26, R25:R24
+        RCALL   set_state_SYN_RECEIVED
+??INT_ETH_PROCESS_PKT2_41:
+        MOVW    R9:R8, R25:R24
+        LDI     R16, 15
+        ADD     R8, R16
+        LDI     R16, 0
+        ADC     R9, R16
+??INT_ETH_PROCESS_PKT2_42:
+        CLR     R10
+        CLR     R11
+        LDI     R16, LOW(ETH_PKT)
+        MOV     R4, R16
+        LDI     R16, (ETH_PKT) >> 8
+        MOV     R6, R4
+        MOV     R7, R16
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        LDD     R16, Z+26
+        LDD     R17, Z+27
+        LDD     R18, Z+28
+        LDD     R19, Z+29
+        STD     Z+30, R16
+        STD     Z+31, R17
+        STD     Z+32, R18
+        STD     Z+33, R19
+??INT_ETH_PROCESS_PKT2_15:
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        MOVW    R31:R30, R7:R6
+        STD     Z+26, R16
+        STD     Z+27, R17
+        STD     Z+28, R18
+        STD     Z+29, R19
+        LDI     R16, 0
+        STD     Z+22, R16
+        LDI     R16, 6
+        STD     Z+23, R16
+        LDI     R17, 0
+        LDI     R16, 16
+        MOVW    R31:R30, R9:R8
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 34
+        RCALL   _netw_memcpy
+        LDI     R16, 80
+        MOVW    R31:R30, R7:R6
+        STD     Z+46, R16
+        MOV     R16, R24
+        OR      R16, R25
+        BREQ    ??INT_ETH_PROCESS_PKT2_43
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+37
+        LDD     R17, Z+38
+        LDD     R18, Z+41
+        CPI     R18, 1
+        BRNE    ??INT_ETH_PROCESS_PKT2_44
+        LDI     R16, 0
+        LDI     R17, 0
+        STD     Z+41, R16
+??INT_ETH_PROCESS_PKT2_44:
+        MOVW    R31:R30, R7:R6
+        ADIW    R31:R30, 38
+        RCALL   inc32i
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+37
+        LDD     R17, Z+38
+        ADD     R16, R10
+        ADC     R17, R11
+        STD     Z+37, R16
+        STD     Z+38, R17
+        LDD     R18, Z+35
+        LDD     R19, Z+36
+        CP      R18, R16
+        CPC     R19, R17
+        BRCC    ??INT_ETH_PROCESS_PKT2_45
+        STD     Z+35, R16
+        STD     Z+36, R17
+??INT_ETH_PROCESS_PKT2_45:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+47
+        SBRS    R16, 1
+        RJMP    ??INT_ETH_PROCESS_PKT2_43
+        LDI     R16, 96
+        STD     Z+46, R16
+        LDI     R16, 2
+        STD     Z+54, R16
+        LDI     R16, 4
+        STD     Z+55, R16
+        LDI     R16, 5
+        STD     Z+56, R16
+        LDI     R16, 64
+        STD     Z+57, R16
+        LDI     R16, 4
+        ADD     R10, R16
+        LDI     R16, 0
+        ADC     R11, R16
+??INT_ETH_PROCESS_PKT2_43:
+        LDI     R16, 20
+        ADD     R10, R16
+        LDI     R16, 0
+        ADC     R11, R16
+        STD     Z+24, R11
+        STD     Z+25, R10
+        STD     Z+52, R16
+        STD     Z+53, R16
+        STD     Z+50, R16
+        STD     Z+51, R16
+        MOVW    R17:R16, R11:R10
+        SUBI    R16, 244
+        SBCI    R17, 255
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 22
+        RCALL   IPChecksum
+        MOVW    R31:R30, R7:R6
+        STD     Z+50, R16
+        STD     Z+51, R17
+        MOVW    R25:R24, R7:R6
+??INT_ETH_PROCESS_PKT2_20:
+        LDI     R16, 20
+        ADD     R10, R16
+        LDI     R16, 0
+        ADC     R11, R16
+        ADIW    R31:R30, 12
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 6
+        RCALL   MACcpy
+        LDI     R30, LOW((IP + 21))
+        LDI     R31, HIGH((IP + 21))
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 12
+        RCALL   MACcpy
+        LDI     R16, 8
+        LDI     R17, 0
+        MOVW    R31:R30, R25:R24
+        STD     Z+12, R16
+        STD     Z+13, R17
+        LDI     R16, 69
+        STD     Z+14, R16
+        STD     Z+15, R17
+        STD     Z+16, R11
+        STD     Z+17, R10
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LDD     R16, Z+12
+        LDD     R17, Z+13
+        SUBI    R16, 255
+        SBCI    R17, 255
+        STD     Z+12, R16
+        STD     Z+13, R17
+        MOVW    R31:R30, R25:R24
+        STD     Z+18, R17
+        STD     Z+19, R16
+        LDI     R19, 0
+        LDI     R18, 64
+        STD     Z+20, R18
+        STD     Z+21, R19
+        LDI     R16, 128
+        STD     Z+22, R16
+        STD     Z+24, R19
+        STD     Z+25, R19
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        MOVW    R31:R30, R25:R24
+        STD     Z+26, R16
+        STD     Z+27, R17
+        STD     Z+28, R18
+        STD     Z+29, R19
+        LDI     R16, 20
+        LDI     R17, 0
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 14
+        RCALL   IPChecksum
+        MOVW    R31:R30, R25:R24
+        STD     Z+24, R16
+        STD     Z+25, R17
+        LDI     R16, 14
+        ADD     R10, R16
+        LDI     R16, 0
+        ADC     R11, R16
+        LDI     R16, 60
+        CP      R10, R16
+        LDI     R16, 0
+        CPC     R11, R16
+        BRCC    ??INT_ETH_PROCESS_PKT2_46
+??INT_ETH_PROCESS_PKT2_12:
+        LDI     R16, 60
+        MOV     R10, R16
+        CLR     R11
+??INT_ETH_PROCESS_PKT2_46:
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        STD     Z+8, R10
+        STD     Z+9, R11
+        LDI     R16, 16
+        STD     Z+14, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_36
+??INT_ETH_PROCESS_PKT2_37:
+        SBRS    R16, 4
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        CPI     R16, 4
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R27:R26, R7:R6
+        RCALL   cmp_S_A
+        MOVW    R5:R4, R17:R16
+        MOVW    R31:R30, R25:R24
+        LDD     R19, Z+29
+        LDD     R18, Z+30
+        CP      R18, R10
+        CPC     R19, R11
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        OR      R16, R17
+        LDD     R16, Z+27
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_47
+        CPI     R16, 5
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_48
+        LDI     R16, 1
+        CP      R4, R16
+        LDI     R16, 0
+        CPC     R5, R16
+        BRGE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        LDS     R16, BufferPKT
+        TST     R16
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_49
+        LDS     R4, FIFO_pkt_TS
+        LDS     R24, (IP + 8)
+        LDS     R25, (IP + 9)
+        LDI     R26, LOW(ETH_PKT)
+        LDI     R27, (ETH_PKT) >> 8
+        MOV     R16, R24
+        OR      R16, R25
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        CALL    ETHfifo_free
+        CPI     R16, 121
+        SBCI    R17, 5
+        SBCI    R18, 0
+        SBCI    R19, 0
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        CLR     R0
+        LDI     R30, LOW(ETHfifo_pWR)
+        LDI     R31, (ETHfifo_pWR) >> 8
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        ADIW    R25:R24, 3
+        MOVW    R3:R2, R25:R24
+        CBI     0x12, 0x04
+        LDI     R20, 6
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_50:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_50
+        SBI     0x12, 0x04
+        CBI     0x12, 0x04
+        LDI     R20, 2
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_51:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_51
+        OUT     0x0F, R18
+??INT_ETH_PROCESS_PKT2_52:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_52
+        OUT     0x0F, R17
+??INT_ETH_PROCESS_PKT2_53:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_53
+        OUT     0x0F, R16
+??INT_ETH_PROCESS_PKT2_54:
+        SBIC    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_55
+        RJMP    ??INT_ETH_PROCESS_PKT2_54
+??INT_ETH_PROCESS_PKT2_56:
+        MOV     R20, R0
+        TST     R0
+        BREQ    ??INT_ETH_PROCESS_PKT2_55
+        DEC     R20
+        BREQ    ??INT_ETH_PROCESS_PKT2_57
+        DEC     R20
+        BREQ    ??INT_ETH_PROCESS_PKT2_58
+        RJMP    ??INT_ETH_PROCESS_PKT2_59
+??INT_ETH_PROCESS_PKT2_55:
+        MOVW    R31:R30, R25:R24
+        SBIW    R31:R30, 3
+        MOV     R30, R31
+??INT_ETH_PROCESS_PKT2_60:
+        INC     R0
+        RJMP    ??INT_ETH_PROCESS_PKT2_61
+??INT_ETH_PROCESS_PKT2_57:
+        MOV     R30, R24
+        SUBI    R30, 3
+        RJMP    ??INT_ETH_PROCESS_PKT2_60
+??INT_ETH_PROCESS_PKT2_58:
+        MOV     R30, R4
+        RJMP    ??INT_ETH_PROCESS_PKT2_60
+??INT_ETH_PROCESS_PKT2_59:
+        LD      R30, X+
+??INT_ETH_PROCESS_PKT2_61:
+        OUT     0x0F, R30
+        LDI     R20, 0
+        SUBI    R16, 255
+        SBCI    R17, 255
+        SBCI    R18, 255
+        SBCI    R19, 255
+        CPI     R16, 0
+        CPC     R17, R20
+        LDI     R21, 2
+        CPC     R18, R21
+        CPC     R19, R20
+        BRCS    ??INT_ETH_PROCESS_PKT2_62
+        LDI     R20, 1
+??INT_ETH_PROCESS_PKT2_62:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_62
+        TST     R20
+        BREQ    ??INT_ETH_PROCESS_PKT2_63
+        SBI     0x12, 0x04
+        LDI     R16, 69
+        LDI     R17, 201
+        LDI     R18, 1
+        LDI     R19, 0
+        CBI     0x12, 0x04
+        LDI     R20, 6
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_64:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_64
+        SBI     0x12, 0x04
+        CBI     0x12, 0x04
+        OUT     0x0F, R21
+??INT_ETH_PROCESS_PKT2_65:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_65
+        OUT     0x0F, R18
+??INT_ETH_PROCESS_PKT2_66:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_66
+        OUT     0x0F, R17
+??INT_ETH_PROCESS_PKT2_67:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_67
+        OUT     0x0F, R16
+??INT_ETH_PROCESS_PKT2_68:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_68
+??INT_ETH_PROCESS_PKT2_63:
+        MOVW    R21:R20, R3:R2
+        LDI     R22, 255
+        ADD     R2, R22
+        ADC     R3, R22
+        OR      R20, R21
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_56
+        SBI     0x12, 0x04
+        LDI     R30, LOW(ETHfifo_pWR)
+        LDI     R31, (ETHfifo_pWR) >> 8
+        ST      Z, R16
+        STD     Z+1, R17
+        STD     Z+2, R18
+        STD     Z+3, R19
+        LDS     R16, ETHfifo_CNT
+        INC     R16
+        STS     ETHfifo_CNT, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_49:
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LDD     R26, Z+6
+        LDD     R27, Z+7
+        SUBI    R26, 236
+        LDD     R4, Z+8
+        LDD     R5, Z+9
+        LDI     R16, LOW(ETH_PKT)
+        MOV     R6, R16
+        LDI     R16, (ETH_PKT) >> 8
+        MOV     R7, R16
+        MOV     R16, R4
+        OR      R16, R5
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        CALL    ETHfifo_free
+        CPI     R16, 121
+        SBCI    R17, 5
+        LDI     R27, 0
+        SBCI    R18, 0
+        SBCI    R19, 0
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        LDI     R30, LOW(ETHfifo_pWR)
+        LDI     R31, (ETHfifo_pWR) >> 8
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        LDI     R20, 3
+        ADD     R4, R20
+        ADC     R5, R27
+        MOVW    R1:R0, R5:R4
+        CBI     0x12, 0x04
+        LDI     R20, 6
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_69:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_69
+        SBI     0x12, 0x04
+        CBI     0x12, 0x04
+        LDI     R20, 2
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_70:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_70
+        OUT     0x0F, R18
+??INT_ETH_PROCESS_PKT2_71:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_71
+        OUT     0x0F, R17
+??INT_ETH_PROCESS_PKT2_72:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_72
+        OUT     0x0F, R16
+??INT_ETH_PROCESS_PKT2_73:
+        SBIC    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_74
+        RJMP    ??INT_ETH_PROCESS_PKT2_73
+??INT_ETH_PROCESS_PKT2_75:
+        MOV     R20, R27
+        TST     R27
+        BREQ    ??INT_ETH_PROCESS_PKT2_74
+        DEC     R20
+        BREQ    ??INT_ETH_PROCESS_PKT2_76
+        DEC     R20
+        BREQ    ??INT_ETH_PROCESS_PKT2_77
+        RJMP    ??INT_ETH_PROCESS_PKT2_78
+??INT_ETH_PROCESS_PKT2_74:
+        MOVW    R21:R20, R5:R4
+        SUBI    R20, 3
+        SBCI    R21, 0
+??INT_ETH_PROCESS_PKT2_79:
+        INC     R27
+        RJMP    ??INT_ETH_PROCESS_PKT2_80
+??INT_ETH_PROCESS_PKT2_76:
+        MOV     R21, R4
+        SUBI    R21, 3
+        RJMP    ??INT_ETH_PROCESS_PKT2_79
+??INT_ETH_PROCESS_PKT2_77:
+        MOV     R21, R26
+        RJMP    ??INT_ETH_PROCESS_PKT2_79
+??INT_ETH_PROCESS_PKT2_78:
+        MOVW    R31:R30, R7:R6
+        LD      R21, Z+
+        MOVW    R7:R6, R31:R30
+??INT_ETH_PROCESS_PKT2_80:
+        OUT     0x0F, R21
+        LDI     R21, 0
+        SUBI    R16, 255
+        SBCI    R17, 255
+        SBCI    R18, 255
+        SBCI    R19, 255
+        CPI     R16, 0
+        CPC     R17, R21
+        LDI     R20, 2
+        CPC     R18, R20
+        CPC     R19, R21
+        BRCS    ??INT_ETH_PROCESS_PKT2_81
+        LDI     R21, 1
+??INT_ETH_PROCESS_PKT2_81:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_81
+        TST     R21
+        BREQ    ??INT_ETH_PROCESS_PKT2_82
+        SBI     0x12, 0x04
+        LDI     R16, 69
+        LDI     R17, 201
+        LDI     R18, 1
+        LDI     R19, 0
+        CBI     0x12, 0x04
+        LDI     R20, 6
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_83:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_83
+        SBI     0x12, 0x04
+        CBI     0x12, 0x04
+        LDI     R20, 2
+        OUT     0x0F, R20
+??INT_ETH_PROCESS_PKT2_84:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_84
+        OUT     0x0F, R18
+??INT_ETH_PROCESS_PKT2_85:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_85
+        OUT     0x0F, R17
+??INT_ETH_PROCESS_PKT2_86:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_86
+        OUT     0x0F, R16
+??INT_ETH_PROCESS_PKT2_87:
+        SBIS    0x0E, 0x07
+        RJMP    ??INT_ETH_PROCESS_PKT2_87
+??INT_ETH_PROCESS_PKT2_82:
+        MOVW    R23:R22, R1:R0
+        LDI     R20, 255
+        ADD     R0, R20
+        ADC     R1, R20
+        OR      R22, R23
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_75
+        SBI     0x12, 0x04
+        LDI     R30, LOW(ETHfifo_pWR)
+        LDI     R31, (ETHfifo_pWR) >> 8
+        ST      Z, R16
+        STD     Z+1, R17
+        STD     Z+2, R18
+        STD     Z+3, R19
+        LDS     R16, ETHfifo_CNT
+        INC     R16
+        STS     ETHfifo_CNT, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+??INT_ETH_PROCESS_PKT2_47:
+        SUBI    R16, 2
+        BREQ    ??INT_ETH_PROCESS_PKT2_88
+        SUBI    R16, 3
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_89
+        DEC     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_90
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+??INT_ETH_PROCESS_PKT2_88:
+        MOVW    R27:R26, R7:R6
+        RCALL   cmp_A_S
+        CPI     R16, 1
+        SBCI    R17, 0
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_26
+??INT_ETH_PROCESS_PKT2_40:
+        LDI     R16, 1
+        MOVW    R31:R30, R25:R24
+        ADIW    R31:R30, 19
+        RCALL   inc32
+        LDI     R16, 6
+        MOVW    R31:R30, R25:R24
+        STD     Z+27, R16
+        LDI     R16, 16
+        STD     Z+28, R16
+        LDD     R16, Z+2
+        ORI     R16, 0x80
+        STD     Z+2, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_91
+??INT_ETH_PROCESS_PKT2_90:
+        MOVW    R27:R26, R7:R6
+        RCALL   cmp_A_S
+        MOVW    R5:R4, R17:R16
+        TST     R17
+        BRPL    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+35
+        LDD     R17, Z+36
+        CP      R16, R4
+        CPC     R17, R5
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        SUB     R16, R4
+        SBC     R17, R5
+        STD     Z+35, R16
+        STD     Z+36, R17
+        LDD     R20, Z+37
+        LDD     R21, Z+38
+        MOVW    R17:R16, R21:R20
+        MOV     R18, R20
+        CP      R16, R4
+        CPC     R17, R5
+        BRCC    ??INT_ETH_PROCESS_PKT2_92
+        LDI     R16, 0
+        LDI     R17, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_93
+??INT_ETH_PROCESS_PKT2_92:
+        SUB     R16, R4
+        SBC     R17, R5
+??INT_ETH_PROCESS_PKT2_93:
+        STD     Z+37, R16
+        STD     Z+38, R17
+        OR      R16, R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_94
+        OR      R18, R21
+        BREQ    ??INT_ETH_PROCESS_PKT2_94
+        LDD     R16, Z+40
+        LDI     R17, 64
+        MUL     R16, R17
+        MOV     R0, R1
+        LDD     R17, Z+39
+        CP      R0, R17
+        BRCC    ??INT_ETH_PROCESS_PKT2_95
+        CPI     R16, 255
+        BRNE    ??INT_ETH_PROCESS_PKT2_96
+        LDI     R16, 128
+        RJMP    ??INT_ETH_PROCESS_PKT2_95
+??INT_ETH_PROCESS_PKT2_96:
+        LSR     R16
+        CPI     R16, 4
+        BRCC    ??INT_ETH_PROCESS_PKT2_95
+        LDI     R16, 4
+??INT_ETH_PROCESS_PKT2_95:
+        STD     Z+39, R16
+        STD     Z+40, R16
+??INT_ETH_PROCESS_PKT2_94:
+        MOVW    R17:R16, R5:R4
+        ADIW    R31:R30, 19
+        RCALL   inc32i
+        RJMP    ??INT_ETH_PROCESS_PKT2_97
+??INT_ETH_PROCESS_PKT2_98:
+        MOVW    R31:R30, R25:R24
+        LDI     R26, 0
+        LDI     R27, 0
+        LDI     R16, 5
+        RCALL   CallTCPhook
+??INT_ETH_PROCESS_PKT2_97:
+        LDI     R17, 255
+        CP      R4, R17
+        LDI     R16, 0
+        CPC     R5, R16
+        BRGE    ??INT_ETH_PROCESS_PKT2_99
+        MOV     R17, R4
+??INT_ETH_PROCESS_PKT2_99:
+        SUB     R4, R17
+        SBC     R5, R16
+        TST     R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_98
+??INT_ETH_PROCESS_PKT2_91:
+        MOVW    R31:R30, R7:R6
+        LDD     R17, Z+14
+        LDD     R16, Z+15
+        CPI     R16, 1
+        LDI     R18, 21
+        CPC     R17, R18
+        BRCS    ??INT_ETH_PROCESS_PKT2_100
+        LDI     R16, 0
+        LDI     R17, 21
+??INT_ETH_PROCESS_PKT2_100:
+        MOVW    R31:R30, R25:R24
+        STD     Z+31, R16
+        STD     Z+32, R17
+        MOVW    R17:R16, R11:R10
+        ADIW    R31:R30, 23
+        RCALL   inc32i
+        CLR     R4
+        CLR     R5
+??INT_ETH_PROCESS_PKT2_101:
+        MOVW    R19:R18, R11:R10
+        SUB     R18, R4
+        SBC     R19, R5
+        CPI     R19, 1
+        BRCS    ??INT_ETH_PROCESS_PKT2_102
+        LDI     R18, 255
+??INT_ETH_PROCESS_PKT2_102:
+        MOVW    R31:R30, R7:R6
+        LDD     R20, Z+12
+        LDI     R21, 0
+        MOVW    R27:R26, R7:R6
+        ADD     R26, R20
+        ADC     R27, R21
+        ADD     R26, R4
+        ADC     R27, R5
+        MOVW    R31:R30, R25:R24
+        MOV     R17, R18
+        LDI     R16, 7
+        RCALL   CallTCPhook
+        MOVW    R19:R18, R11:R10
+        SUB     R18, R4
+        SBC     R19, R5
+        CPI     R19, 1
+        BRCS    ??INT_ETH_PROCESS_PKT2_103
+        LDI     R18, 255
+        LDI     R19, 0
+??INT_ETH_PROCESS_PKT2_103:
+        ADD     R4, R18
+        ADC     R5, R19
+        CP      R4, R10
+        CPC     R5, R11
+        BRNE    ??INT_ETH_PROCESS_PKT2_101
+        MOVW    R31:R30, R7:R6
+        LDD     R17, Z+13
+        SBRS    R17, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_104
+        LDI     R16, 1
+        MOVW    R31:R30, R25:R24
+        ADIW    R31:R30, 23
+        RCALL   inc32
+        LDI     R16, 5
+        MOVW    R31:R30, R25:R24
+        STD     Z+27, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_105
+??INT_ETH_PROCESS_PKT2_104:
+        MOVW    R31:R30, R25:R24
+        LDD     R17, Z+27
+        CPI     R17, 5
+        BRNE    ??INT_ETH_PROCESS_PKT2_106
+??INT_ETH_PROCESS_PKT2_105:
+        LDI     R16, 17
+        STD     Z+28, R16
+        LDI     R16, 0
+        STD     Z+39, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_106:
+        LDD     R18, Z+29
+        LDD     R19, Z+30
+        OR      R18, R19
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_107
+        LDD     R16, Z+37
+        LDD     R17, Z+38
+        OR      R16, R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_107
+        LDI     R16, 3
+        STD     Z+41, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_107:
+        OR      R10, R11
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+        LDD     R16, Z+40
+        STD     Z+39, R16
+        LDD     R16, Z+2
+        BST     R16, 7
+        BRTC    ??INT_ETH_PROCESS_PKT2_108
+        ANDI    R16, 0x7F
+        STD     Z+2, R16
+        LDD     R16, Z+41
+        CPI     R16, 4
+        BRCC    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+        LDI     R16, 0
+        STD     Z+41, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_41
+??INT_ETH_PROCESS_PKT2_108:
+        LDI     R17, 5
+        STD     Z+41, R17
+        ORI     R16, 0x80
+        STD     Z+2, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_89:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRC    R16, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_48
+        MOVW    R31:R30, R25:R24
+        MOVW    R27:R26, R7:R6
+        RCALL   cmp_A_S
+        CPI     R16, 1
+        SBCI    R17, 0
+        BRGE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_48:
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 3
+        RCALL   ClosingTCP
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_109
+        LDI     R16, 8
+        MOVW    R31:R30, R25:R24
+        STD     Z+27, R16
+??INT_ETH_PROCESS_PKT2_109:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRS    R16, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_9
+??INT_ETH_PROCESS_PKT2_26:
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRS    R16, 4
+        RJMP    ??INT_ETH_PROCESS_PKT2_110
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 4
+        LDI     R16, 4
+        MOVW    R31:R30, R27:R26
+        ADIW    R31:R30, 4
+        RCALL   _swapmem
+        MOVW    R31:R30, R7:R6
+        LDD     R16, Z+13
+        SBRS    R16, 0
+        RJMP    ??INT_ETH_PROCESS_PKT2_111
+        LDI     R16, 1
+        ADIW    R31:R30, 8
+        RCALL   inc32
+        LDI     R16, 17
+        MOVW    R31:R30, R7:R6
+        RJMP    ??INT_ETH_PROCESS_PKT2_112
+??INT_ETH_PROCESS_PKT2_111:
+        LDI     R16, 4
+        RJMP    ??INT_ETH_PROCESS_PKT2_112
+??INT_ETH_PROCESS_PKT2_110:
+        MOVW    R19:R18, R7:R6
+        SUBI    R18, 248
+        SBCI    R19, 255
+        LDD     R20, Z+4
+        LDD     R21, Z+5
+        LDD     R22, Z+6
+        LDD     R23, Z+7
+        MOVW    R31:R30, R19:R18
+        ST      Z, R20
+        STD     Z+1, R21
+        STD     Z+2, R22
+        STD     Z+3, R23
+        LDI     R16, 1
+        RCALL   inc32
+        LDI     R16, 0
+        MOVW    R31:R30, R7:R6
+        STD     Z+4, R16
+        STD     Z+5, R16
+        STD     Z+6, R16
+        STD     Z+7, R16
+        LDI     R16, 20
+??INT_ETH_PROCESS_PKT2_112:
+        STD     Z+13, R16
+        LDI     R16, 2
+        ADIW    R31:R30, 2
+        MOVW    R27:R26, R7:R6
+        RCALL   _swapmem
+        MOVW    R9:R8, R7:R6
+        RJMP    ??INT_ETH_PROCESS_PKT2_42
+//  888     while((s=s->next))
+//  889     {
+//  890       UREG i;
+//  891       if (s->timer_init&&(i=s->timer)) s->timer=i-1;
+??INT_ETH_PROCESS_PKT2_113:
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+40
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_114
+        LDD     R16, Z+39
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_114
+        DEC     R16
+        STD     Z+39, R16
+//  892       if (s->txreq>TCP_TXREQ_SEND) s->txreq--;
+??INT_ETH_PROCESS_PKT2_114:
+        LDD     R16, Z+41
+        CPI     R16, 4
+        BRCS    ??INT_ETH_PROCESS_PKT2_7
+        DEC     R16
+        STD     Z+41, R16
+//  893     }
+??INT_ETH_PROCESS_PKT2_7:
+        MOVW    R31:R30, R25:R24
+        LD      R24, Z
+        LDD     R25, Z+1
+        MOV     R16, R24
+        OR      R16, R25
+        BRNE    ??INT_ETH_PROCESS_PKT2_113
+//  894   }
+//  895   s=((TCP_SOCK *)&QUE_sock);
+??INT_ETH_PROCESS_PKT2_6:
+        LDI     R24, LOW((IP + 10))
+        LDI     R25, HIGH((IP + 10))
+        RJMP    ??INT_ETH_PROCESS_PKT2_115
+//  896   while((s=s->next))
+//  897   {
+//  898     // Обработка чита
+//  899     if (s->async_req) CallTCPhook_null(TCP_EVENT_ASYNC_REQ,s);
+//  900     if (s->state==TCP_STATE_QUE_CLIENT || //Есть клиент в очереди
+//  901 	s->txreq==TCP_TXREQ_SEND) //Запрос передачи
+//  902     {
+//  903       //s->timer_init=TCP_TIMER_INITV>>1; //Таймер начинает считать сначала
+//  904       goto L_TRY_CHEAT;
+//  905     }
+//  906     // Обработка таймера сокетов (перепосылка пакета)
+//  907     if ((!s->timer_init) || (s->timer)) continue;
+//  908     switch(s->state)
+//  909     {
+//  910     case TCP_STATE_CONNECTING:
+//  911       if (s->timer_init==255)
+//  912       {
+//  913 	ClosingTCP(TCP_EVENT_ABORT,s); //Нет соединения
+??INT_ETH_PROCESS_PKT2_116:
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 4
+        RCALL   ClosingTCP
+//  914 	continue;
+//  915       }
+??INT_ETH_PROCESS_PKT2_115:
+        MOVW    R31:R30, R25:R24
+        LD      R24, Z
+        LDD     R25, Z+1
+        MOV     R16, R24
+        OR      R16, R25
+        BRNE    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_117
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+42
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_118
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 9
+        RCALL   CallTCPhook_null
+??INT_ETH_PROCESS_PKT2_118:
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        CPI     R16, 8
+        BREQ    ??INT_ETH_PROCESS_PKT2_119
+        LDD     R16, Z+41
+        CPI     R16, 3
+        BREQ    ??INT_ETH_PROCESS_PKT2_119
+        LDD     R16, Z+40
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_115
+        LDD     R16, Z+39
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_115
+        LDD     R16, Z+27
+        SUBI    R16, 2
+        BREQ    ??INT_ETH_PROCESS_PKT2_120
+        DEC     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_121
+        SUBI    R16, 1
+        BRCS    ??INT_ETH_PROCESS_PKT2_122
+        SUBI    R16, 3
+        BRCS    ??INT_ETH_PROCESS_PKT2_120
+??INT_ETH_PROCESS_PKT2_122:
+        RJMP    ??INT_ETH_PROCESS_PKT2_123
+??INT_ETH_PROCESS_PKT2_121:
+        LDD     R16, Z+40
+        CPI     R16, 255
+        BREQ    ??INT_ETH_PROCESS_PKT2_116
+//  916     case TCP_STATE_SYN_SENT:
+//  917     case TCP_STATE_CONNECTED:
+//  918     case TCP_STATE_SYN_RECEIVED:
+//  919     case TCP_STATE_FINW1:
+//  920       s->timer=1; //Если вдруг не получится занять буфер, будем повторять снова
+??INT_ETH_PROCESS_PKT2_120:
+        LDI     R16, 1
+        STD     Z+39, R16
+//  921     L_TRY_CHEAT:
+//  922       {
+//  923 	UREG pp;
+//  924 	__disable_interrupt();
+??INT_ETH_PROCESS_PKT2_119:
+        CLI
+//  925 	pp=ETH_PKT_mode;
+        LDS     R17, (IP + 14)
+//  926 	ETH_PKT_mode=1;
+        LDI     R16, 1
+        STS     (IP + 14), R16
+//  927 	__enable_interrupt();
+        SEI
+//  928 	if (pp) goto L_CHECK_INCOMING;
+        TST     R17
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_0
+//  929 	ETH_STOP_BACK_PRESSURE();
+        CALL    ETH_STOP_BACK_PRESSURE
+//  930 	ip=(IP_FRAME*)(&ETH_PKT);
+//  931       }
+//  932       tcpf=(TCP_FRAME*)ip;
+        LDI     R16, LOW(ETH_PKT)
+        MOV     R6, R16
+        LDI     R16, (ETH_PKT) >> 8
+        MOV     R7, R16
+//  933       if (s->state==TCP_STATE_CONNECTING)
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+27
+        CPI     R16, 3
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_124
+//  934       {
+//  935 	ARP_FRAME *apo;    
+//  936 	UREG f=s->timer_init;
+//  937 	f<<=1;
+        LDD     R16, Z+40
+        LSL     R16
+//  938 	if (f>=(TCP_TIMER_INITV<<3))
+        CPI     R16, 32
+        BRCS    ??INT_ETH_PROCESS_PKT2_125
+//  939 	{
+//  940 	  s->timer_init=255; //Последний выстрел
+        LDI     R17, 255
+        STD     Z+40, R17
+        RJMP    ??INT_ETH_PROCESS_PKT2_126
+//  941 	}
+//  942 	else
+//  943 	  s->timer_init=f;
+??INT_ETH_PROCESS_PKT2_125:
+        STD     Z+40, R16
+//  944 	s->timer=f;
+??INT_ETH_PROCESS_PKT2_126:
+        STD     Z+39, R16
+//  945 	//Теперь готовим ARP-запрос
+//  946 	apo=(ARP_FRAME*)(&ETH_PKT);
+//  947 	apo->arp.hw_type=ARP_HARDWARE;
+        LDI     R16, 0
+        LDI     R17, 1
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+14, R16
+        STD     Z+15, R17
+//  948 	apo->arp.proto=ARP_ETHCODE;
+        LDI     R16, 8
+        LDI     R17, 0
+        STD     Z+16, R16
+        STD     Z+17, R17
+//  949 	apo->arp.hw_len=ETH_HWA_LEN;
+        LDI     R16, 6
+        STD     Z+18, R16
+//  950 	apo->arp.protocol_len=ETH_PRA_LEN;
+        LDI     R16, 4
+        STD     Z+19, R16
+//  951 	apo->arp.opcode=ARP_REQUEST;
+        LDI     R16, 0
+        LDI     R17, 1
+        STD     Z+20, R16
+        STD     Z+21, R17
+//  952 	apo->eth.type=ETH_PROTOCOL_ARP;
+        LDI     R16, 8
+        LDI     R17, 6
+        STD     Z+12, R16
+        STD     Z+13, R17
+//  953 	MACcpy(apo->arp.src_mac+ETH_HWA_LEN,MAC0+ETH_HWA_LEN);
+        LDI     R16, LOW(IP)
+        MOV     R6, R16
+        LDI     R16, (IP) >> 8
+        MOV     R7, R16
+        LDI     R30, LOW((IP + 21))
+        LDI     R31, HIGH((IP + 21))
+        LDI     R26, LOW((ETH_PKT + 28))
+        LDI     R27, HIGH((ETH_PKT + 28))
+        RCALL   MACcpy
+//  954 	IPcpyIP(&apo->arp.src_ip);
+        MOVW    R31:R30, R7:R6
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+28, R16
+        STD     Z+29, R17
+        STD     Z+30, R18
+        STD     Z+31, R19
+//  955 	netw_memset(apo->arp.dst_mac,0,ETH_HWA_LEN);
+        LDI     R17, 6
+        LDI     R16, 0
+        ADIW    R31:R30, 32
+        RCALL   netw_memset
+//  956         apo->arp.dst_ip=s->ACKNO;
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+23
+        LDD     R17, Z+24
+        LDD     R18, Z+25
+        LDD     R19, Z+26
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        STD     Z+38, R16
+        STD     Z+39, R17
+        STD     Z+40, R18
+        STD     Z+41, R19
+//  957 //      apo->arp.dst_ip=s->rip;
+//  958 //       apo->arp.dst_ip=OUTG_IP[1];        
+//  959 	MACcpy(apo->eth.src_mac+ETH_HWA_LEN,MAC0+ETH_HWA_LEN);        
+        LDI     R16, 21
+        ADD     R6, R16
+        LDI     R16, 0
+        ADC     R7, R16
+        MOVW    R31:R30, R7:R6
+        LDI     R26, LOW((ETH_PKT + 12))
+        LDI     R27, HIGH((ETH_PKT + 12))
+        RCALL   MACcpy
+//  960 //        MACcpy(apo->eth.dst_mac+ETH_HWA_LEN,MAC_GATE0+ETH_HWA_LEN);
+//  961 	netw_memset(apo->eth.dst_mac,0xFF,ETH_HWA_LEN);
+        LDI     R17, 6
+        LDI     R16, 255
+        LDI     R30, LOW(ETH_PKT)
+        LDI     R31, (ETH_PKT) >> 8
+        RCALL   netw_memset
+//  962 	len=ARP_FRAME_LEN;
+//  963 	ep=(ETH_FRAME*)apo;
+//  964 	goto L_SENDETH;    
+        RJMP    ??INT_ETH_PROCESS_PKT2_12
+//  965       }
+//  966       if (s->state==TCP_STATE_QUE_CLIENT)
+??INT_ETH_PROCESS_PKT2_124:
+        CPI     R16, 8
+        BRNE    ??INT_ETH_PROCESS_PKT2_127
+//  967       {
+//  968 	CallTCPhook(TCP_EVENT_QUE_GET,0,(TCP_QUE_CLIENT**)(&tcpf->tcp.ackno),s);
+        MOVW    R27:R26, R7:R6
+        ADIW    R27:R26, 42
+        LDI     R17, 0
+        LDI     R16, 11
+        RCALL   CallTCPhook
+//  969 	TCP_QUE_CLIENT *p=(*((TCP_QUE_CLIENT **)(&tcpf->tcp.ackno)));
+        MOVW    R31:R30, R7:R6
+        LDD     R4, Z+42
+        LDD     R5, Z+43
+//  970 	MACcpy(s->dst_mac+ETH_HWA_LEN,p->dst_mac+ETH_HWA_LEN);
+        MOVW    R31:R30, R5:R4
+        ADIW    R31:R30, 6
+        MOVW    R27:R26, R25:R24
+        ADIW    R27:R26, 11
+        RCALL   MACcpy
+//  971 	IPcpy(&s->rip,&p->rip);
+        MOVW    R31:R30, R5:R4
+        LDD     R16, Z+10
+        LDD     R17, Z+11
+        LDD     R18, Z+12
+        LDD     R19, Z+13
+        MOVW    R31:R30, R25:R24
+        STD     Z+11, R16
+        STD     Z+12, R17
+        STD     Z+13, R18
+        STD     Z+14, R19
+//  972 	s->rport=p->rport;
+        MOVW    R31:R30, R5:R4
+        LDD     R16, Z+8
+        LDD     R17, Z+9
+        MOVW    R31:R30, R25:R24
+        STD     Z+17, R16
+        STD     Z+18, R17
+//  973 	CallTCPhook_null(TCP_EVENT_CONREQ,s);
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 1
+        RCALL   CallTCPhook_null
+//  974 	set_state_SYN_RECEIVED(s,&p->seqno,p->mss);
+        MOVW    R31:R30, R5:R4
+        LDD     R18, Z+6
+        LDD     R19, Z+7
+        LDI     R16, 14
+        ADD     R4, R16
+        LDI     R16, 0
+        ADC     R5, R16
+        MOVW    R17:R16, R5:R4
+        MOVW    R27:R26, R25:R24
+        RCALL   set_state_SYN_RECEIVED
+//  975 	CallTCPhook_null(TCP_EVENT_QUE_REMOVE,s);
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 12
+        RCALL   CallTCPhook_null
+//  976       }
+//  977       IPcpy(&tcpf->ip.dest_ip,&s->rip);
+??INT_ETH_PROCESS_PKT2_127:
+        MOVW    R5:R4, R7:R6
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+11
+        LDD     R17, Z+12
+        LDD     R18, Z+13
+        LDD     R19, Z+14
+        MOVW    R31:R30, R7:R6
+        STD     Z+30, R16
+        STD     Z+31, R17
+        STD     Z+32, R18
+        STD     Z+33, R19
+//  978       MACcpy(ip->eth.src_mac+ETH_HWA_LEN,s->dst_mac+ETH_HWA_LEN);
+        MOVW    R31:R30, R25:R24
+        ADIW    R31:R30, 11
+        LDI     R16, 12
+        ADD     R4, R16
+        LDI     R16, 0
+        ADC     R5, R16
+        MOVW    R27:R26, R5:R4
+        RCALL   MACcpy
+//  979       ptcp=(TCP_HEADER*)&s->lport;
+        MOVW    R9:R8, R25:R24
+        LDI     R16, 15
+        ADD     R8, R16
+        LDI     R16, 0
+        ADC     R9, R16
+//  980       len=0;
+        CLR     R10
+        CLR     R11
+//  981       //if (s->state==TCP_STATE_QUE_CLIENT) goto L_SENDTCPWITHDATA;
+//  982       if (s->timer_init==255)
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+40
+        CPI     R16, 255
+        BRNE    ??INT_ETH_PROCESS_PKT2_128
+//  983       {
+//  984 	//Закрываем по таймауту
+//  985 	s->flags=TCP_FLAG_RESET; //Посылаем RST
+        LDI     R16, 4
+        STD     Z+28, R16
+//  986 	while(CallTCPhook_null(TCP_EVENT_QUE_REMOVE,s)); //Пока всех не выбросим из очереди, все равно все устарело
+??INT_ETH_PROCESS_PKT2_129:
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 12
+        RCALL   CallTCPhook_null
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_129
+//  987 	ClosingTCP(TCP_EVENT_ABORT,s);
+        MOVW    R27:R26, R25:R24
+        LDI     R16, 4
+        RCALL   ClosingTCP
+//  988 	goto L_SENDTCPWITHDATA;
+        RJMP    ??INT_ETH_PROCESS_PKT2_15
+//  989       }
+//  990       {
+//  991 	if (s->txreq==TCP_TXREQ_SEND) goto L_RESEND_OR_CHEAT;
+??INT_ETH_PROCESS_PKT2_128:
+        LDD     R16, Z+41
+        CPI     R16, 3
+        BREQ    ??INT_ETH_PROCESS_PKT2_130
+//  992 	if (s->state==TCP_STATE_CONNECTED)
+        LDD     R16, Z+27
+        CPI     R16, 6
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_131
+//  993 	{
+//  994 	  s->send_disp=0; //Т.к. производим откат
+        STD     Z+37, R10
+        STD     Z+38, R10
+//  995 	L_RESEND_OR_CHEAT:
+//  996 	  s->type&=~TCP_TYPE_FLAG_DELAYED_ACK;
+??INT_ETH_PROCESS_PKT2_130:
+        LDD     R16, Z+2
+        ANDI    R16, 0x7F
+        STD     Z+2, R16
+//  997 	  {
+//  998 	    unsigned int d;
+//  999 	    unsigned int sd=s->send_disp;
+        LDD     R16, Z+37
+        LDD     R17, Z+38
+// 1000 	    UREG j=TCP_EVENT_SEND;
+        LDI     R18, 8
+// 1001 	    if (sd==0) j=TCP_EVENT_REGENERATE; //Если смещение 0, регенерируем от ACK
+        MOV     R19, R16
+        OR      R19, R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_132
+        LDI     R18, 6
+// 1002 	    d=s->rwin-sd;
+??INT_ETH_PROCESS_PKT2_132:
+        LDD     R4, Z+31
+        LDD     R5, Z+32
+        SUB     R4, R16
+        SBC     R5, R17
+// 1003 	    UREG i;
+// 1004 	    len=0;
+// 1005 	    unsigned int nl=s->rmss;
+        LDD     R16, Z+33
+        LDD     R17, Z+34
+// 1006 	    //Проверим размер окна и MSS приемной стороны
+// 1007 	    if (d==nl)
+        CP      R4, R16
+        CPC     R5, R17
+        BRNE    ??INT_ETH_PROCESS_PKT2_133
+// 1008 	    {
+// 1009 	      //Этот пакет - последний для окна. После него не стоит продолжать передачу
+// 1010 	      s->txreq=TCP_TXREQ_STOP;
+        LDI     R16, 2
+        STD     Z+41, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_134
+// 1011 	    }
+// 1012 	    if (d>nl)
+??INT_ETH_PROCESS_PKT2_133:
+        CP      R16, R4
+        CPC     R17, R5
+        BRCC    ??INT_ETH_PROCESS_PKT2_134
+// 1013 	    {
+// 1014 	      //Размер окна больше чем MSS
+// 1015 	      d=nl; //Количество данных для передачи равно MSS
+        MOVW    R5:R4, R17:R16
+// 1016 	    }
+// 1017 	    i=255; if (d<i) i=d; d-=i;
+??INT_ETH_PROCESS_PKT2_134:
+        LDI     R16, 255
+        CP      R4, R16
+        CPC     R5, R10
+        BRCC    ??INT_ETH_PROCESS_PKT2_135
+        MOV     R16, R4
+??INT_ETH_PROCESS_PKT2_135:
+        SUB     R4, R16
+        SBC     R5, R10
+// 1018 	    nl=CallTCPhook(j,i,tcpf->data,s);
+        LDI     R26, LOW((ETH_PKT + 54))
+        LDI     R27, HIGH((ETH_PKT + 54))
+        MOV     R17, R16
+        MOV     R16, R18
+        RJMP    ??INT_ETH_PROCESS_PKT2_136
+// 1019 	    for(;nl;)
+// 1020 	    {
+// 1021 	      len+=nl;
+// 1022 	      i=255; if (d<i) i=d; d-=i;
+// 1023 	      if (!i) break;
+// 1024 	      nl=CallTCPhook(TCP_EVENT_SEND,i,tcpf->data+len,s);
+??INT_ETH_PROCESS_PKT2_137:
+        MOVW    R31:R30, R25:R24
+        LDI     R26, LOW((ETH_PKT + 54))
+        LDI     R27, HIGH((ETH_PKT + 54))
+        ADD     R26, R10
+        ADC     R27, R11
+        MOV     R17, R16
+        LDI     R16, 8
+??INT_ETH_PROCESS_PKT2_136:
+        RCALL   CallTCPhook
+        LDI     R17, 0
+        TST     R16
+        BREQ    ??INT_ETH_PROCESS_PKT2_138
+        ADD     R10, R16
+        ADC     R11, R17
+        LDI     R16, 255
+        CP      R4, R16
+        CPC     R5, R17
+        BRCC    ??INT_ETH_PROCESS_PKT2_139
+        MOV     R16, R4
+??INT_ETH_PROCESS_PKT2_139:
+        SUB     R4, R16
+        SBC     R5, R17
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_137
+// 1025 	    }
+// 1026 	  }	  
+// 1027 	  {
+// 1028 	    UREG i=s->flags;
+??INT_ETH_PROCESS_PKT2_138:
+        MOVW    R31:R30, R25:R24
+        LDD     R16, Z+28
+// 1029 	    if (len) i|=TCP_FLAG_PUSH; else i&=~TCP_FLAG_PUSH;
+        MOV     R17, R10
+        OR      R17, R11
+        BREQ    ??INT_ETH_PROCESS_PKT2_140
+        ORI     R16, 0x08
+        RJMP    ??INT_ETH_PROCESS_PKT2_141
+??INT_ETH_PROCESS_PKT2_140:
+        ANDI    R16, 0xF7
+// 1030 	    s->flags=i;
+??INT_ETH_PROCESS_PKT2_141:
+        STD     Z+28, R16
+// 1031 	  }
+// 1032 	  if (s->txreq==TCP_TXREQ_STOP)
+        LDD     R16, Z+41
+        CPI     R16, 2
+        BRNE    ??INT_ETH_PROCESS_PKT2_142
+// 1033 	  {
+// 1034 	    s->txreq=TCP_TXREQ_NONE;
+        LDI     R16, 0
+        STD     Z+41, R16
+// 1035 	    goto L_STOP_TX;
+        RJMP    ??INT_ETH_PROCESS_PKT2_143
+// 1036 	  }
+// 1037           if (s->txreq==TCP_TXREQ_SEND)
+??INT_ETH_PROCESS_PKT2_142:
+        LDD     R16, Z+41
+        CPI     R16, 3
+        BRNE    ??INT_ETH_PROCESS_PKT2_131
+// 1038           {
+// 1039 	  L_STOP_TX:
+// 1040 	    //Если есть данные, будем продолжать слать, нам пофиг ;)
+// 1041             if (len==0) s->txreq=TCP_TXREQ_DUPACK; //Если данных нет, посылаем DUP для получения быстрого ACK на последний пакет
+??INT_ETH_PROCESS_PKT2_143:
+        MOV     R16, R10
+        OR      R16, R11
+        BREQ    $+2+2
+        RJMP    ??INT_ETH_PROCESS_PKT2_15
+        LDI     R16, 1
+        STD     Z+41, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_15
+// 1042 #ifdef IPSEQ_DEBUG
+// 1043 	    IPSEQ=2;
+// 1044 #endif
+// 1045             goto L_SENDTCPWITHDATA; //Не надо трогать таймер после перепосылки
+// 1046           }
+// 1047 	}
+// 1048       }
+// 1049       //Следующая итерация таймера, в 2 раза больше пауза
+// 1050       {
+// 1051 	UREG f=s->timer_init<<1;
+??INT_ETH_PROCESS_PKT2_131:
+        LDD     R16, Z+40
+        LSL     R16
+// 1052 	if ((s->state==TCP_STATE_SYN_RECEIVED)||(s->state==TCP_STATE_SYN_SENT))
+        LDD     R17, Z+27
+        CPI     R17, 2
+        BREQ    ??INT_ETH_PROCESS_PKT2_144
+        CPI     R17, 4
+        BRNE    ??INT_ETH_PROCESS_PKT2_145
+// 1053 	{
+// 1054 	  if (f>=(TCP_TIMER_INITV<<3))
+??INT_ETH_PROCESS_PKT2_144:
+        CPI     R16, 32
+        BRCS    ??INT_ETH_PROCESS_PKT2_146
+// 1055 	  {
+// 1056 	    s->timer_init=255; //Последний выстрел
+        LDI     R17, 255
+        STD     Z+40, R17
+// 1057 	  }
+// 1058 	  else
+// 1059 	    s->timer_init=f;
+// 1060 	}
+// 1061 	else
+// 1062 	{
+// 1063 	  if (f==(UREG)256)
+// 1064 	  {
+// 1065 	    f=255;
+// 1066 	  }
+// 1067 	  s->timer_init=f;
+// 1068 	}
+// 1069 	s->timer=f;
+??INT_ETH_PROCESS_PKT2_147:
+        STD     Z+39, R16
+// 1070       }
+// 1071 #ifdef IPSEQ_DEBUG
+// 1072       IPSEQ=3;
+// 1073 #endif
+// 1074       goto L_SENDTCPWITHDATA;
+        RJMP    ??INT_ETH_PROCESS_PKT2_15
+??INT_ETH_PROCESS_PKT2_145:
+        TST     R16
+        BRNE    ??INT_ETH_PROCESS_PKT2_146
+        LDI     R16, 255
+??INT_ETH_PROCESS_PKT2_146:
+        STD     Z+40, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_147
+// 1075     default:
+// 1076       s->timer_init=0; //какого вообще хрена тут делает таймер ;)
+??INT_ETH_PROCESS_PKT2_123:
+        LDI     R16, 0
+        STD     Z+40, R16
+        RJMP    ??INT_ETH_PROCESS_PKT2_115
+// 1077       break;
+// 1078     }
+// 1079   }
+// 1080 }
+??INT_ETH_PROCESS_PKT2_117:
+        LD      R24, Y+
+        LD      R25, Y+
+        LD      R26, Y+
+        LD      R27, Y+
+        LD      R4, Y+
+        LD      R5, Y+
+        LD      R6, Y+
+        LD      R7, Y+
+        LD      R8, Y+
+        LD      R9, Y+
+        LD      R10, Y+
+        LD      R11, Y+
+        RET
+        REQUIRE _A_TWAR
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+        REQUIRE _A_PORTD
+// 1081 
+// 1082 #pragma diag_default=Ta006
+// 1083 
+// 1084 #pragma diag_suppress=Ta006
+
+        RSEG CODE:CODE:NOROOT(1)
+// 1085 __interrupt void TIMER_TASK(void)
+TIMER_TASK:
+// 1086 {
+        ST      -Y, R31
+        ST      -Y, R30
+        ST      -Y, R18
+        ST      -Y, R17
+        ST      -Y, R16
+        IN      R18, 0x3F
+// 1087   //Обработка таймеров
+// 1088  // if ((++IRS)&0x1FFF) return; //Каждые 8192*25.6мкс=210мс
+// 1089   if ((count_200ms_low+=8)) return;
+        LDS     R16, (IP + 4)
+        SUBI    R16, 248
+        STS     (IP + 4), R16
+        TST     R16
+        BRNE    ??TIMER_TASK_0
+// 1090   if ((count_200ms_high+=1)) return;
+        LDS     R16, (IP + 5)
+        INC     R16
+        STS     (IP + 5), R16
+        TST     R16
+        BRNE    ??TIMER_TASK_0
+// 1091   irs_high++;
+        LDI     R30, LOW(IP)
+        LDI     R31, (IP) >> 8
+        LDD     R16, Z+6
+        LDD     R17, Z+7
+        SUBI    R16, 255
+        SBCI    R17, 255
+        STD     Z+6, R16
+        STD     Z+7, R17
+// 1092   TIMER_200ms=1;
+        SBI     0x02, 0x04
+// 1093   WAKEUP_ETH();
+        SBI     0x02, 0x01
+// 1094 }
+??TIMER_TASK_0:
+        OUT     0x3F, R18
+        LD      R16, Y+
+        LD      R17, Y+
+        LD      R18, Y+
+        LD      R30, Y+
+        LD      R31, Y+
+        RETI
+        REQUIRE _A_TWAR
+// 1095 #pragma diag_default=Ta006
+// 1096 
+// 1097 #pragma vector=EE_RDY_vect
+
+        RSEG CODE:CODE:NOROOT(1)
+// 1098 __interrupt __raw void INT_ETH_PROCESS_PKT(void)
+INT_ETH_PROCESS_PKT:
+// 1099 {
+// 1100    
+// 1101 }
+        RETI
+// 1102 
+// 1103 #pragma vector=TIMER0_COMP_vect
+
+        RSEG CODE:CODE:NOROOT(1)
+// 1104 __interrupt __raw void INT_TIMER_DISPATCH(void)
+INT_TIMER_DISPATCH:
+// 1105 {
+// 1106   if (TIMER_TASK_LOCK) return;
+        SBIC    0x02, 0x02
+        RJMP    ??INT_TIMER_DISPATCH_0
+// 1107   TIMER_TASK_LOCK=1;
+        SBI     0x02, 0x02
+// 1108 //  DISABLE_INT_ETH();
+// 1109   __enable_interrupt();
+        SEI
+// 1110   if (TIMER_TASK_TMR)
+        SBIS    0x02, 0x03
+        RJMP    ??INT_TIMER_DISPATCH_1
+// 1111   {
+// 1112     TIMER_TASK_TMR=0;
+        CBI     0x02, 0x03
+// 1113     ((void(*)(void))TIMER_TASK)();
+        RCALL   TIMER_TASK
+        RJMP    ??INT_TIMER_DISPATCH_2
+// 1114   }
+// 1115   else
+// 1116     TIMER_TASK_TMR=1;
+??INT_TIMER_DISPATCH_1:
+        SBI     0x02, 0x03
+// 1117   __watchdog_reset();
+??INT_TIMER_DISPATCH_2:
+        WDR
+// 1118   __disable_interrupt();
+        CLI
+// 1119   TIMER_TASK_LOCK=0;
+        CBI     0x02, 0x02
+// 1120   //if (ETH_TASK_LOCK) return;
+// 1121   //if (ETH_TASK_WAKEUP) ENABLE_INT_ETH();
+// 1122 }
+??INT_TIMER_DISPATCH_0:
+        RETI
+        REQUIRE _A_TWAR
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        COMMON INTVEC:CODE:ROOT(1)
+        ORG 40
+`??INT_TIMER_DISPATCH??INTVEC 40`:
+        JMP     INT_TIMER_DISPATCH
+
+        COMMON INTVEC:CODE:ROOT(1)
+        ORG 68
+`??INT_ETH_PROCESS_PKT??INTVEC 68`:
+        JMP     INT_ETH_PROCESS_PKT
+
+        RSEG INITTAB:CODE:NOROOT(0)
+`?<Segment init: NEAR_Z>`:
+        DC16    SFE(NEAR_Z) - SFB(NEAR_Z)
+        DC16    SFB(NEAR_Z)
+        DC16    0
+        REQUIRE ?need_segment_init
+
+        END
+// 1123 
+// 1124 /*
+// 1125 void ExecuteETH(void)
+// 1126 {
+// 1127   ENABLE_INT_ETH();
+// 1128 }
+// 1129 */
+// 
+//     5 bytes in segment ABSOLUTE
+// 4 622 bytes in segment CODE
+//     6 bytes in segment INITTAB
+//     8 bytes in segment INTVEC
+//    27 bytes in segment NEAR_Z
+// 
+// 4 622 bytes of CODE memory (+ 14 bytes shared)
+//    27 bytes of DATA memory (+  5 bytes shared)
+//
+//Errors: none
+//Warnings: none

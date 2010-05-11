@@ -1,0 +1,448 @@
+###############################################################################
+#                                                                             #
+#                                                       02/Feb/2010  10:25:51 #
+# IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR     #
+# Copyright 1996-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Source file  =  D:\a-erezeev\AVRProjects\EthRadio_buf_inline\http_post.c #
+#    Command line =  --string_literals_in_flash D:\a-erezeev\AVRProjects\EthR #
+#                    adio_buf_inline\http_post.c --cpu=m32 -ms -o             #
+#                    D:\a-erezeev\AVRProjects\EthRadio_buf_inline\Debug\Obj\  #
+#                    -lC D:\a-erezeev\AVRProjects\EthRadio_buf_inline\Debug\L #
+#                    ist\ -lB D:\a-erezeev\AVRProjects\EthRadio_buf_inline\De #
+#                    bug\List\ --initializers_in_flash -s9 --no_code_motion   #
+#                    --debug -DENABLE_BIT_DEFINITIONS -e -I "C:\Program       #
+#                    Files\IAR Systems\Embedded Workbench Evaluation          #
+#                    5.3\avr\INC\" -I "C:\Program Files\IAR Systems\Embedded  #
+#                    Workbench Evaluation 5.3\avr\INC\CLIB\" --eeprom_size    #
+#                    1024 --lock_regs=1                                       #
+#    List file    =  D:\a-erezeev\AVRProjects\EthRadio_buf_inline\Debug\List\ #
+#                    http_post.lst                                            #
+#    Object file  =  D:\a-erezeev\AVRProjects\EthRadio_buf_inline\Debug\Obj\h #
+#                    ttp_post.r90                                             #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+D:\a-erezeev\AVRProjects\EthRadio_buf_inline\http_post.c
+      1          /* Name: http_get.c
+      2           * Project: uNikeE - Software Ethernet MAC and upper layers stack
+      3           * Author: Dmitry Oparin aka Rst7/CBSIE
+      4           * Creation Date: 25-Jan-2009
+      5           * Copyright: (C)2008,2009 by Rst7/CBSIE
+      6           * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+      7           */
+      8          #include "nike_e.h"
+      9          #include "tcp.h"
+     10          #include "pgmspace.h"
+     11          
+     12          typedef struct
+     13          {
+     14            TCP_SOCK sock;
+     15            UREG state;
+     16            UINT8 header_pos;
+     17            UINT16 block_length;
+     18            UINT16 metadata_interval;
+     19            char req[32];
+     20          }POST_SOCK;
+     21          
+
+   \                                 In  segment NEAR_Z, align 1, keep-with-next
+   \   00000000                      REQUIRE `?<Segment init: NEAR_Z>`
+     22          POST_SOCK post_sock;
+   \                     post_sock:
+   \   00000000                      DS8 81
+     23          
+     24          extern __eeprom UINT32 OUTG_IP[2];
+     25          //extern char i2a_buf [5];
+     26          
+     27          __z void _i2a(char *s, UINT16 v);
+     28          extern __z void i2a(char *s, UINT16 v);
+     29          extern void *debug_addr;
+     30          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     31          void AddPOSTsocket(void)
+   \                     AddPOSTsocket:
+     32          {
+     33            __x UREG POST_hook(UREG state, UREG len, UINT8 *data, TCP_SOCK *_s);
+     34            post_sock.sock.type=TCP_TYPE_CLIENT;
+   \   00000000   ....               LDI     R30, LOW(post_sock)
+   \   00000002   ....               LDI     R31, (post_sock) >> 8
+   \   00000004   E002               LDI     R16, 2
+   \   00000006   8302               STD     Z+2, R16
+     35            post_sock.sock.state=TCP_STATE_CLOSED;
+   \   00000008   E000               LDI     R16, 0
+   \   0000000A   8F03               STD     Z+27, R16
+     36            post_sock.sock.hook=POST_hook;
+   \   0000000C   ....               LDI     R16, LOW(POST_hook/2)
+   \   0000000E   ....               LDI     R17, (POST_hook/2) >> 8
+   \   00000010   8303               STD     Z+3, R16
+   \   00000012   8314               STD     Z+4, R17
+     37            post_sock.sock.win=htons(0x800);
+   \   00000014   E030               LDI     R19, 0
+   \   00000016   E028               LDI     R18, 8
+   \   00000018   8F25               STD     Z+29, R18
+   \   0000001A   8F36               STD     Z+30, R19
+     38            debug_addr=&post_sock;
+   \   0000001C   93E0....           STS     debug_addr, R30
+   \   00000020   93F0....           STS     (debug_addr + 1), R31
+     39            AddTCPsocket(&post_sock.sock);
+   \   00000024   ........           JMP     AddTCPsocket
+     40          }
+     41          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     42          void StartPOST(void)
+   \                     StartPOST:
+     43          {
+   \   00000000   93BA               ST      -Y, R27
+   \   00000002   93AA               ST      -Y, R26
+     44            if (post_sock.sock.state==TCP_STATE_CLOSED) TCPconnect(&post_sock.sock,OUTG_IP[0],80);  
+   \   00000004   9100....           LDS     R16, (post_sock + 27)
+   \   00000008   2300               TST     R16
+   \   0000000A   F451               BRNE    ??StartPOST_0
+   \   0000000C   ....               LDI     R20, LOW(OUTG_IP)
+   \   0000000E   ....               LDI     R21, (OUTG_IP) >> 8
+   \   00000010   ........           CALL    __eeget32_16
+   \   00000014   E540               LDI     R20, 80
+   \   00000016   E050               LDI     R21, 0
+   \   00000018   ....               LDI     R26, LOW(post_sock)
+   \   0000001A   ....               LDI     R27, (post_sock) >> 8
+   \   0000001C   ........           CALL    TCPconnect
+     45          }
+   \                     ??StartPOST_0:
+   \   00000020   91A9               LD      R26, Y+
+   \   00000022   91B9               LD      R27, Y+
+   \   00000024   9508               RET
+     46          
+     47          enum HTTP_POST_STATE
+     48          {
+     49             _POST_STOP=0, //Остановленно
+     50            _POST_CONREQ, //Запрос соединения
+     51            _POST_SENDREQ, //Посылка HTTP-запроса
+     52            _POST_WAITACK, //Ожидание подтверждения посылки
+     53            _POST_RESP // Ответ сервера
+     54          };
+     55          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     56          static __x UREG POST_hook(UREG state, UREG len, UINT8 *data, TCP_SOCK *_s)
+   \                     POST_hook:
+     57          {
+   \   00000000   939A               ST      -Y, R25
+   \   00000002   938A               ST      -Y, R24
+   \   00000004   9725               SBIW    R29:R28, 5
+     58            POST_SOCK *s=(POST_SOCK *)_s;
+     59          //  UREG i;
+     60          //  UREG j;
+     61            switch(state)
+   \   00000006   950A               DEC     R16
+   \   00000008   F0C1               BREQ    ??POST_hook_0
+   \   0000000A   5002               SUBI    R16, 2
+   \   0000000C   F069               BREQ    ??POST_hook_1
+   \   0000000E   950A               DEC     R16
+   \   00000010   F059               BREQ    ??POST_hook_1
+   \   00000012   950A               DEC     R16
+   \   00000014   F129               BREQ    ??POST_hook_2
+   \   00000016   950A               DEC     R16
+   \   00000018   F159               BREQ    ??POST_hook_3
+   \   0000001A   950A               DEC     R16
+   \   0000001C   F0B9               BREQ    ??POST_hook_4
+   \   0000001E   950A               DEC     R16
+   \   00000020   F169               BREQ    ??POST_hook_5
+   \   00000022   950A               DEC     R16
+   \   00000024   F079               BREQ    ??POST_hook_6
+   \   00000026   C00C               RJMP    ??POST_hook_7
+     62            {
+     63            case TCP_EVENT_CLOSE:
+     64            case TCP_EVENT_ABORT:
+     65              s->state=_POST_STOP;
+   \                     ??POST_hook_1:
+   \   00000028   E000               LDI     R16, 0
+   \   0000002A   01F9               MOVW    R31:R30, R19:R18
+   \   0000002C   A703               STD     Z+43, R16
+     66              s->header_pos=0;
+   \   0000002E   A704               STD     Z+44, R16
+     67              s->block_length=0;
+   \   00000030   A705               STD     Z+45, R16
+   \   00000032   A706               STD     Z+46, R16
+     68              s->metadata_interval=0;
+   \   00000034   A707               STD     Z+47, R16
+   \   00000036   AB00               STD     Z+48, R16
+     69              return 0;
+   \   00000038   C06A               RJMP    ??POST_hook_8
+     70            case TCP_EVENT_CONREQ:
+     71              s->state=_POST_CONREQ;
+   \                     ??POST_hook_0:
+   \   0000003A   E001               LDI     R16, 1
+   \   0000003C   01F9               MOVW    R31:R30, R19:R18
+   \                     ??POST_hook_9:
+   \   0000003E   A703               STD     Z+43, R16
+     72              return 0;
+   \                     ??POST_hook_7:
+   \   00000040   E000               LDI     R16, 0
+   \   00000042   C065               RJMP    ??POST_hook_8
+     73            case TCP_EVENT_ASYNC_REQ:
+     74              s->sock.async_req=0;
+   \                     ??POST_hook_6:
+   \   00000044   E000               LDI     R16, 0
+   \   00000046   01F9               MOVW    R31:R30, R19:R18
+   \   00000048   A702               STD     Z+42, R16
+     75              return 0;
+   \   0000004A   C061               RJMP    ??POST_hook_8
+     76            case TCP_EVENT_DATA:
+     77              if (s->state==_POST_CONREQ)
+   \                     ??POST_hook_4:
+   \   0000004C   01F9               MOVW    R31:R30, R19:R18
+   \   0000004E   A503               LDD     R16, Z+43
+   \   00000050   3001               CPI     R16, 1
+   \   00000052   F421               BRNE    ??POST_hook_10
+     78              {
+     79                s->state=_POST_SENDREQ;
+   \   00000054   E002               LDI     R16, 2
+   \   00000056   A703               STD     Z+43, R16
+     80                return 1; //Запрос передачи
+   \   00000058   E001               LDI     R16, 1
+   \   0000005A   C059               RJMP    ??POST_hook_8
+     81              }
+     82              if (s->state<_POST_RESP) return 0;
+   \                     ??POST_hook_10:
+   \   0000005C   3004               CPI     R16, 4
+   \   0000005E   F380               BRCS    ??POST_hook_7
+     83             // return GET_hook_DATA_RX(len,data,s);
+     84            case TCP_EVENT_ACK:
+     85              //Подтверждение данных
+     86              if (s->state==_POST_WAITACK&&len)
+   \                     ??POST_hook_2:
+   \   00000060   01F9               MOVW    R31:R30, R19:R18
+   \   00000062   A503               LDD     R16, Z+43
+   \   00000064   3003               CPI     R16, 3
+   \   00000066   F761               BRNE    ??POST_hook_7
+   \   00000068   2311               TST     R17
+   \   0000006A   F351               BREQ    ??POST_hook_7
+     87              {
+     88                s->state=_POST_RESP;
+   \   0000006C   E004               LDI     R16, 4
+   \   0000006E   CFE7               RJMP    ??POST_hook_9
+     89              }
+     90              return 0;
+     91            case TCP_EVENT_REGENERATE:
+     92              if (s->state==_POST_WAITACK) s->state=_POST_SENDREQ;
+   \                     ??POST_hook_3:
+   \   00000070   01F9               MOVW    R31:R30, R19:R18
+   \   00000072   A503               LDD     R16, Z+43
+   \   00000074   3003               CPI     R16, 3
+   \   00000076   F411               BRNE    ??POST_hook_5
+   \   00000078   E002               LDI     R16, 2
+   \   0000007A   A703               STD     Z+43, R16
+     93            case TCP_EVENT_SEND:
+     94              if (s->state==_POST_SENDREQ)
+   \                     ??POST_hook_5:
+   \   0000007C   01F9               MOVW    R31:R30, R19:R18
+   \   0000007E   A503               LDD     R16, Z+43
+   \   00000080   3002               CPI     R16, 2
+   \   00000082   F6F1               BRNE    ??POST_hook_7
+     95              {
+     96                s->state=_POST_WAITACK;
+   \   00000084   E003               LDI     R16, 3
+   \   00000086   A703               STD     Z+43, R16
+     97                static __flash char req1[]="POST /sample.php HTTP/1.1\r\nHost: 127.0.0.1\r\nReferer: 127.0.0.1/\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: ";
+     98                static __flash char nn[]="\r\n\r\n"; 
+     99                static char reqbody[]="T1=-13.4&T2=23.4&T3=12.1&H1=88&H2=60&P=940";      
+    100                __no_init char i2a_buf[5];
+    101                i2a(i2a_buf, strlen(reqbody));          
+   \   00000088   ....               LDI     R16, LOW(??reqbody)
+   \   0000008A   ....               LDI     R17, (??reqbody) >> 8
+   \   0000008C   ........           CALL    strlen
+   \   00000090   01FE               MOVW    R31:R30, R29:R28
+   \   00000092   ........           CALL    i2a
+    102                UREG i=sizeof(req1)-1;
+    103                char __flash *s=req1;
+   \   00000096   ....               LDI     R30, LOW(??req1)
+   \   00000098   ....               LDI     R31, (??req1) >> 8
+    104                UINT8 *d=data;
+   \   0000009A   01CD               MOVW    R25:R24, R27:R26
+   \   0000009C   E802               LDI     R16, 130
+    105                do *d++=*s++;
+   \                     ??POST_hook_11:
+   \   0000009E   9115               LPM     R17, Z+
+   \   000000A0   01DC               MOVW    R27:R26, R25:R24
+   \   000000A2   931D               ST      X+, R17
+   \   000000A4   01CD               MOVW    R25:R24, R27:R26
+    106                while(--i); // Записали req1
+   \   000000A6   950A               DEC     R16
+   \   000000A8   F7D1               BRNE    ??POST_hook_11
+    107                char *s1 = i2a_buf;
+   \   000000AA   01DE               MOVW    R27:R26, R29:R28
+   \   000000AC   C003               RJMP    ??POST_hook_12
+    108                while (*s1) *d++=*s1++; // Записали длину POST посылки
+   \                     ??POST_hook_13:
+   \   000000AE   01FC               MOVW    R31:R30, R25:R24
+   \   000000B0   9301               ST      Z+, R16
+   \   000000B2   01CF               MOVW    R25:R24, R31:R30
+   \                     ??POST_hook_12:
+   \   000000B4   910D               LD      R16, X+
+   \   000000B6   2300               TST     R16
+   \   000000B8   F7D1               BRNE    ??POST_hook_13
+    109                s=nn;
+   \   000000BA   ....               LDI     R30, LOW((??req1 + 131))
+   \   000000BC   ....               LDI     R31, HIGH((??req1 + 131))
+   \   000000BE   C004               RJMP    ??POST_hook_14
+    110                while (*s) *d++=*s++; // Записали \r\n\r\n      
+   \                     ??POST_hook_15:
+   \   000000C0   9105               LPM     R16, Z+
+   \   000000C2   01DC               MOVW    R27:R26, R25:R24
+   \   000000C4   930D               ST      X+, R16
+   \   000000C6   01CD               MOVW    R25:R24, R27:R26
+   \                     ??POST_hook_14:
+   \   000000C8   9104               LPM     R16, Z
+   \   000000CA   2300               TST     R16
+   \   000000CC   F7C9               BRNE    ??POST_hook_15
+    111                s1=reqbody;
+   \   000000CE   ....               LDI     R26, LOW(??reqbody)
+   \   000000D0   ....               LDI     R27, (??reqbody) >> 8
+    112                i =strlen(reqbody);
+   \   000000D2   018D               MOVW    R17:R16, R27:R26
+   \   000000D4   ........           CALL    strlen
+    113                do *d++=*s1++;
+   \                     ??POST_hook_16:
+   \   000000D8   911D               LD      R17, X+
+   \   000000DA   01FC               MOVW    R31:R30, R25:R24
+   \   000000DC   9311               ST      Z+, R17
+   \   000000DE   01CF               MOVW    R25:R24, R31:R30
+    114                while (--i); // Записали POST посылку      
+   \   000000E0   950A               DEC     R16
+   \   000000E2   F7D1               BRNE    ??POST_hook_16
+    115                s=nn;
+   \   000000E4   ....               LDI     R30, LOW((??req1 + 131))
+   \   000000E6   ....               LDI     R31, HIGH((??req1 + 131))
+   \   000000E8   C004               RJMP    ??POST_hook_17
+    116                while (*s) *d++=*s++; // Записали \r\n\r\n      
+   \                     ??POST_hook_18:
+   \   000000EA   9105               LPM     R16, Z+
+   \   000000EC   01DC               MOVW    R27:R26, R25:R24
+   \   000000EE   930D               ST      X+, R16
+   \   000000F0   01CD               MOVW    R25:R24, R27:R26
+   \                     ??POST_hook_17:
+   \   000000F2   9104               LPM     R16, Z
+   \   000000F4   2300               TST     R16
+   \   000000F6   F7C9               BRNE    ??POST_hook_18
+    117                return sizeof(req1)-1+strlen(i2a_buf)+4+strlen(reqbody)+4;
+   \   000000F8   018E               MOVW    R17:R16, R29:R28
+   \   000000FA   ........           CALL    strlen
+   \   000000FE   2F80               MOV     R24, R16
+   \   00000100   ....               LDI     R16, LOW(??reqbody)
+   \   00000102   ....               LDI     R17, (??reqbody) >> 8
+   \   00000104   ........           CALL    strlen
+   \   00000108   0F80               ADD     R24, R16
+   \   0000010A   5786               SUBI    R24, 118
+   \   0000010C   2F08               MOV     R16, R24
+   \                     ??POST_hook_8:
+   \   0000010E   9625               ADIW    R29:R28, 5
+   \   00000110   9189               LD      R24, Y+
+   \   00000112   9199               LD      R25, Y+
+   \   00000114   9508               RET
+    118              }
+    119              return 0;
+    120            }
+    121            return 0;
+    122          }
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     ??req1:
+   \   00000000   4F5054532F20       DC8 50H, 4FH, 53H, 54H, 20H, 2FH, 73H, 61H
+   \              6173        
+   \   00000008   706D656C702E       DC8 6DH, 70H, 6CH, 65H, 2EH, 70H, 68H, 70H
+   \              7068        
+   \   00000010   482054542F50       DC8 20H, 48H, 54H, 54H, 50H, 2FH, 31H, 2EH
+   \              2E31        
+   \   00000018   0D31480A736F       DC8 31H, 0DH, 0AH, 48H, 6FH, 73H, 74H, 3AH
+   \              3A74        
+   \   00000020   31203732302E       DC8 20H, 31H, 32H, 37H, 2EH, 30H, 2EH, 30H
+   \              302E        
+   \   00000028   312E0A0D6552       DC8 2EH, 31H, 0DH, 0AH, 52H, 65H, 66H, 65H
+   \              6566        
+   \   00000030   65723A723120       DC8 72H, 65H, 72H, 3AH, 20H, 31H, 32H, 37H
+   \              3732        
+   \   00000038   302E302E312E       DC8 2EH, 30H, 2EH, 30H, 2EH, 31H, 2FH, 0DH
+   \              0D2F        
+   \   00000040   430A6E6F6574       DC8 0AH, 43H, 6FH, 6EH, 74H, 65H, 6EH, 74H
+   \              746E        
+   \   00000048   542D70793A65       DC8 2DH, 54H, 79H, 70H, 65H, 3AH, 20H, 61H
+   \              6120        
+   \   00000050   7070696C6163       DC8 70H, 70H, 6CH, 69H, 63H, 61H, 74H, 69H
+   \              6974        
+   \   00000058   6E6F782F772D       DC8 6FH, 6EH, 2FH, 78H, 2DH, 77H, 77H, 77H
+   \              7777        
+   \   00000060   662D726F2D6D       DC8 2DH, 66H, 6FH, 72H, 6DH, 2DH, 75H, 72H
+   \              7275        
+   \   00000068   656C636E646F       DC8 6CH, 65H, 6EH, 63H, 6FH, 64H, 65H, 64H
+   \              6465        
+   \   00000070   0A0D6F43746E       DC8 0DH, 0AH, 43H, 6FH, 6EH, 74H, 65H, 6EH
+   \              6E65        
+   \   00000078   2D74654C676E       DC8 74H, 2DH, 4CH, 65H, 6EH, 67H, 74H, 68H
+   \              6874        
+   \   00000080   203A00             DC8 3AH, 20H, 0
+   \   00000083   0A0D0A0D00         DC8 "\015\012\015\012"
+
+   \                                 In  segment NEAR_I, align 1, keep-with-next
+   \   00000000                      REQUIRE `?<Segment init: NEAR_I>`
+   \                     ??reqbody:
+   \   00000000                      DS8 43
+   \   0000002B                      REQUIRE `?<Initializer for reqbody>`
+
+   \                                 In  segment NEAR_ID, align 1, keep-with-next
+   \                     `?<Initializer for reqbody>`:
+   \   00000000   31542D3D3331       DC8 "T1=-13.4&T2=23.4&T3=12.1&H1=88&H2=60&P=940"
+   \              342E54263D32
+   \              3332342E5426
+   \              3D333231312E
+   \              48263D313838
+   \              48263D323036
+   \              5026393D3034
+   \              00          
+
+   Maximum stack usage in bytes:
+
+     Function          CSTACK RSTACK
+     --------          ------ ------
+     AddPOSTsocket         0      2
+       -> AddTCPsocket     0      2
+     POST_hook             7      2
+       -> strlen           7      2
+       -> i2a              7      2
+       -> strlen           7      2
+       -> strlen           7      2
+       -> strlen           7      2
+     StartPOST             2      4
+       -> TCPconnect       2      2
+
+
+   Segment part sizes:
+
+     Function/Label             Bytes
+     --------------             -----
+     post_sock                    81
+     AddPOSTsocket                40
+     StartPOST                    38
+     POST_hook                   278
+     req1                        136
+     nn
+     reqbody                      43
+     ?<Initializer for reqbody>   43
+      Others                      12
+
+ 
+ 356 bytes in segment CODE
+  12 bytes in segment INITTAB
+ 136 bytes in segment NEAR_F
+  43 bytes in segment NEAR_I
+  43 bytes in segment NEAR_ID
+  81 bytes in segment NEAR_Z
+ 
+ 535 bytes of CODE memory (+ 12 bytes shared)
+ 124 bytes of DATA memory
+
+Errors: none
+Warnings: none

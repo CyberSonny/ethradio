@@ -1,0 +1,3449 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:41:41 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\enc28j60.c                   /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\enc28j60.c --cpu=m32 -ms -o  /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\enc28j60.s90      /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME enc28j60
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?need_segment_init
+
+        PUBWEAK `?<Segment init: NEAR_Z>`
+        PUBLIC Enc28j60Bank
+        PUBLIC NextPacketPtr
+        PUBWEAK _A_DDRB
+        PUBWEAK _A_PORTB
+        PUBWEAK _A_PORTD
+        PUBWEAK _A_SPDR
+        PUBWEAK _A_SPSR
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC enc28j60BeginPacketSend
+        PUBLIC enc28j60Init
+        PUBLIC enc28j60PacketReceive
+        PUBLIC enc28j60PacketSend
+        PUBLIC enc28j60ReceiveOverflowRecover
+        PUBLIC enc28j60RegDump
+
+        EXTERN MAC0
+
+// G:\AVR\EthRadio_buf_inline\enc28j60.c
+//    1 //*****************************************************************************
+//    2 //
+//    3 // File Name	: 'enc28j60.c'
+//    4 // Title		: Microchip ENC28J60 Ethernet Interface Driver
+//    5 // Author		: Pascal Stang (c)2005
+//    6 // Created		: 9/22/2005
+//    7 // Revised		: 9/22/2005
+//    8 // Version		: 0.1
+//    9 // Target MCU	: Atmel AVR series
+//   10 // Editor Tabs	: 4
+//   11 //
+//   12 // Description	: This driver provides initialization and transmit/receive
+//   13 // functions for the Microchip ENC28J60 10Mb Ethernet Controller and PHY.
+//   14 // This chip is novel in that it is a full MAC+PHY interface all in a 28-pin
+//   15 // chip, using an SPI interface to the host processor.
+//   16 //
+//   17 // patched by Alexander Yerezeyev, 2010
+//   18 // wapbox@bk.ru
+//   19 //*****************************************************************************
+//   20 
+//   21 
+//   22 #include "nike_e.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02eH
+// <__C30> volatile __io _A_SPSR
+_A_SPSR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02fH
+// <__C32> volatile __io _A_SPDR
+_A_SPDR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,032H
+// <__C38> volatile __io _A_PORTD
+_A_PORTD:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,037H
+// <__C48> volatile __io _A_DDRB
+_A_DDRB:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,038H
+// <__C50> volatile __io _A_PORTB
+_A_PORTB:
+        DS8 1
+//   23 #include "compiler.h"
+//   24 #include "enc28j60.h"
+//   25 #include "io.h"
+//   26 extern UINT8 MAC0[];
+//   27 
+//   28 // include configuration
+//   29 //#include "ax88796conf.h"
+
+        RSEG NEAR_Z:DATA:NOROOT(0)
+        REQUIRE `?<Segment init: NEAR_Z>`
+//   30 u8 Enc28j60Bank;
+//   31 u16 NextPacketPtr;
+NextPacketPtr:
+        DS8 2
+Enc28j60Bank:
+        DS8 1
+//   32 
+//   33 #pragma inline = forced
+//   34 u8 enc28j60ReadOp(u8 op, u8 address)
+//   35 {
+//   36 	u8 data;
+//   37         
+//   38     	//sbi(SPSR, SPI2X);
+//   39 	// assert CS
+//   40 	ENC28J60_CONTROL_PORT &= ~(1<<ENC28J60_CONTROL_CS);
+//   41 	
+//   42 	// issue read command
+//   43 	SPDR = op | (address & ADDR_MASK);
+//   44 	while(!(SPSR & (1<<SPIF)));
+//   45 	// read data
+//   46 	SPDR = 0x00;
+//   47 	while(!(SPSR & (1<<SPIF)));
+//   48 	// do dummy read if needed
+//   49 	if(address & 0x80)
+//   50 	{
+//   51 		SPDR = 0x00;
+//   52 		while(!(SPSR & (1<<SPIF)));
+//   53 	}
+//   54 	data = SPDR;
+//   55 	
+//   56 	// release CS
+//   57 	ENC28J60_CONTROL_PORT |= (1<<ENC28J60_CONTROL_CS);
+//   58         //cbi(SPSR, SPI2X);
+//   59 	return data;
+//   60 }
+//   61 #pragma inline = forced
+//   62 void enc28j60WriteOp(u8 op, u8 address, u8 data)
+//   63 {
+//   64       //  sbi(SPSR, SPI2X);
+//   65 	// assert CS
+//   66 	ENC28J60_CONTROL_PORT &= ~(1<<ENC28J60_CONTROL_CS);
+//   67 
+//   68 	// issue write command
+//   69 	SPDR = op | (address & ADDR_MASK);
+//   70 	while(!(SPSR & (1<<SPIF)));
+//   71 	// write data
+//   72 	SPDR = data;
+//   73 	while(!(SPSR & (1<<SPIF)));
+//   74 
+//   75 	// release CS
+//   76 	ENC28J60_CONTROL_PORT |= (1<<ENC28J60_CONTROL_CS);
+//   77        // cbi(SPSR, SPI2X);
+//   78 }
+//   79 #pragma inline = forced
+//   80 void enc28j60ReadBuffer(u16 len, u8* data)
+//   81 {
+//   82          //if ((len==0)||(len>=255)) return;
+//   83 	// assert CS
+//   84        // sbi(SPSR, SPI2X);
+//   85 	ENC28J60_CONTROL_PORT &= ~(1<<ENC28J60_CONTROL_CS);
+//   86 	
+//   87 	// issue read command
+//   88 	SPDR = ENC28J60_READ_BUF_MEM;
+//   89 	while(!(SPSR & (1<<SPIF)));
+//   90 	while(len--)
+//   91 	{
+//   92 		// read data
+//   93 		SPDR = 0x00;
+//   94 		while(!(SPSR & (1<<SPIF)));
+//   95 		*data++ = SPDR;
+//   96 	}	
+//   97 	// release CS
+//   98 	ENC28J60_CONTROL_PORT |= (1<<ENC28J60_CONTROL_CS);
+//   99       //  cbi(SPSR, SPI2X);
+//  100 }
+//  101 #pragma inline = forced
+//  102 void enc28j60WriteBuffer(u16 len, u8* data)
+//  103 {
+//  104        // if ((len==0)||(len>=255)) return;
+//  105 	// assert CS
+//  106        // sbi(SPSR, SPI2X);
+//  107 	ENC28J60_CONTROL_PORT &= ~(1<<ENC28J60_CONTROL_CS);
+//  108 	
+//  109 	// issue write command
+//  110 	SPDR = ENC28J60_WRITE_BUF_MEM;
+//  111 	while(!(SPSR & (1<<SPIF)));
+//  112 	while(len--)
+//  113 	{
+//  114 		// write data
+//  115 		SPDR = *data++;
+//  116 		while(!(SPSR & (1<<SPIF)));
+//  117 	}	
+//  118 	// release CS
+//  119 	ENC28J60_CONTROL_PORT |= (1<<ENC28J60_CONTROL_CS);
+//  120       //  cbi(SPSR, SPI2X);
+//  121 }
+//  122 #pragma inline = forced
+//  123 void enc28j60SetBank(u8 address)
+//  124 {
+//  125 	// set the bank (if needed)
+//  126 	if((address & BANK_MASK) != Enc28j60Bank)
+//  127 	{
+//  128 		// set the bank
+//  129 		enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON1, (ECON1_BSEL1|ECON1_BSEL0));
+//  130 		enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, (address & BANK_MASK)>>5);
+//  131 		Enc28j60Bank = (address & BANK_MASK);
+//  132 	}
+//  133 }
+//  134 #pragma inline = forced
+//  135 u8 enc28j60Read(u8 address)
+//  136 {
+//  137 	// set the bank
+//  138 	enc28j60SetBank(address);
+//  139 	// do the read
+//  140 	return enc28j60ReadOp(ENC28J60_READ_CTRL_REG, address);
+//  141 }
+//  142 #pragma inline = forced
+//  143 void enc28j60Write(u8 address, u8 data)
+//  144 {
+//  145 	// set the bank
+//  146 	enc28j60SetBank(address);
+//  147 	// do the write
+//  148 	enc28j60WriteOp(ENC28J60_WRITE_CTRL_REG, address, data);
+//  149 }
+//  150 #pragma inline = forced
+//  151 u16 enc28j60PhyRead(u8 address)
+//  152 {
+//  153 	u16 data;
+//  154 
+//  155 	// Set the right address and start the register read operation
+//  156 	enc28j60Write(MIREGADR, address);
+//  157 	enc28j60Write(MICMD, MICMD_MIIRD);
+//  158 //        _delay_us(11);
+//  159 	// wait until the PHY read completes
+//  160 	while(enc28j60Read(MISTAT) & MISTAT_BUSY);
+//  161   
+//  162 	// quit reading
+//  163 	enc28j60Write(MICMD, 0x00);
+//  164 	
+//  165 	// get data value
+//  166 	data  = enc28j60Read(MIRDL);
+//  167 	data |= enc28j60Read(MIRDH);
+//  168 	// return the data
+//  169 	return data;
+//  170 }
+//  171 #pragma inline = forced
+//  172 void enc28j60PhyWrite(u8 address, u16 data)
+//  173 {
+//  174 	// set the PHY register address
+//  175 	enc28j60Write(MIREGADR, address);
+//  176 	
+//  177 	// write the PHY data
+//  178 	enc28j60Write(MIWRL, data);	
+//  179 	enc28j60Write(MIWRH, data>>8);
+//  180 //        _delay_us(11);
+//  181 	// wait until the PHY write completes
+//  182 	while(enc28j60Read(MISTAT) & MISTAT_BUSY);
+//  183 }
+//  184 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  185 void enc28j60Init(void)
+enc28j60Init:
+//  186 {
+//  187 	u8 i,j;
+//  188 	// initialize I/O
+//  189 	sbi(ENC28J60_CONTROL_DDR, ENC28J60_CONTROL_CS);
+        SBI     0x17, 0x02
+//  190 	sbi(ENC28J60_CONTROL_PORT, ENC28J60_CONTROL_CS);
+        SBI     0x18, 0x02
+//  191 
+//  192 	// setup SPI I/O pins	
+//  193 /*	
+//  194         sbi(ENC28J60_CONTROL_DDR, ENC28J60_SCK_PIN);	// set SCK as output
+//  195 	cbi(ENC28J60_CONTROL_DDR, ENC28J60_MISO_PIN);	// set MISO as input
+//  196 	sbi(ENC28J60_CONTROL_DDR, ENC28J60_MOSI_PIN);	// set MOSI as output
+//  197 	sbi(ENC28J60_CONTROL_DDR, ENC28J60_SS_PIN);	// SS must be output for Master mode to work
+//  198         sbi(ENC28J60_CONTROL_DDR, ENC28J60_RST_PIN);    // // set RST as output
+//  199 	// initialize SPI interface
+//  200 	// master mode
+//  201         SPCR|=(1<<MSTR)|(1<<SPE); 
+//  202         sbi (SPSR, SPI2X);
+//  203         // perform hardware reset
+//  204         //
+//  205  */      
+//  206         sbi(ENC28J60_CONTROL_DDR, ENC28J60_RST_PIN);    // // set RST as output
+        SBI     0x17, 0x01
+//  207         ENC28J60_RESET();
+        CBI     0x18, 0x01
+        LDI     R16, 143
+        LDI     R17, 1
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+        SBI     0x18, 0x01
+//  208 	// perform system reset
+//  209 	enc28j60WriteOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
+        CBI     0x18, 0x02
+        LDI     R16, 255
+        OUT     0x0F, R16
+??enc28j60Init_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_0
+        OUT     0x0F, R16
+??enc28j60Init_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_1
+        SBI     0x18, 0x02
+//  210         _delay_ms(100);
+        LDI     R16, 255
+        LDI     R17, 225
+        LDI     R18, 4
+        SUBI    R16, 1
+        SBCI    R17, 0
+        SBCI    R18, 0
+        BRNE    $-6
+        RJMP    $+2
+        NOP
+//  211         // The CLKRDY does not work. See Rev. B4 Silicon Errata point. Just wait.
+//  212         //while(!(enc28j60Read(ESTAT) & ESTAT_CLKRDY));
+//  213 	// initialize receive buffer
+//  214 	// 16-bit transfers, must write low byte first
+//  215 	// set receive buffer start address
+//  216 	NextPacketPtr = RXSTART_INIT;
+        LDI     R30, LOW(NextPacketPtr)
+        LDI     R31, (NextPacketPtr) >> 8
+        LDI     R16, 0
+        LDI     R17, 0
+        ST      Z, R16
+        STD     Z+1, R16
+//  217 	enc28j60Write(ERXSTL, RXSTART_INIT&0xFF);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_2
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_3
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_4
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_5
+        OUT     0x0F, R17
+??enc28j60Init_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_6
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_2:
+        CBI     0x18, 0x02
+        LDI     R16, 72
+        OUT     0x0F, R16
+??enc28j60Init_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_7
+        OUT     0x0F, R17
+??enc28j60Init_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_8
+        SBI     0x18, 0x02
+//  218 	enc28j60Write(ERXSTH, RXSTART_INIT>>8);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_9
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_10:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_10
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_11:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_11
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_12
+        OUT     0x0F, R17
+??enc28j60Init_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_13
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_9:
+        CBI     0x18, 0x02
+        LDI     R16, 73
+        OUT     0x0F, R16
+??enc28j60Init_14:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_14
+        OUT     0x0F, R17
+??enc28j60Init_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_15
+        SBI     0x18, 0x02
+//  219 	// set receive pointer address
+//  220 	enc28j60Write(ERXRDPTL, RXSTART_INIT&0xFF);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_16
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_17:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_17
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_18:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_18
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_19:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_19
+        OUT     0x0F, R17
+??enc28j60Init_20:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_20
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_16:
+        CBI     0x18, 0x02
+        LDI     R16, 76
+        OUT     0x0F, R16
+??enc28j60Init_21:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_21
+        OUT     0x0F, R17
+??enc28j60Init_22:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_22
+        SBI     0x18, 0x02
+//  221 	enc28j60Write(ERXRDPTH, RXSTART_INIT>>8);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_23
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_24:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_24
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_25:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_25
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_26:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_26
+        OUT     0x0F, R17
+??enc28j60Init_27:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_27
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_23:
+        CBI     0x18, 0x02
+        LDI     R16, 77
+        OUT     0x0F, R16
+??enc28j60Init_28:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_28
+        OUT     0x0F, R17
+??enc28j60Init_29:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_29
+        SBI     0x18, 0x02
+//  222 	// set receive buffer end
+//  223 	enc28j60Write(ERXNDL, RXSTOP_INIT&0xFF);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_30
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_31:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_31
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_32:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_32
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_33:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_33
+        OUT     0x0F, R17
+??enc28j60Init_34:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_34
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_30:
+        CBI     0x18, 0x02
+        LDI     R16, 74
+        OUT     0x0F, R16
+??enc28j60Init_35:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_35
+        LDI     R16, 71
+        OUT     0x0F, R16
+??enc28j60Init_36:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_36
+        SBI     0x18, 0x02
+//  224 	enc28j60Write(ERXNDH, RXSTOP_INIT>>8);      
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_37
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_38:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_38
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_39:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_39
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_40:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_40
+        OUT     0x0F, R17
+??enc28j60Init_41:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_41
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_37:
+        CBI     0x18, 0x02
+        LDI     R16, 75
+        OUT     0x0F, R16
+??enc28j60Init_42:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_42
+        LDI     R16, 26
+        OUT     0x0F, R16
+??enc28j60Init_43:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_43
+        SBI     0x18, 0x02
+//  225 	// set transmit buffer start
+//  226 	enc28j60Write(ETXSTL, TXSTART_INIT&0xFF);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_44
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_45:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_45
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_46:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_46
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_47:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_47
+        OUT     0x0F, R17
+??enc28j60Init_48:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_48
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_44:
+        CBI     0x18, 0x02
+        LDI     R16, 68
+        OUT     0x0F, R16
+??enc28j60Init_49:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_49
+        LDI     R16, 73
+        OUT     0x0F, R16
+??enc28j60Init_50:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_50
+        SBI     0x18, 0x02
+//  227 	enc28j60Write(ETXSTH, TXSTART_INIT>>8);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_51
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_52:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_52
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_53:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_53
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_54:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_54
+        OUT     0x0F, R17
+??enc28j60Init_55:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_55
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60Init_51:
+        CBI     0x18, 0x02
+        LDI     R16, 69
+        OUT     0x0F, R16
+??enc28j60Init_56:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_56
+        LDI     R16, 26
+        OUT     0x0F, R16
+??enc28j60Init_57:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_57
+        SBI     0x18, 0x02
+//  228       // do bank 1 stuff, packet filter:
+//  229       // For broadcast packets we allow only ARP packtets
+//  230       // All other packets should be unicast only for our mac (MAADR)
+//  231        //
+//  232        // The pattern to match on is therefore
+//  233        // Type     ETH.DST
+//  234        // ARP      BROADCAST
+//  235        // 06 08 -- ff ff ff ff ff ff -> ip checksum for theses bytes=f7f9
+//  236         // This is hex 303F->EPMM0=0x3f,EPMM1=0x30
+//  237           enc28j60Write(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
+        LDD     R16, Z+2
+        CPI     R16, 32
+        BREQ    ??enc28j60Init_58
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_59:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_59
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_60:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_60
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_61:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_61
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_62:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_62
+        SBI     0x18, 0x02
+        LDI     R16, 32
+        STD     Z+2, R16
+??enc28j60Init_58:
+        CBI     0x18, 0x02
+        LDI     R16, 88
+        OUT     0x0F, R16
+??enc28j60Init_63:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_63
+        LDI     R16, 176
+        OUT     0x0F, R16
+??enc28j60Init_64:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_64
+        SBI     0x18, 0x02
+//  238           enc28j60Write(EPMM0, 0x3f);
+        LDD     R16, Z+2
+        CPI     R16, 32
+        BREQ    ??enc28j60Init_65
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_66:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_66
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_67:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_67
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_68:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_68
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_69:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_69
+        SBI     0x18, 0x02
+        LDI     R16, 32
+        STD     Z+2, R16
+??enc28j60Init_65:
+        CBI     0x18, 0x02
+        LDI     R16, 72
+        OUT     0x0F, R16
+??enc28j60Init_70:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_70
+        LDI     R16, 63
+        OUT     0x0F, R16
+??enc28j60Init_71:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_71
+        SBI     0x18, 0x02
+//  239           enc28j60Write(EPMM1, 0x30);
+        LDD     R16, Z+2
+        CPI     R16, 32
+        BREQ    ??enc28j60Init_72
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_73:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_73
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_74:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_74
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_75:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_75
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_76:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_76
+        SBI     0x18, 0x02
+        LDI     R16, 32
+        STD     Z+2, R16
+??enc28j60Init_72:
+        CBI     0x18, 0x02
+        LDI     R16, 73
+        OUT     0x0F, R16
+??enc28j60Init_77:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_77
+        LDI     R16, 48
+        OUT     0x0F, R16
+??enc28j60Init_78:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_78
+        SBI     0x18, 0x02
+//  240           enc28j60Write(EPMCSL, 0xf9);
+        LDD     R16, Z+2
+        CPI     R16, 32
+        BREQ    ??enc28j60Init_79
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_80:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_80
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_81:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_81
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_82:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_82
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_83:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_83
+        SBI     0x18, 0x02
+        LDI     R16, 32
+        STD     Z+2, R16
+??enc28j60Init_79:
+        CBI     0x18, 0x02
+        LDI     R16, 80
+        OUT     0x0F, R16
+??enc28j60Init_84:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_84
+        LDI     R16, 249
+        OUT     0x0F, R16
+??enc28j60Init_85:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_85
+        SBI     0x18, 0x02
+//  241           enc28j60Write(EPMCSH, 0xf7);
+        LDD     R16, Z+2
+        CPI     R16, 32
+        BREQ    ??enc28j60Init_86
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_87:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_87
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_88:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_88
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_89:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_89
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_90:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_90
+        SBI     0x18, 0x02
+        LDI     R16, 32
+        STD     Z+2, R16
+??enc28j60Init_86:
+        CBI     0x18, 0x02
+        LDI     R16, 81
+        OUT     0x0F, R16
+??enc28j60Init_91:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_91
+        LDI     R16, 247
+        OUT     0x0F, R16
+??enc28j60Init_92:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_92
+        SBI     0x18, 0x02
+//  242 	// do bank 2 stuff
+//  243 	// enable MAC receive
+//  244 	enc28j60Write(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_93
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_94:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_94
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_95:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_95
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_96:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_96
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_97:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_97
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_93:
+        CBI     0x18, 0x02
+        LDI     R16, 64
+        OUT     0x0F, R16
+??enc28j60Init_98:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_98
+        LDI     R16, 13
+        OUT     0x0F, R16
+??enc28j60Init_99:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_99
+        SBI     0x18, 0x02
+//  245 	// bring MAC out of reset
+//  246 	enc28j60Write(MACON2, 0x00);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_100
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_101:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_101
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_102:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_102
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_103:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_103
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_104:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_104
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_100:
+        CBI     0x18, 0x02
+        LDI     R16, 65
+        OUT     0x0F, R16
+??enc28j60Init_105:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_105
+        OUT     0x0F, R17
+??enc28j60Init_106:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_106
+        SBI     0x18, 0x02
+//  247 	// enable automatic padding and CRC operations
+//  248 //	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+//  249 	enc28j60Write(MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_107
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_108:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_108
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_109:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_109
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_110:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_110
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_111:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_111
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_107:
+        CBI     0x18, 0x02
+        LDI     R16, 66
+        OUT     0x0F, R16
+??enc28j60Init_112:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_112
+        LDI     R16, 50
+        OUT     0x0F, R16
+??enc28j60Init_113:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_113
+        SBI     0x18, 0x02
+//  250 //When the medium is occupied, the MAC will wait indefinitely for it to become free when attempting to transmit (use this setting for IEEE 802.3. compliance)
+//  251         enc28j60Write(MACON4, MACON4_DEFER);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_114
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_115:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_115
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_116:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_116
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_117:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_117
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_118:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_118
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_114:
+        CBI     0x18, 0x02
+        LDI     R16, 67
+        OUT     0x0F, R16
+??enc28j60Init_119:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_119
+        LDI     R16, 64
+        OUT     0x0F, R16
+??enc28j60Init_120:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_120
+        SBI     0x18, 0x02
+//  252 	// set inter-frame gap (non-back-to-back)
+//  253 	enc28j60Write(MAIPGL, 0x12);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_121
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_122:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_122
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_123:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_123
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_124:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_124
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_125:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_125
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_121:
+        CBI     0x18, 0x02
+        LDI     R16, 70
+        OUT     0x0F, R16
+??enc28j60Init_126:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_126
+        LDI     R16, 18
+        OUT     0x0F, R16
+??enc28j60Init_127:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_127
+        SBI     0x18, 0x02
+//  254 	enc28j60Write(MAIPGH, 0x0C);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_128
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_129:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_129
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_130:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_130
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_131:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_131
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_132:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_132
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_128:
+        CBI     0x18, 0x02
+        LDI     R16, 71
+        OUT     0x0F, R16
+??enc28j60Init_133:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_133
+        LDI     R16, 12
+        OUT     0x0F, R16
+??enc28j60Init_134:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_134
+        SBI     0x18, 0x02
+//  255 	// set inter-frame gap (back-to-back)
+//  256 	enc28j60Write(MABBIPG, 0x12);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_135
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_136:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_136
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_137:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_137
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_138:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_138
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_139:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_139
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_135:
+        CBI     0x18, 0x02
+        LDI     R16, 68
+        OUT     0x0F, R16
+??enc28j60Init_140:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_140
+        LDI     R16, 18
+        OUT     0x0F, R16
+??enc28j60Init_141:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_141
+        SBI     0x18, 0x02
+//  257 	// Set the maximum packet size which the controller will accept
+//  258 	enc28j60Write(MAMXFLL, MAX_FRAMELEN&0xFF);	
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_142
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_143:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_143
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_144:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_144
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_145:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_145
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_146:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_146
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_142:
+        CBI     0x18, 0x02
+        LDI     R16, 74
+        OUT     0x0F, R16
+??enc28j60Init_147:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_147
+        LDI     R16, 122
+        OUT     0x0F, R16
+??enc28j60Init_148:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_148
+        SBI     0x18, 0x02
+//  259 	enc28j60Write(MAMXFLH, MAX_FRAMELEN>>8);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_149
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_150:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_150
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_151:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_151
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_152:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_152
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_153:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_153
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_149:
+        CBI     0x18, 0x02
+        LDI     R16, 75
+        OUT     0x0F, R16
+??enc28j60Init_154:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_154
+        LDI     R16, 5
+        OUT     0x0F, R16
+??enc28j60Init_155:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_155
+        SBI     0x18, 0x02
+//  260 
+//  261 	// do bank 3 stuff
+//  262 	// write MAC address
+//  263 	// NOTE: MAC address in ENC28J60 is byte-backward
+//  264 //	enc28j60Write(MAADR5, UIP_ETHADDR0);
+//  265 	enc28j60Write(MAADR5, MAC0[0]);
+        LDS     R17, MAC0
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_156
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_157:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_157
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_158:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_158
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_159:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_159
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_160:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_160
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_156:
+        CBI     0x18, 0x02
+        LDI     R16, 68
+        OUT     0x0F, R16
+??enc28j60Init_161:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_161
+        OUT     0x0F, R17
+??enc28j60Init_162:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_162
+        SBI     0x18, 0x02
+//  266 //	enc28j60Write(MAADR4, UIP_ETHADDR1);
+//  267 	enc28j60Write(MAADR4, MAC0[1]);
+        LDS     R17, (MAC0 + 1)
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_163
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_164:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_164
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_165:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_165
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_166:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_166
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_167:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_167
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_163:
+        CBI     0x18, 0x02
+        LDI     R16, 69
+        OUT     0x0F, R16
+??enc28j60Init_168:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_168
+        OUT     0x0F, R17
+??enc28j60Init_169:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_169
+        SBI     0x18, 0x02
+//  268 //	enc28j60Write(MAADR3, UIP_ETHADDR2);
+//  269 	enc28j60Write(MAADR3, MAC0[2]);        
+        LDS     R17, (MAC0 + 2)
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_170
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_171:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_171
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_172:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_172
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_173:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_173
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_174:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_174
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_170:
+        CBI     0x18, 0x02
+        LDI     R16, 66
+        OUT     0x0F, R16
+??enc28j60Init_175:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_175
+        OUT     0x0F, R17
+??enc28j60Init_176:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_176
+        SBI     0x18, 0x02
+//  270 //	enc28j60Write(MAADR2, UIP_ETHADDR3);
+//  271 	enc28j60Write(MAADR2, MAC0[3]);        
+        LDS     R17, (MAC0 + 3)
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_177
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_178:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_178
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_179:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_179
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_180:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_180
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_181:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_181
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_177:
+        CBI     0x18, 0x02
+        LDI     R16, 67
+        OUT     0x0F, R16
+??enc28j60Init_182:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_182
+        OUT     0x0F, R17
+??enc28j60Init_183:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_183
+        SBI     0x18, 0x02
+//  272 //	enc28j60Write(MAADR1, UIP_ETHADDR4);
+//  273 	enc28j60Write(MAADR1, MAC0[4]);        
+        LDS     R17, (MAC0 + 4)
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_184
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_185:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_185
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_186:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_186
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_187:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_187
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_188:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_188
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_184:
+        CBI     0x18, 0x02
+        LDI     R16, 64
+        OUT     0x0F, R16
+??enc28j60Init_189:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_189
+        OUT     0x0F, R17
+??enc28j60Init_190:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_190
+        SBI     0x18, 0x02
+//  274 //	enc28j60Write(MAADR0, UIP_ETHADDR5);
+//  275 	enc28j60Write(MAADR0, MAC0[5]);        
+        LDS     R17, (MAC0 + 5)
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_191
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_192:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_192
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_193:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_193
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_194:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_194
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_195:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_195
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_191:
+        CBI     0x18, 0x02
+        LDI     R16, 65
+        OUT     0x0F, R16
+??enc28j60Init_196:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_196
+        OUT     0x0F, R17
+??enc28j60Init_197:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_197
+        SBI     0x18, 0x02
+//  276         
+//  277 
+//  278         
+//  279 	// no loopback of transmitted frames
+//  280 	enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_198
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_199:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_199
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_200:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_200
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_201:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_201
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_202:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_202
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_198:
+        CBI     0x18, 0x02
+        LDI     R16, 84
+        OUT     0x0F, R16
+??enc28j60Init_203:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_203
+        LDI     R16, 16
+        OUT     0x0F, R16
+??enc28j60Init_204:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_204
+        SBI     0x18, 0x02
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_205
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_206:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_206
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_207:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_207
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_208:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_208
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_209:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_209
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_205:
+        CBI     0x18, 0x02
+        LDI     R16, 86
+        OUT     0x0F, R16
+??enc28j60Init_210:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_210
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60Init_211:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_211
+        SBI     0x18, 0x02
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_212
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_213:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_213
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_214:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_214
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_215:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_215
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_216:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_216
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_212:
+        CBI     0x18, 0x02
+        LDI     R16, 87
+        OUT     0x0F, R16
+??enc28j60Init_217:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_217
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_218:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_218
+        SBI     0x18, 0x02
+??enc28j60Init_219:
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_220
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_221:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_221
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_222:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_222
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_223:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_223
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_224:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_224
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_220:
+        CBI     0x18, 0x02
+        LDI     R16, 10
+        OUT     0x0F, R16
+??enc28j60Init_225:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_225
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60Init_226:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_226
+        OUT     0x0F, R16
+??enc28j60Init_227:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_227
+        IN      R16, 0x0F
+        SBI     0x18, 0x02
+        BST     R16, 0
+        BRTS    ??enc28j60Init_219
+//  281 
+//  282 	// switch to bank 0
+//  283 	enc28j60SetBank(ECON1);
+        LDD     R16, Z+2
+        TST     R16
+        BREQ    ??enc28j60Init_228
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_229:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_229
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_230:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_230
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_231:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_231
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60Init_232:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_232
+        SBI     0x18, 0x02
+        STD     Z+2, R16
+//  284 	// enable interrutps
+//  285 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_RXERIE);
+??enc28j60Init_228:
+        CBI     0x18, 0x02
+        LDI     R16, 155
+        OUT     0x0F, R16
+??enc28j60Init_233:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_233
+        LDI     R16, 129
+        OUT     0x0F, R16
+??enc28j60Init_234:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_234
+        SBI     0x18, 0x02
+//  286 	// enable packet reception
+//  287 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_235:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_235
+        LDI     R16, 4
+        OUT     0x0F, R16
+??enc28j60Init_236:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_236
+        SBI     0x18, 0x02
+//  288 /*
+//  289 	// setup duplex ----------------------
+//  290 	// Disable receive logic and abort any packets currently being transmitted                
+//  291 	enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS|ECON1_RXEN);
+//  292         //switch to bank 2
+//  293         
+//  294         enc28j60SetBank(MACON3);
+//  295 	_delay_ms(10);
+//  296 	{
+//  297 		u16 temp;
+//  298 		// Set the PHY to the proper duplex mode
+//  299 		temp = enc28j60PhyRead(PHCON1);
+//  300 		temp &= ~PHCON1_PDPXMD;
+//  301 		enc28j60PhyWrite(PHCON1, temp);
+//  302            	// Set the MAC to the proper duplex mode
+//  303                 enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_FULDPX);
+//  304                 //Allow the MAC to transmit pause control frames (needed for flow control in full duplex)
+//  305                // enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON1, MACON1_TXPAUS);
+//  306 	}
+//  307 	// Set the back-to-back inter-packet gap time to IEEE specified 
+//  308 	// requirements.  The meaning of the MABBIPG value changes with the duplex
+//  309 	// state, so it must be updated in this function.
+//  310 	// In full duplex, 0x15 represents 9.6us; 0x12 is 9.6us in half duplex
+//  311 	enc28j60Write(MABBIPG, 0x15);		
+//  312        	// switch to bank 0
+//  313         enc28j60SetBank(ECON1);
+//  314 	// Reenable receive logic
+//  315         
+//  316 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
+//  317 */      
+//  318          // configure LEDs
+//  319         enc28j60PhyWrite(PHLCON, 0x0122);	
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_237
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_238:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_238
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_239:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_239
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_240:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_240
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_241:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_241
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_237:
+        CBI     0x18, 0x02
+        LDI     R16, 84
+        OUT     0x0F, R16
+??enc28j60Init_242:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_242
+        LDI     R16, 20
+        OUT     0x0F, R16
+??enc28j60Init_243:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_243
+        SBI     0x18, 0x02
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_244
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_245:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_245
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_246:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_246
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_247:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_247
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_248:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_248
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_244:
+        CBI     0x18, 0x02
+        LDI     R16, 86
+        OUT     0x0F, R16
+??enc28j60Init_249:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_249
+        LDI     R16, 34
+        OUT     0x0F, R16
+??enc28j60Init_250:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_250
+        SBI     0x18, 0x02
+        LDD     R16, Z+2
+        CPI     R16, 64
+        BREQ    ??enc28j60Init_251
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_252:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_252
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_253:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_253
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_254:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_254
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60Init_255:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_255
+        SBI     0x18, 0x02
+        LDI     R16, 64
+        STD     Z+2, R16
+??enc28j60Init_251:
+        CBI     0x18, 0x02
+        LDI     R16, 87
+        OUT     0x0F, R16
+??enc28j60Init_256:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_256
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60Init_257:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_257
+        SBI     0x18, 0x02
+??enc28j60Init_258:
+        LDD     R16, Z+2
+        CPI     R16, 96
+        BREQ    ??enc28j60Init_259
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60Init_260:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_260
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_261:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_261
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60Init_262:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_262
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60Init_263:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_263
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STD     Z+2, R16
+??enc28j60Init_259:
+        CBI     0x18, 0x02
+        LDI     R16, 10
+        OUT     0x0F, R16
+??enc28j60Init_264:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_264
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60Init_265:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_265
+        OUT     0x0F, R16
+??enc28j60Init_266:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60Init_266
+        IN      R16, 0x0F
+        SBI     0x18, 0x02
+        BST     R16, 0
+        BRTS    ??enc28j60Init_258
+//  320 }
+        RET
+        REQUIRE _A_DDRB
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  321 
+//  322 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  323 void enc28j60BeginPacketSend(unsigned int packetLength)
+enc28j60BeginPacketSend:
+//  324 {
+//  325 //
+//  326 }
+        RET
+//  327 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  328 unsigned char enc28j60PacketSend(unsigned char * packet, unsigned int len)
+enc28j60PacketSend:
+//  329 {
+        MOVW    R23:R22, R25:R24
+//  330        /* wait until previous packet was sent */
+//  331         while(enc28j60Read(ECON1) & ECON1_TXRTS);
+??enc28j60PacketSend_0:
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_1
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_2
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_3
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_4
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_5
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_1:
+        CBI     0x18, 0x02
+        LDI     R20, 31
+        OUT     0x0F, R20
+??enc28j60PacketSend_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_6
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_7
+        IN      R20, 0x0F
+        SBI     0x18, 0x02
+        BST     R20, 3
+        BRTS    ??enc28j60PacketSend_0
+//  332         if ((!packet)||(!len)) return 1;
+        MOV     R20, R16
+        OR      R20, R17
+        BREQ    ??enc28j60PacketSend_8
+        MOV     R20, R18
+        OR      R20, R19
+        BRNE    ??enc28j60PacketSend_9
+??enc28j60PacketSend_8:
+        LDI     R16, 1
+        RJMP    ??enc28j60PacketSend_10
+//  333         // make a TX reset (errata workaround)
+//  334        /*
+//  335        enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
+//  336        enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
+//  337        enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF);     
+//  338        */
+//  339         if( (enc28j60Read(EIR) & EIR_TXERIF) )
+??enc28j60PacketSend_9:
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_11
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_12
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_13
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_14:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_14
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_15
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_11:
+        CBI     0x18, 0x02
+        LDI     R20, 28
+        OUT     0x0F, R20
+??enc28j60PacketSend_16:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_16
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_17:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_17
+        IN      R20, 0x0F
+        SBI     0x18, 0x02
+        BST     R20, 1
+        BRTC    ??enc28j60PacketSend_18
+//  340         {
+//  341           // if there was an error during transmission
+//  342           // make a TX reset
+//  343               enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60PacketSend_19:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_19
+        LDI     R16, 128
+        OUT     0x0F, R16
+??enc28j60PacketSend_20:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_20
+        SBI     0x18, 0x02
+//  344               enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60PacketSend_21:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_21
+        LDI     R16, 128
+        OUT     0x0F, R16
+??enc28j60PacketSend_22:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_22
+        SBI     0x18, 0x02
+//  345               enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF);
+        CBI     0x18, 0x02
+        LDI     R16, 188
+        OUT     0x0F, R16
+??enc28j60PacketSend_23:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_23
+        LDI     R16, 2
+        OUT     0x0F, R16
+??enc28j60PacketSend_24:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_24
+        SBI     0x18, 0x02
+//  346               return 1;
+        RJMP    ??enc28j60PacketSend_8
+//  347             }       
+//  348      
+//  349          /* set start of packet */
+//  350         enc28j60Write(ETXSTL, TXSTART_INIT&0xFF);
+??enc28j60PacketSend_18:
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_25
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_26:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_26
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_27:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_27
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_28:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_28
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_29:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_29
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_25:
+        CBI     0x18, 0x02
+        LDI     R20, 68
+        OUT     0x0F, R20
+??enc28j60PacketSend_30:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_30
+        LDI     R20, 73
+        OUT     0x0F, R20
+??enc28j60PacketSend_31:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_31
+        SBI     0x18, 0x02
+//  351 	enc28j60Write(ETXSTH, TXSTART_INIT>>8);
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_32
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_33:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_33
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_34:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_34
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_35:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_35
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_36:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_36
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_32:
+        CBI     0x18, 0x02
+        LDI     R20, 69
+        OUT     0x0F, R20
+??enc28j60PacketSend_37:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_37
+        LDI     R20, 26
+        OUT     0x0F, R20
+??enc28j60PacketSend_38:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_38
+        SBI     0x18, 0x02
+//  352 	// Set the write pointer to start of transmit buffer area        
+//  353 	enc28j60Write(EWRPTL, TXSTART_INIT&0xff);
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_39
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_40:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_40
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_41:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_41
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_42:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_42
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_43:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_43
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_39:
+        CBI     0x18, 0x02
+        LDI     R20, 66
+        OUT     0x0F, R20
+??enc28j60PacketSend_44:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_44
+        LDI     R20, 73
+        OUT     0x0F, R20
+??enc28j60PacketSend_45:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_45
+        SBI     0x18, 0x02
+//  354 	enc28j60Write(EWRPTH, TXSTART_INIT>>8);
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_46
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_47:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_47
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_48:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_48
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_49:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_49
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_50:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_50
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_46:
+        CBI     0x18, 0x02
+        LDI     R20, 67
+        OUT     0x0F, R20
+??enc28j60PacketSend_51:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_51
+        LDI     R20, 26
+        OUT     0x0F, R20
+??enc28j60PacketSend_52:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_52
+        SBI     0x18, 0x02
+//  355 	// Set the TXND pointer to correspond to the packet size given
+//  356 	enc28j60Write(ETXNDL, (TXSTART_INIT+len));
+        MOV     R21, R18
+        SUBI    R21, 183
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_53
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_54:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_54
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_55:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_55
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_56:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_56
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_57:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_57
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_53:
+        CBI     0x18, 0x02
+        LDI     R20, 70
+        OUT     0x0F, R20
+??enc28j60PacketSend_58:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_58
+        OUT     0x0F, R21
+??enc28j60PacketSend_59:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_59
+        SBI     0x18, 0x02
+//  357 	enc28j60Write(ETXNDH, (TXSTART_INIT+len)>>8);
+        MOVW    R21:R20, R19:R18
+        SUBI    R20, 183
+        SBCI    R21, 229
+        LDS     R20, (NextPacketPtr + 2)
+        TST     R20
+        BREQ    ??enc28j60PacketSend_60
+        CBI     0x18, 0x02
+        LDI     R20, 191
+        OUT     0x0F, R20
+??enc28j60PacketSend_61:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_61
+        LDI     R20, 3
+        OUT     0x0F, R20
+??enc28j60PacketSend_62:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_62
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R20, 159
+        OUT     0x0F, R20
+??enc28j60PacketSend_63:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_63
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_64:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_64
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketSend_60:
+        CBI     0x18, 0x02
+        LDI     R20, 71
+        OUT     0x0F, R20
+??enc28j60PacketSend_65:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_65
+        OUT     0x0F, R21
+??enc28j60PacketSend_66:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_66
+        SBI     0x18, 0x02
+//  358       	// write per-packet control byte
+//  359 	enc28j60WriteOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);        
+        CBI     0x18, 0x02
+        LDI     R20, 122
+        OUT     0x0F, R20
+??enc28j60PacketSend_67:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_67
+        LDI     R20, 0
+        OUT     0x0F, R20
+??enc28j60PacketSend_68:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_68
+        SBI     0x18, 0x02
+//  360 	// copy the packet into the transmit buffer
+//  361 	enc28j60WriteBuffer(len, packet);	
+        MOVW    R31:R30, R17:R16
+        MOVW    R25:R24, R19:R18
+        CBI     0x18, 0x02
+        LDI     R16, 122
+        OUT     0x0F, R16
+??enc28j60PacketSend_69:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_69
+??enc28j60PacketSend_70:
+        SBIW    R25:R24, 1
+        LD      R16, Z+
+        OUT     0x0F, R16
+??enc28j60PacketSend_71:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_71
+        BRNE    ??enc28j60PacketSend_70
+        SBI     0x18, 0x02
+//  362 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60PacketSend_72:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_72
+        LDI     R16, 8
+        OUT     0x0F, R16
+??enc28j60PacketSend_73:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketSend_73
+        SBI     0x18, 0x02
+//  363         return 0;
+        LDI     R16, 0
+??enc28j60PacketSend_10:
+        MOVW    R25:R24, R23:R22
+        RET
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+        REQUIRE _A_PORTB
+//  364 }
+//  365 	
+//  366   // Gets a packet from the network receive buffer, if one is available.
+//  367   // The packet will by headed by an ethernet header.
+//  368   //      maxlen  The maximum acceptable length of a retrieved packet.
+//  369   //      packet  Pointer where packet data should be stored.
+//  370   // Returns: Packet length in bytes if a packet was retrieved, zero otherwise.
+
+        RSEG CODE:CODE:NOROOT(1)
+//  371 u16 enc28j60PacketReceive(u16 maxlen, u8* packet)
+enc28j60PacketReceive:
+//  372  {
+        MOV     R1, R25
+        MOV     R2, R24
+        MOVW    R21:R20, R17:R16
+//  373    u16 rxstat;
+//  374    u16 len;
+//  375 //Вынесли в главный цикл   
+//  376 /*   if( enc28j60Read(EPKTCNT)==0 )
+//  377    {
+//  378         return(0);
+//  379    }
+//  380 */
+//  381    if( (enc28j60Read(EIR) & EIR_RXERIF) ) // RX buffer overflow is detected!
+        LDS     R16, (NextPacketPtr + 2)
+        TST     R16
+        BREQ    ??enc28j60PacketReceive_0
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60PacketReceive_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_1
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60PacketReceive_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_2
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60PacketReceive_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_3
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60PacketReceive_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_4
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R16
+??enc28j60PacketReceive_0:
+        CBI     0x18, 0x02
+        LDI     R16, 28
+        OUT     0x0F, R16
+??enc28j60PacketReceive_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_5
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60PacketReceive_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_6
+        IN      R16, 0x0F
+        SBI     0x18, 0x02
+        BST     R16, 0
+        BRTC    ??enc28j60PacketReceive_7
+//  382    {
+//  383     #ifdef CONSOLE_DEBUG
+//  384      _print_fstr("EncOVF!\r\n");
+//  385     #endif
+//  386     sbi (PORTD, PD3);
+        SBI     0x12, 0x03
+//  387     enc28j60SetBank(EFLOCON);
+        LDS     R16, (NextPacketPtr + 2)
+        CPI     R16, 96
+        BREQ    ??enc28j60PacketReceive_8
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60PacketReceive_9:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_9
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60PacketReceive_10:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_10
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60PacketReceive_11:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_11
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60PacketReceive_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_12
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STS     (NextPacketPtr + 2), R16
+//  388      enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, EFLOCON, 1);// enable flow control
+??enc28j60PacketReceive_8:
+        CBI     0x18, 0x02
+        LDI     R16, 151
+        OUT     0x0F, R16
+??enc28j60PacketReceive_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_13
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60PacketReceive_14:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_14
+        SBI     0x18, 0x02
+//  389      enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_RXERIF);     
+        CBI     0x18, 0x02
+        LDI     R16, 188
+        OUT     0x0F, R16
+??enc28j60PacketReceive_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_15
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60PacketReceive_16:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_16
+        SBI     0x18, 0x02
+//  390    }
+        RJMP    ??enc28j60PacketReceive_17
+//  391    else
+//  392    {
+//  393      enc28j60SetBank(EFLOCON);
+??enc28j60PacketReceive_7:
+        LDS     R16, (NextPacketPtr + 2)
+        CPI     R16, 96
+        BREQ    ??enc28j60PacketReceive_18
+        CBI     0x18, 0x02
+        LDI     R16, 191
+        OUT     0x0F, R16
+??enc28j60PacketReceive_19:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_19
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60PacketReceive_20:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_20
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R16, 159
+        OUT     0x0F, R16
+??enc28j60PacketReceive_21:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_21
+        LDI     R16, 3
+        OUT     0x0F, R16
+??enc28j60PacketReceive_22:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_22
+        SBI     0x18, 0x02
+        LDI     R16, 96
+        STS     (NextPacketPtr + 2), R16
+//  394      enc28j60WriteOp(ENC28J60_BIT_FIELD_CLR, EFLOCON, 1);// disable flow control
+??enc28j60PacketReceive_18:
+        CBI     0x18, 0x02
+        LDI     R16, 183
+        OUT     0x0F, R16
+??enc28j60PacketReceive_23:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_23
+        LDI     R16, 1
+        OUT     0x0F, R16
+??enc28j60PacketReceive_24:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_24
+        SBI     0x18, 0x02
+//  395      cbi (PORTD, PD3);
+        CBI     0x12, 0x03
+//  396    };   
+//  397    
+//  398   // Set the read pointer to the start of the received packet
+//  399   enc28j60Write(ERDPTL, (NextPacketPtr));
+??enc28j60PacketReceive_17:
+        LDI     R30, LOW(NextPacketPtr)
+        LDI     R31, (NextPacketPtr) >> 8
+        LD      R16, Z
+        LDD     R17, Z+2
+        TST     R17
+        BREQ    ??enc28j60PacketReceive_25
+        CBI     0x18, 0x02
+        LDI     R17, 191
+        OUT     0x0F, R17
+??enc28j60PacketReceive_26:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_26
+        LDI     R17, 3
+        OUT     0x0F, R17
+??enc28j60PacketReceive_27:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_27
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R17, 159
+        OUT     0x0F, R17
+??enc28j60PacketReceive_28:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_28
+        LDI     R17, 0
+        OUT     0x0F, R17
+??enc28j60PacketReceive_29:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_29
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60PacketReceive_25:
+        CBI     0x18, 0x02
+        LDI     R17, 64
+        OUT     0x0F, R17
+??enc28j60PacketReceive_30:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_30
+        OUT     0x0F, R16
+??enc28j60PacketReceive_31:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_31
+        SBI     0x18, 0x02
+//  400   enc28j60Write(ERDPTH, (NextPacketPtr)>>8);
+        LDD     R16, Z+1
+        LDD     R17, Z+2
+        TST     R17
+        BREQ    ??enc28j60PacketReceive_32
+        CBI     0x18, 0x02
+        LDI     R17, 191
+        OUT     0x0F, R17
+??enc28j60PacketReceive_33:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_33
+        LDI     R17, 3
+        OUT     0x0F, R17
+??enc28j60PacketReceive_34:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_34
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R17, 159
+        OUT     0x0F, R17
+??enc28j60PacketReceive_35:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_35
+        LDI     R17, 0
+        OUT     0x0F, R17
+??enc28j60PacketReceive_36:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_36
+        SBI     0x18, 0x02
+        STD     Z+2, R17
+??enc28j60PacketReceive_32:
+        CBI     0x18, 0x02
+        LDI     R17, 65
+        OUT     0x0F, R17
+??enc28j60PacketReceive_37:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_37
+        OUT     0x0F, R16
+??enc28j60PacketReceive_38:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_38
+        SBI     0x18, 0x02
+//  401   
+//  402   // read the "next packet pointer"
+//  403   NextPacketPtr  = enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0);
+        CBI     0x18, 0x02
+        LDI     R16, 58
+        OUT     0x0F, R16
+??enc28j60PacketReceive_39:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_39
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60PacketReceive_40:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_40
+        IN      R16, 0x0F
+        SBI     0x18, 0x02
+        LDI     R17, 0
+        ST      Z, R16
+        STD     Z+1, R17
+//  404   NextPacketPtr |= enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0)<<8;
+        CBI     0x18, 0x02
+        LDI     R16, 58
+        OUT     0x0F, R16
+??enc28j60PacketReceive_41:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_41
+        OUT     0x0F, R17
+??enc28j60PacketReceive_42:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_42
+        IN      R17, 0x0F
+        SBI     0x18, 0x02
+        LDD     R23, Z+1
+        OR      R23, R17
+        STD     Z+1, R23
+//  405   // read the packet length (see datasheet page 43)
+//  406   len  = enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0);
+        CBI     0x18, 0x02
+        OUT     0x0F, R16
+??enc28j60PacketReceive_43:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_43
+        LDI     R16, 0
+        OUT     0x0F, R16
+??enc28j60PacketReceive_44:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_44
+        IN      R16, 0x0F
+        SBI     0x18, 0x02
+        LDI     R17, 0
+//  407   len |= enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0)<<8;
+        CBI     0x18, 0x02
+        LDI     R22, 58
+        OUT     0x0F, R22
+??enc28j60PacketReceive_45:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_45
+        OUT     0x0F, R17
+??enc28j60PacketReceive_46:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_46
+        IN      R23, 0x0F
+        SBI     0x18, 0x02
+//  408   len-=4; //remove the CRC count
+        MOV     R17, R23
+        SUBI    R16, 4
+        SBCI    R17, 0
+//  409    // read the receive status (see datasheet page 43)
+//  410   rxstat  = enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0);
+        CBI     0x18, 0x02
+        OUT     0x0F, R22
+??enc28j60PacketReceive_47:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_47
+        LDI     R22, 0
+        OUT     0x0F, R22
+??enc28j60PacketReceive_48:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_48
+        IN      R0, 0x0F
+        SBI     0x18, 0x02
+//  411   rxstat |= ((u16)enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0))<<8;
+        CBI     0x18, 0x02
+        LDI     R22, 58
+        OUT     0x0F, R22
+??enc28j60PacketReceive_49:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_49
+        LDI     R22, 0
+        OUT     0x0F, R22
+??enc28j60PacketReceive_50:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_50
+        IN      R22, 0x0F
+        SBI     0x18, 0x02
+//  412   // limit retrieve length
+//  413    if (len>maxlen){
+        CP      R20, R16
+        CPC     R21, R17
+        BRCC    ??enc28j60PacketReceive_51
+//  414        len=maxlen;
+        MOVW    R17:R16, R21:R20
+//  415       }
+//  416    // check CRC and symbol errors (see datasheet page 44, table 7-3):
+//  417    // The ERXFCON.CRCEN is set by default. Normally we should not
+//  418    // need to check this.
+//  419    if ((rxstat & 0x80)==0)
+??enc28j60PacketReceive_51:
+        SBRC    R0, 7
+        RJMP    ??enc28j60PacketReceive_52
+//  420    {
+//  421       // invalid reception
+//  422       len=0;
+        LDI     R16, 0
+        LDI     R17, 0
+        RJMP    ??enc28j60PacketReceive_53
+//  423     }
+//  424    else
+//  425    {
+//  426         // copy the packet from the receive buffer
+//  427          enc28j60ReadBuffer(len, packet);
+??enc28j60PacketReceive_52:
+        MOVW    R31:R30, R19:R18
+        MOVW    R25:R24, R17:R16
+        CBI     0x18, 0x02
+        LDI     R18, 58
+        OUT     0x0F, R18
+??enc28j60PacketReceive_54:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_54
+        MOV     R18, R16
+        OR      R18, R17
+        BREQ    ??enc28j60PacketReceive_55
+??enc28j60PacketReceive_56:
+        SBIW    R25:R24, 1
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_57:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_57
+        IN      R18, 0x0F
+        ST      Z+, R18
+        BRNE    ??enc28j60PacketReceive_56
+??enc28j60PacketReceive_55:
+        SBI     0x18, 0x02
+//  428    }
+//  429      
+//  430 // Move the RX read pointer to the start of the next received packet
+//  431 // This frees the memory we just read out
+//  432 // Errata workaround #13. Make sure ERXRDPT is odd
+//  433 //
+//  434   {
+//  435         unsigned int rstart,rend;
+//  436         rstart = (enc28j60Read(ERXSTH)<<8);
+??enc28j60PacketReceive_53:
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_58
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_59:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_59
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_60:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_60
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_61:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_61
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_62:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_62
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R18
+??enc28j60PacketReceive_58:
+        CBI     0x18, 0x02
+        LDI     R18, 9
+        OUT     0x0F, R18
+??enc28j60PacketReceive_63:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_63
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_64:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_64
+        IN      R23, 0x0F
+        SBI     0x18, 0x02
+        LDI     R22, 0
+//  437         rstart |= enc28j60Read(ERXSTL);        
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_65
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_66:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_66
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_67:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_67
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_68:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_68
+        OUT     0x0F, R22
+??enc28j60PacketReceive_69:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_69
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R22
+??enc28j60PacketReceive_65:
+        CBI     0x18, 0x02
+        LDI     R18, 8
+        OUT     0x0F, R18
+??enc28j60PacketReceive_70:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_70
+        OUT     0x0F, R22
+??enc28j60PacketReceive_71:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_71
+        IN      R18, 0x0F
+        SBI     0x18, 0x02
+        MOV     R22, R18
+//  438         rend = (enc28j60Read(ERXNDH)<<8);
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_72
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_73:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_73
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_74:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_74
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_75:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_75
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_76:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_76
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R18
+??enc28j60PacketReceive_72:
+        CBI     0x18, 0x02
+        LDI     R18, 11
+        OUT     0x0F, R18
+??enc28j60PacketReceive_77:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_77
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_78:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_78
+        IN      R21, 0x0F
+        SBI     0x18, 0x02
+        LDI     R20, 0
+//  439         rend |= enc28j60Read(ERXNDL);
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_79
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_80:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_80
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_81:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_81
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_82:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_82
+        OUT     0x0F, R20
+??enc28j60PacketReceive_83:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_83
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R20
+??enc28j60PacketReceive_79:
+        CBI     0x18, 0x02
+        LDI     R18, 10
+        OUT     0x0F, R18
+??enc28j60PacketReceive_84:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_84
+        OUT     0x0F, R20
+??enc28j60PacketReceive_85:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_85
+        IN      R18, 0x0F
+        SBI     0x18, 0x02
+        MOV     R20, R18
+//  440         if (((NextPacketPtr - 1) < rstart) || ((NextPacketPtr - 1) > rend))
+        LDS     R18, NextPacketPtr
+        LDS     R19, (NextPacketPtr + 1)
+        SUBI    R18, 1
+        SBCI    R19, 0
+        CP      R18, R22
+        CPC     R19, R23
+        BRCS    ??enc28j60PacketReceive_86
+        LDS     R24, NextPacketPtr
+        LDS     R25, (NextPacketPtr + 1)
+        SBIW    R25:R24, 1
+        CP      R20, R24
+        CPC     R21, R25
+        BRCS    $+2+2
+        RJMP    ??enc28j60PacketReceive_87
+//  441         {
+//  442             enc28j60Write(ERXRDPTL, (rend));
+??enc28j60PacketReceive_86:
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_88
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_89:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_89
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_90:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_90
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_91:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_91
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_92:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_92
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R18
+??enc28j60PacketReceive_88:
+        CBI     0x18, 0x02
+        LDI     R18, 76
+        OUT     0x0F, R18
+??enc28j60PacketReceive_93:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_93
+        OUT     0x0F, R20
+??enc28j60PacketReceive_94:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_94
+        SBI     0x18, 0x02
+//  443             enc28j60Write(ERXRDPTH, (rend)>>8);
+        LDS     R18, (NextPacketPtr + 2)
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_95
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_96:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_96
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_97:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_97
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_98:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_98
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_99:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_99
+        SBI     0x18, 0x02
+        STS     (NextPacketPtr + 2), R18
+??enc28j60PacketReceive_95:
+        CBI     0x18, 0x02
+        LDI     R18, 77
+        OUT     0x0F, R18
+??enc28j60PacketReceive_100:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_100
+        OUT     0x0F, R21
+??enc28j60PacketReceive_101:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_101
+        RJMP    ??enc28j60PacketReceive_102
+//  444         }
+//  445         else
+//  446         {
+//  447             enc28j60Write(ERXRDPTL, (NextPacketPtr-1));
+??enc28j60PacketReceive_87:
+        LDI     R30, LOW(NextPacketPtr)
+        LDI     R31, (NextPacketPtr) >> 8
+        LD      R18, Z
+        DEC     R18
+        LDD     R19, Z+2
+        TST     R19
+        BREQ    ??enc28j60PacketReceive_103
+        CBI     0x18, 0x02
+        LDI     R19, 191
+        OUT     0x0F, R19
+??enc28j60PacketReceive_104:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_104
+        LDI     R19, 3
+        OUT     0x0F, R19
+??enc28j60PacketReceive_105:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_105
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R19, 159
+        OUT     0x0F, R19
+??enc28j60PacketReceive_106:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_106
+        LDI     R19, 0
+        OUT     0x0F, R19
+??enc28j60PacketReceive_107:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_107
+        SBI     0x18, 0x02
+        STD     Z+2, R19
+??enc28j60PacketReceive_103:
+        CBI     0x18, 0x02
+        LDI     R19, 76
+        OUT     0x0F, R19
+??enc28j60PacketReceive_108:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_108
+        OUT     0x0F, R18
+??enc28j60PacketReceive_109:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_109
+        SBI     0x18, 0x02
+//  448             enc28j60Write(ERXRDPTH, (NextPacketPtr-1)>>8);
+        LD      R24, Z
+        LDD     R25, Z+1
+        SBIW    R25:R24, 1
+        LDD     R18, Z+2
+        TST     R18
+        BREQ    ??enc28j60PacketReceive_110
+        CBI     0x18, 0x02
+        LDI     R18, 191
+        OUT     0x0F, R18
+??enc28j60PacketReceive_111:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_111
+        LDI     R18, 3
+        OUT     0x0F, R18
+??enc28j60PacketReceive_112:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_112
+        SBI     0x18, 0x02
+        CBI     0x18, 0x02
+        LDI     R18, 159
+        OUT     0x0F, R18
+??enc28j60PacketReceive_113:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_113
+        LDI     R18, 0
+        OUT     0x0F, R18
+??enc28j60PacketReceive_114:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_114
+        SBI     0x18, 0x02
+        STD     Z+2, R18
+??enc28j60PacketReceive_110:
+        CBI     0x18, 0x02
+        LDI     R18, 77
+        OUT     0x0F, R18
+??enc28j60PacketReceive_115:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_115
+        OUT     0x0F, R25
+??enc28j60PacketReceive_116:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_116
+??enc28j60PacketReceive_102:
+        SBI     0x18, 0x02
+//  449         }
+//  450     }
+//  451       
+//  452   // decrement the packet counter indicate we are done with this packet
+//  453   enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
+        CBI     0x18, 0x02
+        LDI     R18, 158
+        OUT     0x0F, R18
+??enc28j60PacketReceive_117:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_117
+        LDI     R18, 64
+        OUT     0x0F, R18
+??enc28j60PacketReceive_118:
+        SBIS    0x0E, 0x07
+        RJMP    ??enc28j60PacketReceive_118
+        SBI     0x18, 0x02
+//  454   return(len);
+        MOV     R24, R2
+        MOV     R25, R1
+        RET
+        REQUIRE _A_PORTD
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+        REQUIRE _A_PORTB
+//  455  }
+//  456 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  457 void enc28j60ReceiveOverflowRecover(void)
+enc28j60ReceiveOverflowRecover:
+//  458 {
+//  459 	// receive buffer overflow handling procedure
+//  460 
+//  461 	// recovery completed
+//  462 }
+        RET
+//  463 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  464 void enc28j60RegDump(void)
+enc28j60RegDump:
+//  465 {
+//  466 //	unsigned char macaddr[6];
+//  467 //	result = ax88796Read(TR);
+//  468 	
+//  469 //	rprintf("Media State: ");
+//  470 //	if(!(result & AUTOD))
+//  471 //		rprintf("Autonegotiation\r\n");
+//  472 //	else if(result & RST_B)
+//  473 //		rprintf("PHY in Reset   \r\n");
+//  474 //	else if(!(result & RST_10B))
+//  475 //		rprintf("10BASE-T       \r\n");
+//  476 //	else if(!(result & RST_TXB))
+//  477 //		rprintf("100BASE-T      \r\n");
+//  478 /*				
+//  479 	rprintf("RevID: 0x%x\r\n", enc28j60Read(EREVID));
+//  480 
+//  481 	rprintfProgStrM("Cntrl: ECON1 ECON2 ESTAT  EIR  EIE\r\n");
+//  482 	rprintfProgStrM("         ");
+//  483 	rprintfu8(enc28j60Read(ECON1));
+//  484 	rprintfProgStrM("    ");
+//  485 	rprintfu8(enc28j60Read(ECON2));
+//  486 	rprintfProgStrM("    ");
+//  487 	rprintfu8(enc28j60Read(ESTAT));
+//  488 	rprintfProgStrM("    ");
+//  489 	rprintfu8(enc28j60Read(EIR));
+//  490 	rprintfProgStrM("   ");
+//  491 	rprintfu8(enc28j60Read(EIE));
+//  492 	rprintfCRLF();
+//  493 
+//  494 	rprintfProgStrM("MAC  : MACON1  MACON2  MACON3  MACON4  MAC-Address\r\n");
+//  495 	rprintfProgStrM("        0x");
+//  496 	rprintfu8(enc28j60Read(MACON1));
+//  497 	rprintfProgStrM("    0x");
+//  498 	rprintfu8(enc28j60Read(MACON2));
+//  499 	rprintfProgStrM("    0x");
+//  500 	rprintfu8(enc28j60Read(MACON3));
+//  501 	rprintfProgStrM("    0x");
+//  502 	rprintfu8(enc28j60Read(MACON4));
+//  503 	rprintfProgStrM("   ");
+//  504 	rprintfu8(enc28j60Read(MAADR5));
+//  505 	rprintfu8(enc28j60Read(MAADR4));
+//  506 	rprintfu8(enc28j60Read(MAADR3));
+//  507 	rprintfu8(enc28j60Read(MAADR2));
+//  508 	rprintfu8(enc28j60Read(MAADR1));
+//  509 	rprintfu8(enc28j60Read(MAADR0));
+//  510 	rprintfCRLF();
+//  511 
+//  512 	rprintfProgStrM("Rx   : ERXST  ERXND  ERXWRPT ERXRDPT ERXFCON EPKTCNT MAMXFL\r\n");
+//  513 	rprintfProgStrM("       0x");
+//  514 	rprintfu8(enc28j60Read(ERXSTH));
+//  515 	rprintfu8(enc28j60Read(ERXSTL));
+//  516 	rprintfProgStrM(" 0x");
+//  517 	rprintfu8(enc28j60Read(ERXNDH));
+//  518 	rprintfu8(enc28j60Read(ERXNDL));
+//  519 	rprintfProgStrM("  0x");
+//  520 	rprintfu8(enc28j60Read(ERXWRPTH));
+//  521 	rprintfu8(enc28j60Read(ERXWRPTL));
+//  522 	rprintfProgStrM("  0x");
+//  523 	rprintfu8(enc28j60Read(ERXRDPTH));
+//  524 	rprintfu8(enc28j60Read(ERXRDPTL));
+//  525 	rprintfProgStrM("   0x");
+//  526 	rprintfu8(enc28j60Read(ERXFCON));
+//  527 	rprintfProgStrM("    0x");
+//  528 	rprintfu8(enc28j60Read(EPKTCNT));
+//  529 	rprintfProgStrM("  0x");
+//  530 	rprintfu8(enc28j60Read(MAMXFLH));
+//  531 	rprintfu8(enc28j60Read(MAMXFLL));
+//  532 	rprintfCRLF();
+//  533 
+//  534 	rprintfProgStrM("Tx   : ETXST  ETXND  MACLCON1 MACLCON2 MAPHSUP\r\n");
+//  535 	rprintfProgStrM("       0x");
+//  536 	rprintfu8(enc28j60Read(ETXSTH));
+//  537 	rprintfu8(enc28j60Read(ETXSTL));
+//  538 	rprintfProgStrM(" 0x");
+//  539 	rprintfu8(enc28j60Read(ETXNDH));
+//  540 	rprintfu8(enc28j60Read(ETXNDL));
+//  541 	rprintfProgStrM("   0x");
+//  542 	rprintfu8(enc28j60Read(MACLCON1));
+//  543 	rprintfProgStrM("     0x");
+//  544 	rprintfu8(enc28j60Read(MACLCON2));
+//  545 	rprintfProgStrM("     0x");
+//  546 	rprintfu8(enc28j60Read(MAPHSUP));
+//  547 	rprintfCRLF();
+//  548 */
+//  549 }
+        RET
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        RSEG INITTAB:CODE:NOROOT(0)
+`?<Segment init: NEAR_Z>`:
+        DC16    SFE(NEAR_Z) - SFB(NEAR_Z)
+        DC16    SFB(NEAR_Z)
+        DC16    0
+        REQUIRE ?need_segment_init
+
+        END
+//  550 
+//  551 
+//  552 
+// 
+//     5 bytes in segment ABSOLUTE
+// 4 672 bytes in segment CODE
+//     6 bytes in segment INITTAB
+//     3 bytes in segment NEAR_Z
+// 
+// 4 672 bytes of CODE memory (+ 6 bytes shared)
+//     3 bytes of DATA memory (+ 5 bytes shared)
+//
+//Errors: none
+//Warnings: 2

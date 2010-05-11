@@ -1,0 +1,850 @@
+###############################################################################
+#                                                                             #
+#                                                       17/Feb/2010  18:31:05 #
+# IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR     #
+# Copyright 1996-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Source file  =  G:\AVR\EthRadio_buf_inline\md5cheat.c                    #
+#    Command line =  --string_literals_in_flash G:\AVR\EthRadio_buf_inline\md #
+#                    5cheat.c --cpu=m32 -ms -o G:\AVR\EthRadio_buf_inline\Deb #
+#                    ug\Obj\ -lC G:\AVR\EthRadio_buf_inline\Debug\List\ -lB   #
+#                    G:\AVR\EthRadio_buf_inline\Debug\List\                   #
+#                    --initializers_in_flash -s9 --no_code_motion --debug     #
+#                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR     #
+#                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I   #
+#                    "C:\Program Files\IAR Systems\Embedded Workbench         #
+#                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024         #
+#                    --lock_regs=1                                            #
+#    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\md5cheat.lst       #
+#    Object file  =  G:\AVR\EthRadio_buf_inline\Debug\Obj\md5cheat.r90        #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+G:\AVR\EthRadio_buf_inline\md5cheat.c
+      1          /* Name: md5cheat.c
+      2           * Project: uNikeE - Software Ethernet MAC and upper layers stack
+      3           * Author: Dmitry Oparin aka Rst7/CBSIE
+      4           * Creation Date: 25-Jan-2009
+      5           * Copyright: (C)2008,2009 by Rst7/CBSIE
+      6           * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+      7           */
+      8          
+      9          #include "stdafx.h"
+
+   \                                 In  segment ABSOLUTE, at 0x5f
+   \   <__C130> volatile __io _A_SREG
+   \                     _A_SREG:
+   \   00000000                      DS8 1
+     10          
+     11          #define F1(x, y, z) ( ((x) & (y)) | ((~x) & (z)) )
+     12          #define F2(x, y, z) ( ((x) & (z)) | ((y) & (~z)) )
+     13          #define F3(x, y, z) ( (x) ^ (y) ^ (z) )
+     14          #define F4(x, y, z) ( (y) ^ ((x) | (~z)) )
+     15          
+     16          typedef struct 
+     17          {
+     18            unsigned long g;
+     19            unsigned char f;
+     20            unsigned char e;
+     21          }MD5STEP_DATA;
+     22          
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+     23          static const __flash MD5STEP_DATA table[]=
+   \                     table:
+   \   00000000   A478D76A           DD 3614090360
+   \   00000004   0007               DC8 7, 0
+   \   00000006   B756E8C7           DD 3905402710
+   \   0000000A   010C               DC8 12, 1
+   \   0000000C   70DB2420           DD 606105819
+   \   00000010   0211               DC8 17, 2
+   \   00000012   CEEEC1BD           DD 3250441966
+   \   00000016   0316               DC8 22, 3
+   \   00000018   0FAFF57C           DD 4118548399
+   \   0000001C   0407               DC8 7, 4
+   \   0000001E   C62A4787           DD 1200080426
+   \   00000022   050C               DC8 12, 5
+   \   00000024   4613A830           DD 2821735955
+   \   00000028   0611               DC8 17, 6
+   \   0000002A   9501FD46           DD 4249261313
+   \   0000002E   0716               DC8 22, 7
+   \   00000030   98D86980           DD 1770035416
+   \   00000034   0807               DC8 7, 8
+   \   00000036   F7AF8B44           DD 2336552879
+   \   0000003A   090C               DC8 12, 9
+   \   0000003C   5BB1FFFF           DD 4294925233
+   \   00000040   0A11               DC8 17, 10
+   \   00000042   D7BE895C           DD 2304563134
+   \   00000046   0B16               DC8 22, 11
+   \   00000048   11226B90           DD 1804603682
+   \   0000004C   0C07               DC8 7, 12
+   \   0000004E   7193FD98           DD 4254626195
+   \   00000052   0D0C               DC8 12, 13
+   \   00000054   438EA679           DD 2792965006
+   \   00000058   0E11               DC8 17, 14
+   \   0000005A   082149B4           DD 1236535329
+   \   0000005E   0F16               DC8 22, 15
+   \   00000060   2562F61E           DD 4129170786
+   \   00000064   0105               DC8 5, 1
+   \   00000066   B340C040           DD 3225465664
+   \   0000006A   0609               DC8 9, 6
+   \   0000006C   5A51265E           DD 643717713
+   \   00000070   0B0E               DC8 14, 11
+   \   00000072   C7AAE9B6           DD 3921069994
+   \   00000076   0014               DC8 20, 0
+   \   00000078   105DD62F           DD 3593408605
+   \   0000007C   0505               DC8 5, 5
+   \   0000007E   14530244           DD 38016083
+   \   00000082   0A09               DC8 9, 10
+   \   00000084   E681D8A1           DD 3634488961
+   \   00000088   0F0E               DC8 14, 15
+   \   0000008A   FBC8E7D3           DD 3889429448
+   \   0000008E   0414               DC8 20, 4
+   \   00000090   CDE621E1           DD 568446438
+   \   00000094   0905               DC8 5, 9
+   \   00000096   07D6C337           DD 3275163606
+   \   0000009A   0E09               DC8 9, 14
+   \   0000009C   0D87F4D5           DD 4107603335
+   \   000000A0   030E               DC8 14, 3
+   \   000000A2   14ED455A           DD 1163531501
+   \   000000A6   0814               DC8 20, 8
+   \   000000A8   E905A9E3           DD 2850285829
+   \   000000AC   0D05               DC8 5, 13
+   \   000000AE   A3F8FCEF           DD 4243563512
+   \   000000B2   0209               DC8 9, 2
+   \   000000B4   02D9676F           DD 1735328473
+   \   000000B8   070E               DC8 14, 7
+   \   000000BA   4C8A8D2A           DD 2368359562
+   \   000000BE   0C14               DC8 20, 12
+   \   000000C0   3942FFFA           DD 4294588738
+   \   000000C4   0504               DC8 4, 5
+   \   000000C6   F6818771           DD 2272392833
+   \   000000CA   080B               DC8 11, 8
+   \   000000CC   61226D9D           DD 1839030562
+   \   000000D0   0B10               DC8 16, 11
+   \   000000D2   380CFDE5           DD 4259657740
+   \   000000D6   0E17               DC8 23, 14
+   \   000000D8   EA44A4BE           DD 2763975236
+   \   000000DC   0104               DC8 4, 1
+   \   000000DE   CFA94BDE           DD 1272893353
+   \   000000E2   040B               DC8 11, 4
+   \   000000E4   4B60F6BB           DD 4139469664
+   \   000000E8   0710               DC8 16, 7
+   \   000000EA   BC70BEBF           DD 3200236656
+   \   000000EE   0A17               DC8 23, 10
+   \   000000F0   7EC6289B           DD 681279174
+   \   000000F4   0D04               DC8 4, 13
+   \   000000F6   27FAEAA1           DD 3936430074
+   \   000000FA   000B               DC8 11, 0
+   \   000000FC   3085D4EF           DD 3572445317
+   \   00000100   0310               DC8 16, 3
+   \   00000102   1D050488           DD 76029189
+   \   00000106   0617               DC8 23, 6
+   \   00000108   D039D9D4           DD 3654602809
+   \   0000010C   0904               DC8 4, 9
+   \   0000010E   99E5E6DB           DD 3873151461
+   \   00000112   0C0B               DC8 11, 12
+   \   00000114   7CF81FA2           DD 530742520
+   \   00000118   0F10               DC8 16, 15
+   \   0000011A   5665C4AC           DD 3299628645
+   \   0000011E   0217               DC8 23, 2
+   \   00000120   2244F429           DD 4096336452
+   \   00000124   0006               DC8 6, 0
+   \   00000126   FF97432A           DD 1126891415
+   \   0000012A   070A               DC8 10, 7
+   \   0000012C   23A7AB94           DD 2878612391
+   \   00000130   0E0F               DC8 15, 14
+   \   00000132   A039FC93           DD 4237533241
+   \   00000136   0515               DC8 21, 5
+   \   00000138   59C3655B           DD 1700485571
+   \   0000013C   0C06               DC8 6, 12
+   \   0000013E   CC928F0C           DD 2399980690
+   \   00000142   030A               DC8 10, 3
+   \   00000144   F47DFFEF           DD 4293915773
+   \   00000148   0A0F               DC8 15, 10
+   \   0000014A   5DD18584           DD 2240044497
+   \   0000014E   0115               DC8 21, 1
+   \   00000150   7E4F6FA8           DD 1873313359
+   \   00000154   0806               DC8 6, 8
+   \   00000156   E6E0FE2C           DD 4264355552
+   \   0000015A   0F0A               DC8 10, 15
+   \   0000015C   4314A301           DD 2734768916
+   \   00000160   060F               DC8 15, 6
+   \   00000162   11A14E08           DD 1309151649
+   \   00000166   0D15               DC8 21, 13
+   \   00000168   7E82F753           DD 4149444226
+   \   0000016C   0406               DC8 6, 4
+   \   0000016E   F235BD3A           DD 3174756917
+   \   00000172   0B0A               DC8 10, 11
+   \   00000174   D2BB2AD7           DD 718787259
+   \   00000178   020F               DC8 15, 2
+   \   0000017A   D391EB86           DD 3951481745
+   \   0000017E   0915               DC8 21, 9
+     24          {
+     25            {0xd76aa478, 7,  0 },  
+     26            {0xe8c7b756, 12, 1 }, 
+     27            {0x242070db, 17, 2 }, 
+     28            {0xc1bdceee, 22, 3 }, 
+     29            {0xf57c0faf, 7,  4 },  
+     30            {0x4787c62a, 12, 5 }, 
+     31            {0xa8304613, 17, 6 }, 
+     32            {0xfd469501, 22, 7 }, 
+     33            {0x698098d8, 7,  8 },  
+     34            {0x8b44f7af, 12, 9 }, 
+     35            {0xffff5bb1, 17, 10},
+     36            {0x895cd7be, 22, 11},
+     37            {0x6b901122, 7,  12}, 
+     38            {0xfd987193, 12, 13},
+     39            {0xa679438e, 17, 14},
+     40            {0x49b40821, 22, 15},
+     41            
+     42            {0xf61e2562, 5,  1 },  
+     43            {0xc040b340, 9,  6 },  
+     44            {0x265e5a51, 14, 11},
+     45            {0xe9b6c7aa, 20, 0 }, 
+     46            {0xd62f105d, 5,  5 },  
+     47            {0x02441453, 9,  10}, 
+     48            {0xd8a1e681, 14, 15},
+     49            {0xe7d3fbc8, 20, 4 }, 
+     50            {0x21e1cde6, 5,  9 },  
+     51            {0xc33707d6, 9,  14}, 
+     52            {0xf4d50d87, 14, 3 }, 
+     53            {0x455a14ed, 20, 8 }, 
+     54            {0xa9e3e905, 5,  13}, 
+     55            {0xfcefa3f8, 9,  2 },  
+     56            {0x676f02d9, 14, 7 }, 
+     57            {0x8d2a4c8a, 20, 12},
+     58            
+     59            {0xfffa3942,  4, 5 },  
+     60            {0x8771f681, 11, 8 }, 
+     61            {0x6d9d6122, 16, 11},
+     62            {0xfde5380c, 23, 14},
+     63            {0xa4beea44,  4, 1 },  
+     64            {0x4bdecfa9, 11, 4 }, 
+     65            {0xf6bb4b60, 16, 7 }, 
+     66            {0xbebfbc70, 23, 10},
+     67            {0x289b7ec6, 4,  13}, 
+     68            {0xeaa127fa, 11, 0 }, 
+     69            {0xd4ef3085, 16, 3 }, 
+     70            {0x04881d05, 23, 6 }, 
+     71            {0xd9d4d039, 4,  9 },  
+     72            {0xe6db99e5, 11, 12},
+     73            {0x1fa27cf8, 16, 15},
+     74            {0xc4ac5665, 23, 2 }, 
+     75            
+     76            {0xf4292244,  6, 0 },  
+     77            {0x432aff97, 10, 7 }, 
+     78            {0xab9423a7, 15, 14},
+     79            {0xfc93a039, 21, 5 }, 
+     80            {0x655b59c3,  6, 12}, 
+     81            {0x8f0ccc92, 10, 3 }, 
+     82            {0xffeff47d, 15, 10},
+     83            {0x85845dd1, 21, 1 }, 
+     84            {0x6fa87e4f,  6, 8 },  
+     85            {0xfe2ce6e0, 10, 15},
+     86            {0xa3014314, 15, 6 }, 
+     87            {0x4e0811a1, 21, 13},
+     88            {0xf7537e82,  6, 4 },  
+     89            {0xbd3af235, 10, 11},
+     90            {0x2ad7d2bb, 15, 2 }, 
+     91            {0xeb86d391, 21, 9 }
+     92          };
+     93          
+     94          /*=============================================*/
+     95          static __x_z void _move(char *d, const char *s, UREG l);
+     96          __x_z void back_memmove(void *d, const void *s, UREG l)
+   \                     back_memmove:
+     97          {
+     98            _move((char*)d,(char*)s,l);
+   \   00000000                      REQUIRE _move
+   \   00000000                      ;               // Fall through to label _move
+     99          }
+    100          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    101          static __x_z void _move(char *d, const char *s, UREG l)
+   \                     _move:
+   \                     ??_move_0:
+    102          {
+    103            do
+    104            {
+    105              *--d=*--s;
+   \   00000000   9112               LD      R17, -Z
+   \   00000002   931E               ST      -X, R17
+    106            }
+    107            while(--l);
+   \   00000004   950A               DEC     R16
+   \   00000006   F7E1               BRNE    ??_move_0
+    108          }
+   \   00000008   9508               RET
+    109          
+    110          #pragma inline=forced
+    111          static __x_z void _memcpy_flash(char *d, const char __flash *s, UREG l);
+    112          #pragma inline=forced
+    113          static __x_z void memcpy_flash(void *d, const void __flash *s, UREG l)
+    114          {
+    115            _memcpy_flash((char*)d,(char __flash *)s,l);
+    116          }
+    117          
+    118          #pragma inline=forced
+    119          static __x_z void _memcpy_flash(char *d, const char __flash *s, UREG l)
+    120          {
+    121            do
+    122            {
+    123              *d++=*s++;
+    124            }
+    125            while(--l);
+    126          }
+    127          
+    128          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    129          static __x_z void sum(unsigned long *state, unsigned long *a)
+   \                     sum:
+    130          {
+    131            UREG i=4;
+   \   00000000   E004               LDI     R16, 4
+    132            unsigned long t;
+    133            do
+    134            {
+    135              t=*a++;
+   \                     ??sum_0:
+   \   00000002   9141               LD      R20, Z+
+   \   00000004   9151               LD      R21, Z+
+   \   00000006   9161               LD      R22, Z+
+   \   00000008   9171               LD      R23, Z+
+    136              t+=*state;
+    137              *state++=t;
+   \   0000000A   900D               LD      R0, X+
+   \   0000000C   901D               LD      R1, X+
+   \   0000000E   902D               LD      R2, X+
+   \   00000010   903C               LD      R3, X
+   \   00000012   0E04               ADD     R0, R20
+   \   00000014   1E15               ADC     R1, R21
+   \   00000016   1E26               ADC     R2, R22
+   \   00000018   1E37               ADC     R3, R23
+   \   0000001A   923C               ST      X, R3
+   \   0000001C   922E               ST      -X, R2
+   \   0000001E   921E               ST      -X, R1
+   \   00000020   920E               ST      -X, R0
+   \   00000022   9614               ADIW    R27:R26, 4
+    138            }
+    139            while(--i);
+   \   00000024   950A               DEC     R16
+   \   00000026   F769               BRNE    ??sum_0
+    140          }
+   \   00000028   9508               RET
+    141          
+    142          /*=============================================*/
+    143          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    144          void MD5cheat(char *out_, unsigned char *_p, UREG len)
+   \                     MD5cheat:
+    145          {
+   \   00000000   92DA               ST      -Y, R13
+   \   00000002   92CA               ST      -Y, R12
+   \   00000004   92BA               ST      -Y, R11
+   \   00000006   92AA               ST      -Y, R10
+   \   00000008   929A               ST      -Y, R9
+   \   0000000A   928A               ST      -Y, R8
+   \   0000000C   927A               ST      -Y, R7
+   \   0000000E   926A               ST      -Y, R6
+   \   00000010   925A               ST      -Y, R5
+   \   00000012   924A               ST      -Y, R4
+   \   00000014   93BA               ST      -Y, R27
+   \   00000016   93AA               ST      -Y, R26
+   \   00000018   939A               ST      -Y, R25
+   \   0000001A   938A               ST      -Y, R24
+   \   0000001C                      REQUIRE ?Register_R4_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R5_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R6_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R7_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R8_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R9_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R10_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R11_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R12_is_cg_reg
+   \   0000001C                      REQUIRE ?Register_R13_is_cg_reg
+   \   0000001C   97A0               SBIW    R29:R28, 32
+   \   0000001E   0168               MOVW    R13:R12, R17:R16
+    146            unsigned long state[4];
+    147            static __flash unsigned long state_init[4]={0x67452301,0xefcdab89,0x98badcfe,0x10325476};
+    148            memcpy_flash(state,state_init,16);
+   \   00000020   ....               LDI     R30, LOW(??state_init)
+   \   00000022   ....               LDI     R31, (??state_init) >> 8
+   \   00000024   01DE               MOVW    R27:R26, R29:R28
+   \   00000026   9650               ADIW    R27:R26, 16
+   \   00000028   E100               LDI     R16, 16
+   \                     ??MD5cheat_0:
+   \   0000002A   9115               LPM     R17, Z+
+   \   0000002C   931D               ST      X+, R17
+   \   0000002E   950A               DEC     R16
+   \   00000030   F7E1               BRNE    ??MD5cheat_0
+    149            {  
+    150              unsigned char *wp=_p+len;
+   \   00000032   E050               LDI     R21, 0
+   \   00000034   01F9               MOVW    R31:R30, R19:R18
+   \   00000036   0FE4               ADD     R30, R20
+   \   00000038   1FF5               ADC     R31, R21
+    151              unsigned long *p=(unsigned long *)_p;
+   \   0000003A   0159               MOVW    R11:R10, R19:R18
+    152              UREG i=len;
+   \   0000003C   2F84               MOV     R24, R20
+    153              if ((i&63)!=56)
+   \   0000003E   2F04               MOV     R16, R20
+   \   00000040   730F               ANDI    R16, 0x3F
+   \   00000042   3308               CPI     R16, 56
+   \   00000044   F049               BREQ    ??MD5cheat_1
+    154              {
+    155                *wp++=0x80;
+   \   00000046   E800               LDI     R16, 128
+   \   00000048   9301               ST      Z+, R16
+    156                i++;
+   \   0000004A   C001               RJMP    ??MD5cheat_2
+    157              }
+    158              while((i&63)!=56)
+    159              {
+    160                *wp++=0;
+   \                     ??MD5cheat_3:
+   \   0000004C   9351               ST      Z+, R21
+    161                i++;
+   \                     ??MD5cheat_2:
+   \   0000004E   9583               INC     R24
+    162              }
+   \   00000050   2F08               MOV     R16, R24
+   \   00000052   730F               ANDI    R16, 0x3F
+   \   00000054   3308               CPI     R16, 56
+   \   00000056   F7D1               BRNE    ??MD5cheat_3
+    163              {
+    164                UINT16 v=__multiply_unsigned(len,8);
+   \                     ??MD5cheat_1:
+   \   00000058   E008               LDI     R16, 8
+   \   0000005A   9F40               MUL     R20, R16
+    165                *wp++=v; //len<<3;
+   \   0000005C   8200               ST      Z, R0
+    166                *wp++=v>>8; //len>>5;
+   \   0000005E   9631               ADIW    R31:R30, 1
+   \   00000060   8210               ST      Z, R1
+    167              }
+    168              *wp++=0;
+   \   00000062   9631               ADIW    R31:R30, 1
+   \   00000064   8350               ST      Z, R21
+    169              *wp++=0;
+   \   00000066   9631               ADIW    R31:R30, 1
+   \   00000068   8350               ST      Z, R21
+    170              *wp++=0;
+   \   0000006A   9631               ADIW    R31:R30, 1
+   \   0000006C   8350               ST      Z, R21
+    171              *wp++=0;
+   \   0000006E   9631               ADIW    R31:R30, 1
+   \   00000070   8350               ST      Z, R21
+    172              *wp++=0;
+   \   00000072   9631               ADIW    R31:R30, 1
+   \   00000074   8350               ST      Z, R21
+    173              *wp++=0;
+   \   00000076   9631               ADIW    R31:R30, 1
+   \   00000078   8350               ST      Z, R21
+    174              i+=8;
+    175              i>>=6;
+   \   0000007A   5F88               SUBI    R24, 248
+   \   0000007C   E004               LDI     R16, 4
+   \   0000007E   9F80               MUL     R24, R16
+   \   00000080   2D81               MOV     R24, R1
+    176              do
+    177              {
+    178                volatile struct 
+    179                {
+    180          	unsigned long a, b, c, d;
+    181                };
+    182                UREG i;
+    183                UREG n;
+    184                UREG k;
+    185                unsigned long tt;
+    186                unsigned long const __flash *up;
+    187                unsigned char const __flash *cp;
+    188                back_memmove((void*)(&a+4),state+4,16);
+   \                     ??MD5cheat_4:
+   \   00000082   E100               LDI     R16, 16
+   \   00000084   01FE               MOVW    R31:R30, R29:R28
+   \   00000086   96B0               ADIW    R31:R30, 32
+   \   00000088   01DE               MOVW    R27:R26, R29:R28
+   \   0000008A   9650               ADIW    R27:R26, 16
+   \   0000008C   ....               RCALL   _move
+    189                up=&table->g;
+   \   0000008E   ....               LDI     R16, LOW(table)
+   \   00000090   2E80               MOV     R8, R16
+   \   00000092   ....               LDI     R16, (table) >> 8
+   \   00000094   2E90               MOV     R9, R16
+    190                i=0;
+   \   00000096   E090               LDI     R25, 0
+    191                do
+    192                {
+    193          #pragma diag_suppress=Pa082
+    194          	if (!(i&32))
+   \                     ??MD5cheat_5:
+   \   00000098   FB95               BST     R25, 5
+   \   0000009A   F1E6               BRTS    ??MD5cheat_6
+    195          	{
+    196          	  if (!(i&16))
+   \   0000009C   FB94               BST     R25, 4
+   \   0000009E   8108               LD      R16, Y
+   \   000000A0   8119               LDD     R17, Y+1
+   \   000000A2   812A               LDD     R18, Y+2
+   \   000000A4   813B               LDD     R19, Y+3
+   \   000000A6   814C               LDD     R20, Y+4
+   \   000000A8   815D               LDD     R21, Y+5
+   \   000000AA   816E               LDD     R22, Y+6
+   \   000000AC   817F               LDD     R23, Y+7
+   \   000000AE   F0EE               BRTS    ??MD5cheat_7
+    197          	  {
+    198          	    tt=a+F1(b,c,d);
+   \   000000B0   8408               LDD     R0, Y+8
+   \   000000B2   8419               LDD     R1, Y+9
+   \   000000B4   842A               LDD     R2, Y+10
+   \   000000B6   843B               LDD     R3, Y+11
+   \   000000B8   2140               AND     R20, R0
+   \   000000BA   2151               AND     R21, R1
+   \   000000BC   2162               AND     R22, R2
+   \   000000BE   2173               AND     R23, R3
+   \   000000C0   804C               LDD     R4, Y+4
+   \   000000C2   805D               LDD     R5, Y+5
+   \   000000C4   806E               LDD     R6, Y+6
+   \   000000C6   807F               LDD     R7, Y+7
+   \   000000C8   9440               COM     R4
+   \   000000CA   9450               COM     R5
+   \   000000CC   9460               COM     R6
+   \   000000CE   9470               COM     R7
+   \   000000D0   840C               LDD     R0, Y+12
+   \   000000D2   841D               LDD     R1, Y+13
+   \   000000D4   842E               LDD     R2, Y+14
+   \   000000D6   843F               LDD     R3, Y+15
+   \                     ??MD5cheat_8:
+   \   000000D8   2040               AND     R4, R0
+   \   000000DA   2051               AND     R5, R1
+   \   000000DC   2062               AND     R6, R2
+   \   000000DE   2073               AND     R7, R3
+   \   000000E0   2944               OR      R20, R4
+   \   000000E2   2955               OR      R21, R5
+   \   000000E4   2966               OR      R22, R6
+   \   000000E6   2977               OR      R23, R7
+   \   000000E8   C052               RJMP    ??MD5cheat_9
+    199          	  }
+    200          	  else
+    201          	  {
+    202          	    tt=a+F2(b,c,d);
+   \                     ??MD5cheat_7:
+   \   000000EA   840C               LDD     R0, Y+12
+   \   000000EC   841D               LDD     R1, Y+13
+   \   000000EE   842E               LDD     R2, Y+14
+   \   000000F0   843F               LDD     R3, Y+15
+   \   000000F2   2140               AND     R20, R0
+   \   000000F4   2151               AND     R21, R1
+   \   000000F6   2162               AND     R22, R2
+   \   000000F8   2173               AND     R23, R3
+   \   000000FA   8448               LDD     R4, Y+8
+   \   000000FC   8459               LDD     R5, Y+9
+   \   000000FE   846A               LDD     R6, Y+10
+   \   00000100   847B               LDD     R7, Y+11
+   \   00000102   840C               LDD     R0, Y+12
+   \   00000104   841D               LDD     R1, Y+13
+   \   00000106   842E               LDD     R2, Y+14
+   \   00000108   843F               LDD     R3, Y+15
+   \   0000010A   9400               COM     R0
+   \   0000010C   9410               COM     R1
+   \   0000010E   9420               COM     R2
+   \   00000110   9430               COM     R3
+   \   00000112   CFE2               RJMP    ??MD5cheat_8
+    203          	  }
+    204          	}
+    205          	else
+    206          	{
+    207          	  if (!(i&16))
+   \                     ??MD5cheat_6:
+   \   00000114   FB94               BST     R25, 4
+   \   00000116   F0FE               BRTS    ??MD5cheat_10
+    208          	  {
+    209          	    tt=a+F3(b,c,d);
+   \   00000118   8148               LD      R20, Y
+   \   0000011A   8159               LDD     R21, Y+1
+   \   0000011C   816A               LDD     R22, Y+2
+   \   0000011E   817B               LDD     R23, Y+3
+   \   00000120   810C               LDD     R16, Y+4
+   \   00000122   811D               LDD     R17, Y+5
+   \   00000124   812E               LDD     R18, Y+6
+   \   00000126   813F               LDD     R19, Y+7
+   \   00000128   8408               LDD     R0, Y+8
+   \   0000012A   8419               LDD     R1, Y+9
+   \   0000012C   842A               LDD     R2, Y+10
+   \   0000012E   843B               LDD     R3, Y+11
+   \   00000130   2500               EOR     R16, R0
+   \   00000132   2511               EOR     R17, R1
+   \   00000134   2522               EOR     R18, R2
+   \   00000136   2533               EOR     R19, R3
+   \   00000138   840C               LDD     R0, Y+12
+   \   0000013A   841D               LDD     R1, Y+13
+   \   0000013C   842E               LDD     R2, Y+14
+   \   0000013E   843F               LDD     R3, Y+15
+   \   00000140   2500               EOR     R16, R0
+   \   00000142   2511               EOR     R17, R1
+   \   00000144   2522               EOR     R18, R2
+   \   00000146   2533               EOR     R19, R3
+   \   00000148   0F40               ADD     R20, R16
+   \   0000014A   1F51               ADC     R21, R17
+   \   0000014C   1F62               ADC     R22, R18
+   \   0000014E   1F73               ADC     R23, R19
+   \   00000150   012A               MOVW    R5:R4, R21:R20
+   \   00000152   013B               MOVW    R7:R6, R23:R22
+   \   00000154   C022               RJMP    ??MD5cheat_11
+    210          	  }
+    211          	  else
+    212          	  {
+    213          	    tt=a+F4(b,c,d);
+   \                     ??MD5cheat_10:
+   \   00000156   8108               LD      R16, Y
+   \   00000158   8119               LDD     R17, Y+1
+   \   0000015A   812A               LDD     R18, Y+2
+   \   0000015C   813B               LDD     R19, Y+3
+   \   0000015E   8548               LDD     R20, Y+8
+   \   00000160   8559               LDD     R21, Y+9
+   \   00000162   856A               LDD     R22, Y+10
+   \   00000164   857B               LDD     R23, Y+11
+   \   00000166   804C               LDD     R4, Y+4
+   \   00000168   805D               LDD     R5, Y+5
+   \   0000016A   806E               LDD     R6, Y+6
+   \   0000016C   807F               LDD     R7, Y+7
+   \   0000016E   840C               LDD     R0, Y+12
+   \   00000170   841D               LDD     R1, Y+13
+   \   00000172   842E               LDD     R2, Y+14
+   \   00000174   843F               LDD     R3, Y+15
+   \   00000176   9400               COM     R0
+   \   00000178   9410               COM     R1
+   \   0000017A   9420               COM     R2
+   \   0000017C   9430               COM     R3
+   \   0000017E   2840               OR      R4, R0
+   \   00000180   2851               OR      R5, R1
+   \   00000182   2862               OR      R6, R2
+   \   00000184   2873               OR      R7, R3
+   \   00000186   2544               EOR     R20, R4
+   \   00000188   2555               EOR     R21, R5
+   \   0000018A   2566               EOR     R22, R6
+   \   0000018C   2577               EOR     R23, R7
+   \                     ??MD5cheat_9:
+   \   0000018E   0F04               ADD     R16, R20
+   \   00000190   1F15               ADC     R17, R21
+   \   00000192   1F26               ADC     R18, R22
+   \   00000194   1F37               ADC     R19, R23
+   \   00000196   0128               MOVW    R5:R4, R17:R16
+   \   00000198   0139               MOVW    R7:R6, R19:R18
+    214          	  }
+    215          	}
+    216          #pragma diag_default=Pa082
+    217          	tt+=*up++;
+   \                     ??MD5cheat_11:
+   \   0000019A   01F4               MOVW    R31:R30, R9:R8
+   \   0000019C   9105               LPM     R16, Z+
+   \   0000019E   9115               LPM     R17, Z+
+   \   000001A0   9125               LPM     R18, Z+
+   \   000001A2   9135               LPM     R19, Z+
+   \   000001A4   0E40               ADD     R4, R16
+   \   000001A6   1E51               ADC     R5, R17
+   \   000001A8   1E62               ADC     R6, R18
+   \   000001AA   1E73               ADC     R7, R19
+    218          	cp=(unsigned char const __flash *)up;
+    219          	n=*cp++;
+   \   000001AC   9145               LPM     R20, Z+
+    220          	k=*cp++;
+   \   000001AE   9115               LPM     R17, Z+
+    221          	up=(unsigned long const __flash *)cp;
+   \   000001B0   014F               MOVW    R9:R8, R31:R30
+    222          	tt+=p[k];
+   \   000001B2   E004               LDI     R16, 4
+   \   000001B4   9F10               MUL     R17, R16
+   \   000001B6   01F5               MOVW    R31:R30, R11:R10
+   \   000001B8   0DE0               ADD     R30, R0
+   \   000001BA   1DF1               ADC     R31, R1
+   \   000001BC   8100               LD      R16, Z
+   \   000001BE   8111               LDD     R17, Z+1
+   \   000001C0   8122               LDD     R18, Z+2
+   \   000001C2   8133               LDD     R19, Z+3
+   \   000001C4   0E40               ADD     R4, R16
+   \   000001C6   1E51               ADC     R5, R17
+   \   000001C8   1E62               ADC     R6, R18
+   \   000001CA   1E73               ADC     R7, R19
+    223          	do
+    224          	{
+    225          	  tt<<=1;
+   \                     ??MD5cheat_12:
+   \   000001CC   0C44               LSL     R4
+   \   000001CE   1C55               ROL     R5
+   \   000001D0   1C66               ROL     R6
+   \   000001D2   1C77               ROL     R7
+    226          	  if (SREG_Bit0) tt|=1;
+   \   000001D4   F410               BRBC    0, ??MD5cheat_13
+   \   000001D6   9468               SET
+   \   000001D8   F840               BLD     R4, 0
+    227          	}
+    228          	while(--n);
+   \                     ??MD5cheat_13:
+   \   000001DA   954A               DEC     R20
+   \   000001DC   F7B9               BRNE    ??MD5cheat_12
+    229          	a=tt+b;
+   \   000001DE   810C               LDD     R16, Y+4
+   \   000001E0   811D               LDD     R17, Y+5
+   \   000001E2   812E               LDD     R18, Y+6
+   \   000001E4   813F               LDD     R19, Y+7
+   \   000001E6   0E40               ADD     R4, R16
+   \   000001E8   1E51               ADC     R5, R17
+   \   000001EA   1E62               ADC     R6, R18
+   \   000001EC   1E73               ADC     R7, R19
+   \   000001EE   8248               ST      Y, R4
+   \   000001F0   8259               STD     Y+1, R5
+   \   000001F2   826A               STD     Y+2, R6
+   \   000001F4   827B               STD     Y+3, R7
+    230          	tt=d;
+   \   000001F6   844C               LDD     R4, Y+12
+   \   000001F8   845D               LDD     R5, Y+13
+   \   000001FA   846E               LDD     R6, Y+14
+   \   000001FC   847F               LDD     R7, Y+15
+    231          	back_memmove((void*)(&a+4),(void*)(&a+3),12);
+   \   000001FE   E00C               LDI     R16, 12
+   \   00000200   01FE               MOVW    R31:R30, R29:R28
+   \   00000202   963C               ADIW    R31:R30, 12
+   \   00000204   01DE               MOVW    R27:R26, R29:R28
+   \   00000206   9650               ADIW    R27:R26, 16
+   \   00000208   ....               RCALL   _move
+    232          	a=tt;
+   \   0000020A   8248               ST      Y, R4
+   \   0000020C   8259               STD     Y+1, R5
+   \   0000020E   826A               STD     Y+2, R6
+   \   00000210   827B               STD     Y+3, R7
+    233          	i++;
+   \   00000212   9593               INC     R25
+    234                }
+    235                while(!(i&64));
+   \   00000214   FB96               BST     R25, 6
+   \   00000216   F00E               BRTS    $+2+2
+   \   00000218   CF3F               RJMP    ??MD5cheat_5
+    236                sum(state,(unsigned long *)&a);
+   \   0000021A   01FE               MOVW    R31:R30, R29:R28
+   \   0000021C   01DE               MOVW    R27:R26, R29:R28
+   \   0000021E   9650               ADIW    R27:R26, 16
+   \   00000220   ....               RCALL   sum
+    237                p+=16;
+   \   00000222   E400               LDI     R16, 64
+   \   00000224   0EA0               ADD     R10, R16
+   \   00000226   E000               LDI     R16, 0
+   \   00000228   1EB0               ADC     R11, R16
+    238              }
+    239              while(--i);
+   \   0000022A   958A               DEC     R24
+   \   0000022C   F009               BREQ    $+2+2
+   \   0000022E   CF29               RJMP    ??MD5cheat_4
+    240              i=16;
+    241              {
+    242                char *out=out_;
+   \   00000230   01D6               MOVW    R27:R26, R13:R12
+    243                wp=(unsigned char*)state;
+   \   00000232   01FE               MOVW    R31:R30, R29:R28
+   \   00000234   9670               ADIW    R31:R30, 16
+   \   00000236   E120               LDI     R18, 16
+    244                do
+    245                {
+    246          	UREG c;
+    247          	UREG c2;
+    248          	c2=c=*wp++;
+   \                     ??MD5cheat_14:
+   \   00000238   9131               LD      R19, Z+
+   \   0000023A   2F13               MOV     R17, R19
+   \   0000023C   2F03               MOV     R16, R19
+    249          	c>>=4;
+    250          	c+='0';
+   \   0000023E   9512               SWAP    R17
+   \   00000240   701F               ANDI    R17, 0x0F
+   \   00000242   5D10               SUBI    R17, 208
+    251          	if (c>'9') c+='a'-10-'0';
+   \   00000244   331A               CPI     R17, 58
+   \   00000246   F008               BRCS    ??MD5cheat_15
+   \   00000248   5D19               SUBI    R17, 217
+    252          	*out++=c;
+   \                     ??MD5cheat_15:
+   \   0000024A   931D               ST      X+, R17
+    253          	c2&=0x0F;
+    254          	c2+='0';
+   \   0000024C   700F               ANDI    R16, 0x0F
+   \   0000024E   5D00               SUBI    R16, 208
+    255          	if (c2>'9') c2+='a'-10-'0';
+   \   00000250   330A               CPI     R16, 58
+   \   00000252   F008               BRCS    ??MD5cheat_16
+   \   00000254   5D09               SUBI    R16, 217
+    256          	*out++=c2;
+   \                     ??MD5cheat_16:
+   \   00000256   930D               ST      X+, R16
+    257                }
+    258                while(--i);
+   \   00000258   952A               DEC     R18
+   \   0000025A   F771               BRNE    ??MD5cheat_14
+    259              }
+    260            }
+    261          }
+   \   0000025C   96A0               ADIW    R29:R28, 32
+   \   0000025E   9189               LD      R24, Y+
+   \   00000260   9199               LD      R25, Y+
+   \   00000262   91A9               LD      R26, Y+
+   \   00000264   91B9               LD      R27, Y+
+   \   00000266   9049               LD      R4, Y+
+   \   00000268   9059               LD      R5, Y+
+   \   0000026A   9069               LD      R6, Y+
+   \   0000026C   9079               LD      R7, Y+
+   \   0000026E   9089               LD      R8, Y+
+   \   00000270   9099               LD      R9, Y+
+   \   00000272   90A9               LD      R10, Y+
+   \   00000274   90B9               LD      R11, Y+
+   \   00000276   90C9               LD      R12, Y+
+   \   00000278   90D9               LD      R13, Y+
+   \   0000027A   9508               RET
+   \   0000027C                      REQUIRE _A_SREG
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     ??state_init:
+   \   00000000   23016745AB89       DD 1732584193, 4023233417, 2562383102, 271733878
+   \              EFCDDCFE98BA
+   \              54761032    
+
+   Maximum stack usage in bytes:
+
+     Function     CSTACK RSTACK
+     --------     ------ ------
+     MD5cheat        46      2
+       -> _move      46      2
+       -> _move      46      2
+       -> sum        46      2
+     _move            0      2
+     back_memmove     0      2
+       -> _move       0      2
+     sum              0      2
+
+
+   Segment part sizes:
+
+     Function/Label Bytes
+     -------------- -----
+     _A_SREG           1
+     table           384
+     back_memmove      0
+     _move            10
+     sum              42
+     MD5cheat        636
+     state_init       16
+
+ 
+   1 byte  in segment ABSOLUTE
+ 688 bytes in segment CODE
+ 400 bytes in segment NEAR_F
+ 
+ 1 088 bytes of CODE memory
+     0 bytes of DATA memory (+ 1 byte shared)
+
+Errors: none
+Warnings: none

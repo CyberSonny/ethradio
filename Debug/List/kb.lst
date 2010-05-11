@@ -1,0 +1,358 @@
+###############################################################################
+#                                                                             #
+#                                                       17/Feb/2010  18:31:04 #
+# IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR     #
+# Copyright 1996-2009 IAR Systems AB.                                         #
+#                                                                             #
+#    Source file  =  G:\AVR\EthRadio_buf_inline\kb.c                          #
+#    Command line =  --string_literals_in_flash G:\AVR\EthRadio_buf_inline\kb #
+#                    .c --cpu=m32 -ms -o G:\AVR\EthRadio_buf_inline\Debug\Obj #
+#                    \ -lC G:\AVR\EthRadio_buf_inline\Debug\List\ -lB         #
+#                    G:\AVR\EthRadio_buf_inline\Debug\List\                   #
+#                    --initializers_in_flash -s9 --no_code_motion --debug     #
+#                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR     #
+#                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I   #
+#                    "C:\Program Files\IAR Systems\Embedded Workbench         #
+#                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024         #
+#                    --lock_regs=1                                            #
+#    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\kb.lst             #
+#    Object file  =  G:\AVR\EthRadio_buf_inline\Debug\Obj\kb.r90              #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+G:\AVR\EthRadio_buf_inline\kb.c
+      1          #include "compiler.h"
+
+   \                                 In  segment ABSOLUTE, at 0x39
+   \   <__C52> volatile __io _A_PINA
+   \                     _A_PINA:
+   \   00000000                      DS8 1
+
+   \                                 In  segment ABSOLUTE, at 0x3b
+   \   <__C56> volatile __io _A_PORTA
+   \                     _A_PORTA:
+   \   00000000                      DS8 1
+      2          #include "stdafx.h"
+      3          #include "tcp.h"
+      4          #include "http_get.h"
+      5          #include "station.h"
+      6          #include "FIFO.h"
+      7          #include "lcd.h"
+      8          #include "player.h"
+      9          #include "kb.h"
+     10          
+     11          
+     12          extern volatile UREG PLAYER_STATE;
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     13          void LCD_TCPstate(UINT8 sock_state)
+   \                     LCD_TCPstate:
+     14          {   
+     15            switch (sock_state)
+   \   00000000   2300               TST     R16
+   \   00000002   F039               BREQ    ??LCD_TCPstate_0
+   \   00000004   5003               SUBI    R16, 3
+   \   00000006   F041               BREQ    ??LCD_TCPstate_1
+   \   00000008   5002               SUBI    R16, 2
+   \   0000000A   F059               BREQ    ??LCD_TCPstate_2
+   \   0000000C   950A               DEC     R16
+   \   0000000E   F061               BREQ    ??LCD_TCPstate_3
+   \   00000010   9508               RET
+     16              {
+     17                case TCP_STATE_CLOSED:
+     18                  LCD_fprintline(1,"Closed");
+   \                     ??LCD_TCPstate_0:
+   \   00000012   ....               LDI     R30, LOW(`?<Constant "Closed">`)
+   \   00000014   ....               LDI     R31, (`?<Constant "Closed">`) >> 8
+   \   00000016   C002               RJMP    ??LCD_TCPstate_4
+     19                  //LCD_putMETA(0,0);
+     20                  break;
+     21                case TCP_STATE_CONNECTING:
+     22                  LCD_fprintline(1,"Connecting");
+   \                     ??LCD_TCPstate_1:
+   \   00000018   ....               LDI     R30, LOW((`?<Constant "Closed">` + 7))
+   \   0000001A   ....               LDI     R31, HIGH((`?<Constant "Closed">` + 7))
+   \                     ??LCD_TCPstate_4:
+   \   0000001C   E001               LDI     R16, 1
+   \   0000001E   ........           JMP     LCD_fprintline
+     23                  break;
+     24                case TCP_STATE_FINW1:
+     25                  LCD_fprintline(1,"Closing");
+   \                     ??LCD_TCPstate_2:
+   \   00000022   ....               LDI     R30, LOW((`?<Constant "Closed">` + 18))
+   \   00000024   ....               LDI     R31, HIGH((`?<Constant "Closed">` + 18))
+   \   00000026   CFFA               RJMP    ??LCD_TCPstate_4
+     26                  break;
+     27                case TCP_STATE_CONNECTED:
+     28                  LCD_fprintline(1,"Connected");
+   \                     ??LCD_TCPstate_3:
+   \   00000028   ....               LDI     R30, LOW((`?<Constant "Closed">` + 26))
+   \   0000002A   ....               LDI     R31, HIGH((`?<Constant "Closed">` + 26))
+   \   0000002C   CFF7               RJMP    ??LCD_TCPstate_4
+     29                  break;
+     30              }
+     31          }      
+     32          
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     33          void LCD_PLAYERstate(UINT8 player_state)
+   \                     LCD_PLAYERstate:
+     34          {
+     35             switch (player_state)
+   \   00000000   2300               TST     R16
+   \   00000002   F039               BREQ    ??LCD_PLAYERstate_0
+   \   00000004   950A               DEC     R16
+   \   00000006   F041               BREQ    ??LCD_PLAYERstate_1
+   \   00000008   950A               DEC     R16
+   \   0000000A   F059               BREQ    ??LCD_PLAYERstate_2
+   \   0000000C   950A               DEC     R16
+   \   0000000E   F061               BREQ    ??LCD_PLAYERstate_3
+   \   00000010   9508               RET
+     36             {
+     37                  case PLAYER_STATE_STOPED:
+     38                  LCD_fprintline(1,"Stoped");
+   \                     ??LCD_PLAYERstate_0:
+   \   00000012   ....               LDI     R30, LOW(`?<Constant "Stoped">`)
+   \   00000014   ....               LDI     R31, (`?<Constant "Stoped">`) >> 8
+   \   00000016   C002               RJMP    ??LCD_PLAYERstate_4
+     39                  //LCD_putMETA(0,0);
+     40                  break;
+     41                case PLAYER_STATE_BUFFERING:
+     42                  LCD_fprintline(1,"Buffering");
+   \                     ??LCD_PLAYERstate_1:
+   \   00000018   ....               LDI     R30, LOW((`?<Constant "Stoped">` + 7))
+   \   0000001A   ....               LDI     R31, HIGH((`?<Constant "Stoped">` + 7))
+   \                     ??LCD_PLAYERstate_4:
+   \   0000001C   E001               LDI     R16, 1
+   \   0000001E   ........           JMP     LCD_fprintline
+     43                  break;
+     44                case PLAYER_STATE_PLAYING:
+     45                  LCD_fprintline(1,"Playing");
+   \                     ??LCD_PLAYERstate_2:
+   \   00000022   ....               LDI     R30, LOW((`?<Constant "Stoped">` + 17))
+   \   00000024   ....               LDI     R31, HIGH((`?<Constant "Stoped">` + 17))
+   \   00000026   CFFA               RJMP    ??LCD_PLAYERstate_4
+     46                  break;
+     47               case PLAYER_STATE_STOPREQ:
+     48                  LCD_fprintline(1,"Stop Request");
+   \                     ??LCD_PLAYERstate_3:
+   \   00000028   ....               LDI     R30, LOW((`?<Constant "Stoped">` + 25))
+   \   0000002A   ....               LDI     R31, HIGH((`?<Constant "Stoped">` + 25))
+   \   0000002C   CFF7               RJMP    ??LCD_PLAYERstate_4
+     49                  break;
+     50             }
+     51          }
+     52          
+     53          volatile UINT8 Keyboard_task;
+     54          
+     55          #pragma vector = TIMER2_OVF_vect
+
+   \                                 In  segment CODE, align 2, keep-with-next
+     56          __interrupt  void T2_TASK(void)
+   \                     T2_TASK:
+     57          {
+   \   00000000   932A               ST      -Y, R18
+   \   00000002   931A               ST      -Y, R17
+   \   00000004   930A               ST      -Y, R16
+   \   00000006   B72F               IN      R18, 0x3F
+     58            static UINT8 T2INTdiv;
+     59            if (T2INTdiv++ != 3) return;
+   \   00000008   9100....           LDS     R16, (Keyboard_task + 1)
+   \   0000000C   2F10               MOV     R17, R16
+   \   0000000E   9513               INC     R17
+   \   00000010   9310....           STS     (Keyboard_task + 1), R17
+   \   00000014   3003               CPI     R16, 3
+   \   00000016   F529               BRNE    ??T2_TASK_0
+     60            T2INTdiv=0;
+   \   00000018   E000               LDI     R16, 0
+   \   0000001A   9300....           STS     (Keyboard_task + 1), R16
+     61            /*
+     62            if (get_sock.sock.state != sock_state)
+     63            {
+     64                LCD_TCPstate(get_sock.sock.state);   
+     65                sock_state=get_sock.sock.state;
+     66            }
+     67            if (player_state!=PLAYER_STATE)
+     68            {
+     69              LCD_PLAYERstate(PLAYER_STATE);
+     70              player_state=PLAYER_STATE;
+     71            }
+     72              */
+     73            if (!PORTA_Bit0)
+   \   0000001E   99D8               SBIC    0x1B, 0x00
+   \   00000020   C004               RJMP    ??T2_TASK_1
+     74            {
+     75              if (!PINA_Bit0) // but1 is pressed
+   \   00000022   99C8               SBIC    0x19, 0x00
+   \   00000024   C00E               RJMP    ??T2_TASK_2
+     76              {
+     77                sbi(PORTA, PA0);
+   \   00000026   9AD8               SBI     0x1B, 0x00
+   \   00000028   C00C               RJMP    ??T2_TASK_2
+     78              }
+     79            }
+     80            else
+     81            {
+     82              if (PINA_Bit0) //but1 was released
+   \                     ??T2_TASK_1:
+   \   0000002A   9BC8               SBIS    0x19, 0x00
+   \   0000002C   C00A               RJMP    ??T2_TASK_2
+     83              {
+     84                cbi(PORTA, PA0);      
+   \   0000002E   98D8               CBI     0x1B, 0x00
+     85                if (get_sock.sock.state==TCP_STATE_CLOSED)
+   \   00000030   9100....           LDS     R16, (get_sock + 27)
+   \   00000034   2300               TST     R16
+   \   00000036   F411               BRNE    ??T2_TASK_3
+     86                {
+     87                  /*
+     88                  LCD_fprintline(1,"Connecting");
+     89                  StartGET();
+     90                  */
+     91                  Keyboard_task=Keyboard_task_startget;
+   \   00000038   E001               LDI     R16, 1
+   \   0000003A   C001               RJMP    ??T2_TASK_4
+     92                }
+     93                else
+     94                {
+     95                  //если сокет в любом состоянии кроме "закрыт" то даем запрос на закрытие
+     96                  // и останавливаем воспроизведение
+     97          //        PLAYER_STATE= PLAYER_STATE_STOPREQ;
+     98                  Keyboard_task=Keyboard_task_stopget;
+   \                     ??T2_TASK_3:
+   \   0000003C   E002               LDI     R16, 2
+   \                     ??T2_TASK_4:
+   \   0000003E   9300....           STS     Keyboard_task, R16
+     99                }
+    100              }
+    101            }
+    102            if (!PORTA_Bit1)
+   \                     ??T2_TASK_2:
+   \   00000042   99D9               SBIC    0x1B, 0x01
+   \   00000044   C004               RJMP    ??T2_TASK_5
+    103            {
+    104              if (!PINA_Bit1) // but1 is pressed
+   \   00000046   99C9               SBIC    0x19, 0x01
+   \   00000048   C00C               RJMP    ??T2_TASK_0
+    105              {
+    106                sbi(PORTA, PA1);
+   \   0000004A   9AD9               SBI     0x1B, 0x01
+   \   0000004C   C00A               RJMP    ??T2_TASK_0
+    107              }
+    108            }
+    109            else
+    110            {
+    111              if (PINA_Bit1) // but1 is pressed
+   \                     ??T2_TASK_5:
+   \   0000004E   9BC9               SBIS    0x19, 0x01
+   \   00000050   C008               RJMP    ??T2_TASK_0
+    112              {
+    113                cbi(PORTA, PA1);      
+   \   00000052   98D9               CBI     0x1B, 0x01
+    114                if (PLAYER_STATE==PLAYER_STATE_STOPED)
+   \   00000054   9100....           LDS     R16, PLAYER_STATE
+   \   00000058   2300               TST     R16
+   \   0000005A   F419               BRNE    ??T2_TASK_0
+    115                {
+    116                  Keyboard_task=Keyboard_task_stationchange;
+   \   0000005C   E003               LDI     R16, 3
+   \   0000005E   9300....           STS     Keyboard_task, R16
+   \                     ??T2_TASK_0:
+   \   00000062   BF2F               OUT     0x3F, R18
+   \   00000064   9109               LD      R16, Y+
+   \   00000066   9119               LD      R17, Y+
+   \   00000068   9129               LD      R18, Y+
+   \   0000006A   9518               RETI
+   \   0000006C                      REQUIRE _A_PINA
+   \   0000006C                      REQUIRE _A_PORTA
+    117                  /*
+    118                  stationNum++;
+    119                  if (stationNum>20) stationNum=0;
+    120                  stationNum_EEPROM=stationNum;
+    121                  LCD_fprintline(0,&station_list[stationNum].LCD_ID[0]);
+    122                  */
+    123                }
+    124              }
+    125            }
+    126          }
+
+   \                                 In  segment NEAR_Z, align 1, keep-with-next
+   \   00000000                      REQUIRE `?<Segment init: NEAR_Z>`
+   \                     Keyboard_task:
+   \   00000000                      DS8 1
+   \   00000001                      DS8 1
+
+   \                                 In  segment INTVEC, offset 0x14, root
+   \                     `??T2_TASK??INTVEC 20`:
+   \   00000014   ........           JMP     T2_TASK
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     `?<Constant "Closed">`:
+   \   00000000   6C43736F6465       DC8 "Closed"
+   \              00          
+   \   00000007   6F436E6E6365       DC8 "Connecting"
+   \              6974676E00  
+   \   00000012   6C43736F6E69       DC8 "Closing"
+   \              0067        
+   \   0000001A   6F436E6E6365       DC8 "Connected"
+   \              65740064    
+
+   \                                 In  segment NEAR_F, align 1, keep-with-next
+   \                     `?<Constant "Stoped">`:
+   \   00000000   7453706F6465       DC8 "Stoped"
+   \              00          
+   \   00000007   754266667265       DC8 "Buffering"
+   \              6E690067    
+   \   00000011   6C5079616E69       DC8 "Playing"
+   \              0067        
+   \   00000019   7453706F5220       DC8 "Stop Request"
+   \              716565757473
+   \              00          
+
+   Maximum stack usage in bytes:
+
+     Function            CSTACK RSTACK
+     --------            ------ ------
+     LCD_PLAYERstate         0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+     LCD_TCPstate            0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+       -> LCD_fprintline     0      2
+     T2_TASK                 3      2
+
+
+   Segment part sizes:
+
+     Function/Label       Bytes
+     --------------       -----
+     _A_PINA                 1
+     _A_PORTA                1
+     LCD_TCPstate           46
+     LCD_PLAYERstate        46
+     T2_TASK               108
+     Keyboard_task           2
+     T2INTdiv
+     ??T2_TASK??INTVEC 20    4
+     ?<Constant "Closed">   36
+     ?<Constant "Stoped">   38
+      Others                 6
+
+ 
+   2 bytes in segment ABSOLUTE
+ 200 bytes in segment CODE
+   6 bytes in segment INITTAB
+   4 bytes in segment INTVEC
+  74 bytes in segment NEAR_F
+   2 bytes in segment NEAR_Z
+ 
+ 274 bytes of CODE memory (+ 10 bytes shared)
+   2 bytes of DATA memory (+  2 bytes shared)
+
+Errors: none
+Warnings: none

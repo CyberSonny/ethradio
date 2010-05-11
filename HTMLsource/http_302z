@@ -1,0 +1,6 @@
+HTTP/1.1 302 Moved
+Content-Type: text/html
+Connection: close
+Cache-Control: no-cache
+Location: /z
+

@@ -1,0 +1,308 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:31:04 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\io.c                         /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\io.c --cpu=m32 -ms -o        /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\io.s90            /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME io
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        PUBWEAK _A_UBRRH
+        PUBWEAK _A_UBRRL
+        PUBWEAK _A_UCSRA
+        PUBWEAK _A_UCSRB
+        PUBWEAK _A_UDR
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC _print_fstr
+        PUBLIC _print_num
+        PUBLIC _print_rn
+        PUBLIC uart_init
+
+        EXTERN i2a
+
+// G:\AVR\EthRadio_buf_inline\io.c
+//    1 #include "stdafx.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,029H
+// <__C20> volatile __io _A_UBRRL
+_A_UBRRL:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02aH
+// <__C22> volatile __io _A_UCSRB
+_A_UCSRB:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02bH
+// <__C24> volatile __io _A_UCSRA
+_A_UCSRA:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02cH
+// <__C26> volatile __io _A_UDR
+_A_UDR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,040H
+// <__C67> volatile __io _A_UBRRH
+_A_UBRRH:
+        DS8 1
+//    2 #include "compiler.h"
+//    3 
+//    4 
+//    5 #define UART_TX(var) \ 
+//    6 {\ 
+//    7    while ( !( UCSRA & (1<<UDRE)));\ 
+//    8    UDR = var;\ 
+//    9 };
+//   10 
+//   11 
+//   12 static const char __flash _sData[] = "&Data:";
+//   13 static const char __flash _sLen[] = "Len:";
+//   14 static const char __flash _si[] = "i:";
+//   15 
+//   16 __z void _i2a(char *s, UINT16 v);
+//   17 extern __z void i2a(char *s, UINT16 v);
+//   18 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   19 void uart_init(void)
+uart_init:
+//   20 {
+//   21 /* UART0 initialisation */
+//   22 /* desired baud rate: 115200 */
+//   23 /* actual baud rate: 115200 (0.0%) */
+//   24 /* char size: 8 bit */
+//   25 /* parity: Disabled */
+//   26 UCSRB = 0x00; /* disable while setting baud rate */
+        LDI     R16, 0
+        OUT     0x0A, R16
+//   27 UCSRA = 0x00;
+        OUT     0x0B, R16
+//   28 UCSRC = 0x86; // 8 bit data
+        LDI     R16, 134
+        OUT     0x20, R16
+//   29 UBRRL = 8; // set baud rate lo (115200 @ 16 MHz)
+        LDI     R16, 8
+        OUT     0x09, R16
+//   30 UBRRH = 0x00; /* set baud rate hi */
+        LDI     R16, 0
+        OUT     0x20, R16
+//   31 UCSRB = 0x08; //TX are enabled
+        LDI     R16, 8
+        OUT     0x0A, R16
+//   32 }
+        RET
+        REQUIRE _A_UBRRL
+        REQUIRE _A_UCSRB
+        REQUIRE _A_UCSRA
+        REQUIRE _A_UBRRH
+//   33 
+//   34 
+//   35 //Print 0x0A,0x0B
+
+        RSEG CODE:CODE:NOROOT(1)
+//   36 void _print_rn (void)
+_print_rn:
+??_print_rn_0:
+//   37 { 
+//   38   UART_TX(0x0A);
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_rn_0
+        LDI     R16, 10
+        OUT     0x0C, R16
+//   39   UART_TX(0x0D);
+??_print_rn_1:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_rn_1
+        LDI     R16, 13
+        OUT     0x0C, R16
+//   40 }
+        RET
+        REQUIRE _A_UCSRA
+        REQUIRE _A_UDR
+//   41 
+//   42 //extern char i2a_buf[5];
+//   43 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   44 void _print_num ( const char __flash * s, UINT16 Num)
+_print_num:
+//   45 {
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R25
+        ST      -Y, R24
+        SBIW    R29:R28, 6
+        MOVW    R25:R24, R17:R16
+        MOVW    R17:R16, R19:R18
+//   46   char* pi2a;
+//   47   __no_init char i2a_locbuf[6];
+//   48   pi2a=&i2a_locbuf[0];
+        MOVW    R27:R26, R29:R28
+//   49   i2a(pi2a, Num);
+        MOVW    R31:R30, R29:R28
+        CALL    i2a
+        RJMP    ??_print_num_0
+//   50   while (*s) UART_TX (*s++);
+??_print_num_1:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_num_1
+        LPM     R16, Z+
+        MOVW    R25:R24, R31:R30
+        OUT     0x0C, R16
+??_print_num_0:
+        MOVW    R31:R30, R25:R24
+        LPM     R16, Z
+        TST     R16
+        BRNE    ??_print_num_1
+//   51 //  UART_TX(':'); 
+//   52   while (*pi2a) UART_TX(*pi2a++);  
+??_print_num_2:
+        LD      R16, X+
+        TST     R16
+        BREQ    ??_print_num_3
+??_print_num_4:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_num_4
+        OUT     0x0C, R16
+        RJMP    ??_print_num_2
+//   53   UART_TX(',');
+??_print_num_3:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_num_3
+        LDI     R16, 44
+        OUT     0x0C, R16
+//   54   UART_TX(' '); 
+??_print_num_5:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_num_5
+        LDI     R16, 32
+        OUT     0x0C, R16
+//   55 }
+        ADIW    R29:R28, 6
+        LD      R24, Y+
+        LD      R25, Y+
+        LD      R26, Y+
+        LD      R27, Y+
+        RET
+        REQUIRE _A_UCSRA
+        REQUIRE _A_UDR
+//   56 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   57 void _print_fstr (const char __flash * s)
+_print_fstr:
+//   58 {
+        RJMP    ??_print_fstr_0
+//   59   while (*s) UART_TX (*s++);
+??_print_fstr_1:
+        SBIS    0x0B, 0x05
+        RJMP    ??_print_fstr_1
+        LPM     R18, Z+
+        MOVW    R17:R16, R31:R30
+        OUT     0x0C, R18
+??_print_fstr_0:
+        MOVW    R31:R30, R17:R16
+        LPM     R18, Z
+        TST     R18
+        BRNE    ??_print_fstr_1
+//   60 }
+        RET
+        REQUIRE _A_UCSRA
+        REQUIRE _A_UDR
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        END
+//   61 
+//   62 
+//   63 /*
+//   64 static void put_message(char *s)
+//   65 {
+//   66   while (*s)
+//   67     putchar(*s++);
+//   68 }
+//   69 */
+//   70 
+//   71 
+//   72 /*
+//   73 void print_dump(unsigned char* p, unsigned int len)
+//   74 {
+//   75  // unsigned char i=0;
+//   76     printf_P(_HexWordData, p);
+//   77   printf_P(_HexWordNum, len);
+//   78 //  while (i<len)
+//   79 //  {      
+//   80      //printf_P(_HexByteNum, *p);
+//   81      //i++;
+//   82      //p++;
+//   83 //     putchar (0x3B);
+//   84 //  }  
+//   85 //  printf_P(_Razer);
+//   86 //  printf_P(_Razer);
+//   87 }
+//   88 
+//   89 void print_i (unsigned char i)
+//   90 {
+//   91   printf_P(_DecByteNum, i);
+//   92     printf_P(_Razer);
+//   93 }
+//   94 void print_lenRX(unsigned char* p, unsigned int len)
+//   95 {
+//   96   if (!len) return;
+//   97   unsigned char i=0;
+//   98 
+//   99   printf_P(_HexWordNumRX, len);
+//  100   while (i<len)
+//  101   {      
+//  102      printf_P(_HexByteNum, *p);
+//  103      i++;
+//  104      p++;
+//  105      putchar (0x3B);
+//  106   }  
+//  107   printf_P(_Razer);
+//  108 //  printf_P(_Razer);
+//  109 }
+//  110 */
+// 
+//   5 bytes in segment ABSOLUTE
+// 148 bytes in segment CODE
+// 
+// 148 bytes of CODE memory
+//   0 bytes of DATA memory (+ 5 bytes shared)
+//
+//Errors: none
+//Warnings: 3
