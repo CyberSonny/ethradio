@@ -1,0 +1,107 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:41:43 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\nic.c                        /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\nic.c --cpu=m32 -ms -o       /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\nic.s90           /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME nic
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC nic_init
+        PUBLIC nic_poll
+
+        EXTERN enc28j60Init
+        EXTERN enc28j60PacketReceive
+        EXTERN ETH_PKT
+        EXTERN ETH_PKT_len
+        EXTERN ETH_PKT_mode
+
+// G:\AVR\EthRadio_buf_inline\nic.c
+//    1 
+//    2 #include "nic.h"
+//    3 #include "nike_e.h"
+//    4 #include "io.h"
+//    5 
+//    6 
+
+        RSEG CODE:CODE:NOROOT(1)
+//    7 void nic_init(void)
+nic_init:
+//    8 {
+//    9 	NICInit();
+        JMP     enc28j60Init
+//   10 }
+//   11 
+
+        RSEG CODE:CODE:NOROOT(1)
+//   12 unsigned int nic_poll(void)
+nic_poll:
+//   13 {        
+//   14         unsigned int packetLength;         
+//   15         packetLength=NICRetreivePacketData(ETH_MAX_PACKET_SIZE/*+3*/, (unsigned char *)ETH_PKT.hdr.dst_mac);
+        LDI     R18, LOW(ETH_PKT)
+        LDI     R19, (ETH_PKT) >> 8
+        LDI     R16, 118
+        LDI     R17, 5
+        CALL    enc28j60PacketReceive
+//   16         if (packetLength)
+        MOV     R18, R16
+        OR      R18, R17
+        BREQ    ??nic_poll_0
+//   17         {
+//   18           ETH_PKT_len=packetLength;        
+        STS     ETH_PKT_len, R16
+        STS     (ETH_PKT_len + 1), R17
+//   19           ETH_PKT_mode=1;               
+        LDI     R18, 1
+        STS     ETH_PKT_mode, R18
+//   20         }           		        
+//   21 	return packetLength;	
+??nic_poll_0:
+        RET
+//   22         
+//   23 }
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        END
+// 
+// 38 bytes in segment CODE
+// 
+// 38 bytes of CODE memory
+//
+//Errors: none
+//Warnings: none

@@ -1,0 +1,861 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:31:05 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\md5cheat.c                   /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\md5cheat.c --cpu=m32 -ms -o  /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\md5cheat.s90      /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME md5cheat
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        EXTERN ?Register_R10_is_cg_reg
+        EXTERN ?Register_R11_is_cg_reg
+        EXTERN ?Register_R12_is_cg_reg
+        EXTERN ?Register_R13_is_cg_reg
+        EXTERN ?Register_R4_is_cg_reg
+        EXTERN ?Register_R5_is_cg_reg
+        EXTERN ?Register_R6_is_cg_reg
+        EXTERN ?Register_R7_is_cg_reg
+        EXTERN ?Register_R8_is_cg_reg
+        EXTERN ?Register_R9_is_cg_reg
+
+        PUBLIC MD5cheat
+        PUBWEAK _A_SREG
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+        PUBLIC back_memmove
+
+// G:\AVR\EthRadio_buf_inline\md5cheat.c
+//    1 /* Name: md5cheat.c
+//    2  * Project: uNikeE - Software Ethernet MAC and upper layers stack
+//    3  * Author: Dmitry Oparin aka Rst7/CBSIE
+//    4  * Creation Date: 25-Jan-2009
+//    5  * Copyright: (C)2008,2009 by Rst7/CBSIE
+//    6  * License: GNU GPL v3 (see http://www.gnu.org/licenses/gpl-3.0.txt)
+//    7  */
+//    8 
+//    9 #include "stdafx.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,05fH
+// <__C130> volatile __io _A_SREG
+_A_SREG:
+        DS8 1
+//   10 
+//   11 #define F1(x, y, z) ( ((x) & (y)) | ((~x) & (z)) )
+//   12 #define F2(x, y, z) ( ((x) & (z)) | ((y) & (~z)) )
+//   13 #define F3(x, y, z) ( (x) ^ (y) ^ (z) )
+//   14 #define F4(x, y, z) ( (y) ^ ((x) | (~z)) )
+//   15 
+//   16 typedef struct 
+//   17 {
+//   18   unsigned long g;
+//   19   unsigned char f;
+//   20   unsigned char e;
+//   21 }MD5STEP_DATA;
+//   22 
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+//   23 static const __flash MD5STEP_DATA table[]=
+table:
+        DD 3614090360
+        DC8 7, 0
+        DD 3905402710
+        DC8 12, 1
+        DD 606105819
+        DC8 17, 2
+        DD 3250441966
+        DC8 22, 3
+        DD 4118548399
+        DC8 7, 4
+        DD 1200080426
+        DC8 12, 5
+        DD 2821735955
+        DC8 17, 6
+        DD 4249261313
+        DC8 22, 7
+        DD 1770035416
+        DC8 7, 8
+        DD 2336552879
+        DC8 12, 9
+        DD 4294925233
+        DC8 17, 10
+        DD 2304563134
+        DC8 22, 11
+        DD 1804603682
+        DC8 7, 12
+        DD 4254626195
+        DC8 12, 13
+        DD 2792965006
+        DC8 17, 14
+        DD 1236535329
+        DC8 22, 15
+        DD 4129170786
+        DC8 5, 1
+        DD 3225465664
+        DC8 9, 6
+        DD 643717713
+        DC8 14, 11
+        DD 3921069994
+        DC8 20, 0
+        DD 3593408605
+        DC8 5, 5
+        DD 38016083
+        DC8 9, 10
+        DD 3634488961
+        DC8 14, 15
+        DD 3889429448
+        DC8 20, 4
+        DD 568446438
+        DC8 5, 9
+        DD 3275163606
+        DC8 9, 14
+        DD 4107603335
+        DC8 14, 3
+        DD 1163531501
+        DC8 20, 8
+        DD 2850285829
+        DC8 5, 13
+        DD 4243563512
+        DC8 9, 2
+        DD 1735328473
+        DC8 14, 7
+        DD 2368359562
+        DC8 20, 12
+        DD 4294588738
+        DC8 4, 5
+        DD 2272392833
+        DC8 11, 8
+        DD 1839030562
+        DC8 16, 11
+        DD 4259657740
+        DC8 23, 14
+        DD 2763975236
+        DC8 4, 1
+        DD 1272893353
+        DC8 11, 4
+        DD 4139469664
+        DC8 16, 7
+        DD 3200236656
+        DC8 23, 10
+        DD 681279174
+        DC8 4, 13
+        DD 3936430074
+        DC8 11, 0
+        DD 3572445317
+        DC8 16, 3
+        DD 76029189
+        DC8 23, 6
+        DD 3654602809
+        DC8 4, 9
+        DD 3873151461
+        DC8 11, 12
+        DD 530742520
+        DC8 16, 15
+        DD 3299628645
+        DC8 23, 2
+        DD 4096336452
+        DC8 6, 0
+        DD 1126891415
+        DC8 10, 7
+        DD 2878612391
+        DC8 15, 14
+        DD 4237533241
+        DC8 21, 5
+        DD 1700485571
+        DC8 6, 12
+        DD 2399980690
+        DC8 10, 3
+        DD 4293915773
+        DC8 15, 10
+        DD 2240044497
+        DC8 21, 1
+        DD 1873313359
+        DC8 6, 8
+        DD 4264355552
+        DC8 10, 15
+        DD 2734768916
+        DC8 15, 6
+        DD 1309151649
+        DC8 21, 13
+        DD 4149444226
+        DC8 6, 4
+        DD 3174756917
+        DC8 10, 11
+        DD 718787259
+        DC8 15, 2
+        DD 3951481745
+        DC8 21, 9
+//   24 {
+//   25   {0xd76aa478, 7,  0 },  
+//   26   {0xe8c7b756, 12, 1 }, 
+//   27   {0x242070db, 17, 2 }, 
+//   28   {0xc1bdceee, 22, 3 }, 
+//   29   {0xf57c0faf, 7,  4 },  
+//   30   {0x4787c62a, 12, 5 }, 
+//   31   {0xa8304613, 17, 6 }, 
+//   32   {0xfd469501, 22, 7 }, 
+//   33   {0x698098d8, 7,  8 },  
+//   34   {0x8b44f7af, 12, 9 }, 
+//   35   {0xffff5bb1, 17, 10},
+//   36   {0x895cd7be, 22, 11},
+//   37   {0x6b901122, 7,  12}, 
+//   38   {0xfd987193, 12, 13},
+//   39   {0xa679438e, 17, 14},
+//   40   {0x49b40821, 22, 15},
+//   41   
+//   42   {0xf61e2562, 5,  1 },  
+//   43   {0xc040b340, 9,  6 },  
+//   44   {0x265e5a51, 14, 11},
+//   45   {0xe9b6c7aa, 20, 0 }, 
+//   46   {0xd62f105d, 5,  5 },  
+//   47   {0x02441453, 9,  10}, 
+//   48   {0xd8a1e681, 14, 15},
+//   49   {0xe7d3fbc8, 20, 4 }, 
+//   50   {0x21e1cde6, 5,  9 },  
+//   51   {0xc33707d6, 9,  14}, 
+//   52   {0xf4d50d87, 14, 3 }, 
+//   53   {0x455a14ed, 20, 8 }, 
+//   54   {0xa9e3e905, 5,  13}, 
+//   55   {0xfcefa3f8, 9,  2 },  
+//   56   {0x676f02d9, 14, 7 }, 
+//   57   {0x8d2a4c8a, 20, 12},
+//   58   
+//   59   {0xfffa3942,  4, 5 },  
+//   60   {0x8771f681, 11, 8 }, 
+//   61   {0x6d9d6122, 16, 11},
+//   62   {0xfde5380c, 23, 14},
+//   63   {0xa4beea44,  4, 1 },  
+//   64   {0x4bdecfa9, 11, 4 }, 
+//   65   {0xf6bb4b60, 16, 7 }, 
+//   66   {0xbebfbc70, 23, 10},
+//   67   {0x289b7ec6, 4,  13}, 
+//   68   {0xeaa127fa, 11, 0 }, 
+//   69   {0xd4ef3085, 16, 3 }, 
+//   70   {0x04881d05, 23, 6 }, 
+//   71   {0xd9d4d039, 4,  9 },  
+//   72   {0xe6db99e5, 11, 12},
+//   73   {0x1fa27cf8, 16, 15},
+//   74   {0xc4ac5665, 23, 2 }, 
+//   75   
+//   76   {0xf4292244,  6, 0 },  
+//   77   {0x432aff97, 10, 7 }, 
+//   78   {0xab9423a7, 15, 14},
+//   79   {0xfc93a039, 21, 5 }, 
+//   80   {0x655b59c3,  6, 12}, 
+//   81   {0x8f0ccc92, 10, 3 }, 
+//   82   {0xffeff47d, 15, 10},
+//   83   {0x85845dd1, 21, 1 }, 
+//   84   {0x6fa87e4f,  6, 8 },  
+//   85   {0xfe2ce6e0, 10, 15},
+//   86   {0xa3014314, 15, 6 }, 
+//   87   {0x4e0811a1, 21, 13},
+//   88   {0xf7537e82,  6, 4 },  
+//   89   {0xbd3af235, 10, 11},
+//   90   {0x2ad7d2bb, 15, 2 }, 
+//   91   {0xeb86d391, 21, 9 }
+//   92 };
+//   93 
+//   94 /*=============================================*/
+//   95 static __x_z void _move(char *d, const char *s, UREG l);
+
+        RSEG CODE:CODE:NOROOT(1)
+//   96 __x_z void back_memmove(void *d, const void *s, UREG l)
+back_memmove:
+//   97 {
+//   98   _move((char*)d,(char*)s,l);
+        REQUIRE _move
+        ;               // Fall through to label _move
+//   99 }
+//  100 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  101 static __x_z void _move(char *d, const char *s, UREG l)
+_move:
+??_move_0:
+//  102 {
+//  103   do
+//  104   {
+//  105     *--d=*--s;
+        LD      R17, -Z
+        ST      -X, R17
+//  106   }
+//  107   while(--l);
+        DEC     R16
+        BRNE    ??_move_0
+//  108 }
+        RET
+//  109 
+//  110 #pragma inline=forced
+//  111 static __x_z void _memcpy_flash(char *d, const char __flash *s, UREG l);
+//  112 #pragma inline=forced
+//  113 static __x_z void memcpy_flash(void *d, const void __flash *s, UREG l)
+//  114 {
+//  115   _memcpy_flash((char*)d,(char __flash *)s,l);
+//  116 }
+//  117 
+//  118 #pragma inline=forced
+//  119 static __x_z void _memcpy_flash(char *d, const char __flash *s, UREG l)
+//  120 {
+//  121   do
+//  122   {
+//  123     *d++=*s++;
+//  124   }
+//  125   while(--l);
+//  126 }
+//  127 
+//  128 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  129 static __x_z void sum(unsigned long *state, unsigned long *a)
+sum:
+//  130 {
+//  131   UREG i=4;
+        LDI     R16, 4
+//  132   unsigned long t;
+//  133   do
+//  134   {
+//  135     t=*a++;
+??sum_0:
+        LD      R20, Z+
+        LD      R21, Z+
+        LD      R22, Z+
+        LD      R23, Z+
+//  136     t+=*state;
+//  137     *state++=t;
+        LD      R0, X+
+        LD      R1, X+
+        LD      R2, X+
+        LD      R3, X
+        ADD     R0, R20
+        ADC     R1, R21
+        ADC     R2, R22
+        ADC     R3, R23
+        ST      X, R3
+        ST      -X, R2
+        ST      -X, R1
+        ST      -X, R0
+        ADIW    R27:R26, 4
+//  138   }
+//  139   while(--i);
+        DEC     R16
+        BRNE    ??sum_0
+//  140 }
+        RET
+//  141 
+//  142 /*=============================================*/
+//  143 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  144 void MD5cheat(char *out_, unsigned char *_p, UREG len)
+MD5cheat:
+//  145 {
+        ST      -Y, R13
+        ST      -Y, R12
+        ST      -Y, R11
+        ST      -Y, R10
+        ST      -Y, R9
+        ST      -Y, R8
+        ST      -Y, R7
+        ST      -Y, R6
+        ST      -Y, R5
+        ST      -Y, R4
+        ST      -Y, R27
+        ST      -Y, R26
+        ST      -Y, R25
+        ST      -Y, R24
+        REQUIRE ?Register_R4_is_cg_reg
+        REQUIRE ?Register_R5_is_cg_reg
+        REQUIRE ?Register_R6_is_cg_reg
+        REQUIRE ?Register_R7_is_cg_reg
+        REQUIRE ?Register_R8_is_cg_reg
+        REQUIRE ?Register_R9_is_cg_reg
+        REQUIRE ?Register_R10_is_cg_reg
+        REQUIRE ?Register_R11_is_cg_reg
+        REQUIRE ?Register_R12_is_cg_reg
+        REQUIRE ?Register_R13_is_cg_reg
+        SBIW    R29:R28, 32
+        MOVW    R13:R12, R17:R16
+//  146   unsigned long state[4];
+//  147   static __flash unsigned long state_init[4]={0x67452301,0xefcdab89,0x98badcfe,0x10325476};
+//  148   memcpy_flash(state,state_init,16);
+        LDI     R30, LOW(??state_init)
+        LDI     R31, (??state_init) >> 8
+        MOVW    R27:R26, R29:R28
+        ADIW    R27:R26, 16
+        LDI     R16, 16
+??MD5cheat_0:
+        LPM     R17, Z+
+        ST      X+, R17
+        DEC     R16
+        BRNE    ??MD5cheat_0
+//  149   {  
+//  150     unsigned char *wp=_p+len;
+        LDI     R21, 0
+        MOVW    R31:R30, R19:R18
+        ADD     R30, R20
+        ADC     R31, R21
+//  151     unsigned long *p=(unsigned long *)_p;
+        MOVW    R11:R10, R19:R18
+//  152     UREG i=len;
+        MOV     R24, R20
+//  153     if ((i&63)!=56)
+        MOV     R16, R20
+        ANDI    R16, 0x3F
+        CPI     R16, 56
+        BREQ    ??MD5cheat_1
+//  154     {
+//  155       *wp++=0x80;
+        LDI     R16, 128
+        ST      Z+, R16
+//  156       i++;
+        RJMP    ??MD5cheat_2
+//  157     }
+//  158     while((i&63)!=56)
+//  159     {
+//  160       *wp++=0;
+??MD5cheat_3:
+        ST      Z+, R21
+//  161       i++;
+??MD5cheat_2:
+        INC     R24
+//  162     }
+        MOV     R16, R24
+        ANDI    R16, 0x3F
+        CPI     R16, 56
+        BRNE    ??MD5cheat_3
+//  163     {
+//  164       UINT16 v=__multiply_unsigned(len,8);
+??MD5cheat_1:
+        LDI     R16, 8
+        MUL     R20, R16
+//  165       *wp++=v; //len<<3;
+        ST      Z, R0
+//  166       *wp++=v>>8; //len>>5;
+        ADIW    R31:R30, 1
+        ST      Z, R1
+//  167     }
+//  168     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  169     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  170     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  171     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  172     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  173     *wp++=0;
+        ADIW    R31:R30, 1
+        ST      Z, R21
+//  174     i+=8;
+//  175     i>>=6;
+        SUBI    R24, 248
+        LDI     R16, 4
+        MUL     R24, R16
+        MOV     R24, R1
+//  176     do
+//  177     {
+//  178       volatile struct 
+//  179       {
+//  180 	unsigned long a, b, c, d;
+//  181       };
+//  182       UREG i;
+//  183       UREG n;
+//  184       UREG k;
+//  185       unsigned long tt;
+//  186       unsigned long const __flash *up;
+//  187       unsigned char const __flash *cp;
+//  188       back_memmove((void*)(&a+4),state+4,16);
+??MD5cheat_4:
+        LDI     R16, 16
+        MOVW    R31:R30, R29:R28
+        ADIW    R31:R30, 32
+        MOVW    R27:R26, R29:R28
+        ADIW    R27:R26, 16
+        RCALL   _move
+//  189       up=&table->g;
+        LDI     R16, LOW(table)
+        MOV     R8, R16
+        LDI     R16, (table) >> 8
+        MOV     R9, R16
+//  190       i=0;
+        LDI     R25, 0
+//  191       do
+//  192       {
+//  193 #pragma diag_suppress=Pa082
+//  194 	if (!(i&32))
+??MD5cheat_5:
+        BST     R25, 5
+        BRTS    ??MD5cheat_6
+//  195 	{
+//  196 	  if (!(i&16))
+        BST     R25, 4
+        LD      R16, Y
+        LDD     R17, Y+1
+        LDD     R18, Y+2
+        LDD     R19, Y+3
+        LDD     R20, Y+4
+        LDD     R21, Y+5
+        LDD     R22, Y+6
+        LDD     R23, Y+7
+        BRTS    ??MD5cheat_7
+//  197 	  {
+//  198 	    tt=a+F1(b,c,d);
+        LDD     R0, Y+8
+        LDD     R1, Y+9
+        LDD     R2, Y+10
+        LDD     R3, Y+11
+        AND     R20, R0
+        AND     R21, R1
+        AND     R22, R2
+        AND     R23, R3
+        LDD     R4, Y+4
+        LDD     R5, Y+5
+        LDD     R6, Y+6
+        LDD     R7, Y+7
+        COM     R4
+        COM     R5
+        COM     R6
+        COM     R7
+        LDD     R0, Y+12
+        LDD     R1, Y+13
+        LDD     R2, Y+14
+        LDD     R3, Y+15
+??MD5cheat_8:
+        AND     R4, R0
+        AND     R5, R1
+        AND     R6, R2
+        AND     R7, R3
+        OR      R20, R4
+        OR      R21, R5
+        OR      R22, R6
+        OR      R23, R7
+        RJMP    ??MD5cheat_9
+//  199 	  }
+//  200 	  else
+//  201 	  {
+//  202 	    tt=a+F2(b,c,d);
+??MD5cheat_7:
+        LDD     R0, Y+12
+        LDD     R1, Y+13
+        LDD     R2, Y+14
+        LDD     R3, Y+15
+        AND     R20, R0
+        AND     R21, R1
+        AND     R22, R2
+        AND     R23, R3
+        LDD     R4, Y+8
+        LDD     R5, Y+9
+        LDD     R6, Y+10
+        LDD     R7, Y+11
+        LDD     R0, Y+12
+        LDD     R1, Y+13
+        LDD     R2, Y+14
+        LDD     R3, Y+15
+        COM     R0
+        COM     R1
+        COM     R2
+        COM     R3
+        RJMP    ??MD5cheat_8
+//  203 	  }
+//  204 	}
+//  205 	else
+//  206 	{
+//  207 	  if (!(i&16))
+??MD5cheat_6:
+        BST     R25, 4
+        BRTS    ??MD5cheat_10
+//  208 	  {
+//  209 	    tt=a+F3(b,c,d);
+        LD      R20, Y
+        LDD     R21, Y+1
+        LDD     R22, Y+2
+        LDD     R23, Y+3
+        LDD     R16, Y+4
+        LDD     R17, Y+5
+        LDD     R18, Y+6
+        LDD     R19, Y+7
+        LDD     R0, Y+8
+        LDD     R1, Y+9
+        LDD     R2, Y+10
+        LDD     R3, Y+11
+        EOR     R16, R0
+        EOR     R17, R1
+        EOR     R18, R2
+        EOR     R19, R3
+        LDD     R0, Y+12
+        LDD     R1, Y+13
+        LDD     R2, Y+14
+        LDD     R3, Y+15
+        EOR     R16, R0
+        EOR     R17, R1
+        EOR     R18, R2
+        EOR     R19, R3
+        ADD     R20, R16
+        ADC     R21, R17
+        ADC     R22, R18
+        ADC     R23, R19
+        MOVW    R5:R4, R21:R20
+        MOVW    R7:R6, R23:R22
+        RJMP    ??MD5cheat_11
+//  210 	  }
+//  211 	  else
+//  212 	  {
+//  213 	    tt=a+F4(b,c,d);
+??MD5cheat_10:
+        LD      R16, Y
+        LDD     R17, Y+1
+        LDD     R18, Y+2
+        LDD     R19, Y+3
+        LDD     R20, Y+8
+        LDD     R21, Y+9
+        LDD     R22, Y+10
+        LDD     R23, Y+11
+        LDD     R4, Y+4
+        LDD     R5, Y+5
+        LDD     R6, Y+6
+        LDD     R7, Y+7
+        LDD     R0, Y+12
+        LDD     R1, Y+13
+        LDD     R2, Y+14
+        LDD     R3, Y+15
+        COM     R0
+        COM     R1
+        COM     R2
+        COM     R3
+        OR      R4, R0
+        OR      R5, R1
+        OR      R6, R2
+        OR      R7, R3
+        EOR     R20, R4
+        EOR     R21, R5
+        EOR     R22, R6
+        EOR     R23, R7
+??MD5cheat_9:
+        ADD     R16, R20
+        ADC     R17, R21
+        ADC     R18, R22
+        ADC     R19, R23
+        MOVW    R5:R4, R17:R16
+        MOVW    R7:R6, R19:R18
+//  214 	  }
+//  215 	}
+//  216 #pragma diag_default=Pa082
+//  217 	tt+=*up++;
+??MD5cheat_11:
+        MOVW    R31:R30, R9:R8
+        LPM     R16, Z+
+        LPM     R17, Z+
+        LPM     R18, Z+
+        LPM     R19, Z+
+        ADD     R4, R16
+        ADC     R5, R17
+        ADC     R6, R18
+        ADC     R7, R19
+//  218 	cp=(unsigned char const __flash *)up;
+//  219 	n=*cp++;
+        LPM     R20, Z+
+//  220 	k=*cp++;
+        LPM     R17, Z+
+//  221 	up=(unsigned long const __flash *)cp;
+        MOVW    R9:R8, R31:R30
+//  222 	tt+=p[k];
+        LDI     R16, 4
+        MUL     R17, R16
+        MOVW    R31:R30, R11:R10
+        ADD     R30, R0
+        ADC     R31, R1
+        LD      R16, Z
+        LDD     R17, Z+1
+        LDD     R18, Z+2
+        LDD     R19, Z+3
+        ADD     R4, R16
+        ADC     R5, R17
+        ADC     R6, R18
+        ADC     R7, R19
+//  223 	do
+//  224 	{
+//  225 	  tt<<=1;
+??MD5cheat_12:
+        LSL     R4
+        ROL     R5
+        ROL     R6
+        ROL     R7
+//  226 	  if (SREG_Bit0) tt|=1;
+        BRBC    0, ??MD5cheat_13
+        SET
+        BLD     R4, 0
+//  227 	}
+//  228 	while(--n);
+??MD5cheat_13:
+        DEC     R20
+        BRNE    ??MD5cheat_12
+//  229 	a=tt+b;
+        LDD     R16, Y+4
+        LDD     R17, Y+5
+        LDD     R18, Y+6
+        LDD     R19, Y+7
+        ADD     R4, R16
+        ADC     R5, R17
+        ADC     R6, R18
+        ADC     R7, R19
+        ST      Y, R4
+        STD     Y+1, R5
+        STD     Y+2, R6
+        STD     Y+3, R7
+//  230 	tt=d;
+        LDD     R4, Y+12
+        LDD     R5, Y+13
+        LDD     R6, Y+14
+        LDD     R7, Y+15
+//  231 	back_memmove((void*)(&a+4),(void*)(&a+3),12);
+        LDI     R16, 12
+        MOVW    R31:R30, R29:R28
+        ADIW    R31:R30, 12
+        MOVW    R27:R26, R29:R28
+        ADIW    R27:R26, 16
+        RCALL   _move
+//  232 	a=tt;
+        ST      Y, R4
+        STD     Y+1, R5
+        STD     Y+2, R6
+        STD     Y+3, R7
+//  233 	i++;
+        INC     R25
+//  234       }
+//  235       while(!(i&64));
+        BST     R25, 6
+        BRTS    $+2+2
+        RJMP    ??MD5cheat_5
+//  236       sum(state,(unsigned long *)&a);
+        MOVW    R31:R30, R29:R28
+        MOVW    R27:R26, R29:R28
+        ADIW    R27:R26, 16
+        RCALL   sum
+//  237       p+=16;
+        LDI     R16, 64
+        ADD     R10, R16
+        LDI     R16, 0
+        ADC     R11, R16
+//  238     }
+//  239     while(--i);
+        DEC     R24
+        BREQ    $+2+2
+        RJMP    ??MD5cheat_4
+//  240     i=16;
+//  241     {
+//  242       char *out=out_;
+        MOVW    R27:R26, R13:R12
+//  243       wp=(unsigned char*)state;
+        MOVW    R31:R30, R29:R28
+        ADIW    R31:R30, 16
+        LDI     R18, 16
+//  244       do
+//  245       {
+//  246 	UREG c;
+//  247 	UREG c2;
+//  248 	c2=c=*wp++;
+??MD5cheat_14:
+        LD      R19, Z+
+        MOV     R17, R19
+        MOV     R16, R19
+//  249 	c>>=4;
+//  250 	c+='0';
+        SWAP    R17
+        ANDI    R17, 0x0F
+        SUBI    R17, 208
+//  251 	if (c>'9') c+='a'-10-'0';
+        CPI     R17, 58
+        BRCS    ??MD5cheat_15
+        SUBI    R17, 217
+//  252 	*out++=c;
+??MD5cheat_15:
+        ST      X+, R17
+//  253 	c2&=0x0F;
+//  254 	c2+='0';
+        ANDI    R16, 0x0F
+        SUBI    R16, 208
+//  255 	if (c2>'9') c2+='a'-10-'0';
+        CPI     R16, 58
+        BRCS    ??MD5cheat_16
+        SUBI    R16, 217
+//  256 	*out++=c2;
+??MD5cheat_16:
+        ST      X+, R16
+//  257       }
+//  258       while(--i);
+        DEC     R18
+        BRNE    ??MD5cheat_14
+//  259     }
+//  260   }
+//  261 }
+        ADIW    R29:R28, 32
+        LD      R24, Y+
+        LD      R25, Y+
+        LD      R26, Y+
+        LD      R27, Y+
+        LD      R4, Y+
+        LD      R5, Y+
+        LD      R6, Y+
+        LD      R7, Y+
+        LD      R8, Y+
+        LD      R9, Y+
+        LD      R10, Y+
+        LD      R11, Y+
+        LD      R12, Y+
+        LD      R13, Y+
+        RET
+        REQUIRE _A_SREG
+
+        RSEG NEAR_F:CODE:NOROOT(0)
+??state_init:
+        DD 1732584193, 4023233417, 2562383102, 271733878
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        END
+// 
+//   1 byte  in segment ABSOLUTE
+// 688 bytes in segment CODE
+// 400 bytes in segment NEAR_F
+// 
+// 1 088 bytes of CODE memory
+//     0 bytes of DATA memory (+ 1 byte shared)
+//
+//Errors: none
+//Warnings: none

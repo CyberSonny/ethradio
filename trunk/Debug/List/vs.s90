@@ -1,0 +1,1398 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+//                                                      17/Feb/2010  18:31:02 /
+// IAR C/C++ Compiler V5.30.0.20166/W32, Evaluation Version  for Atmel AVR    /
+// Copyright 1996-2009 IAR Systems AB.                                        /
+//                                                                            /
+//    Source file  =  G:\AVR\EthRadio_buf_inline\vs.c                         /
+//    Command line =  --string_literals_in_flash                              /
+//                    G:\AVR\EthRadio_buf_inline\vs.c --cpu=m32 -ms -o        /
+//                    G:\AVR\EthRadio_buf_inline\Debug\Obj\ -lC               /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\ -lB              /
+//                    G:\AVR\EthRadio_buf_inline\Debug\List\                  /
+//                    --initializers_in_flash -s9 --no_code_motion --debug    /
+//                    -DENABLE_BIT_DEFINITIONS -e -I "C:\Program Files\IAR    /
+//                    Systems\Embedded Workbench Evaluation 5.3\avr\INC\" -I  /
+//                    "C:\Program Files\IAR Systems\Embedded Workbench        /
+//                    Evaluation 5.3\avr\INC\CLIB\" --eeprom_size 1024        /
+//                    --lock_regs=1                                           /
+//    List file    =  G:\AVR\EthRadio_buf_inline\Debug\List\vs.s90            /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME vs
+
+        RSEG CSTACK:DATA:NOROOT(0)
+        RSEG RSTACK:DATA:NOROOT(0)
+
+        PUBLIC VS_DATA
+        PUBLIC VS_DATA32
+        PUBLIC VS_INIT
+        PUBLIC VS_NEW_SINTEST
+        PUBLIC VS_SINSWEEP
+        PUBLIC VS_SINTEST
+        PUBLIC VS_SOFTRST
+        PUBLIC VS_VOL
+        PUBLIC VS_endFillByte
+        PUBWEAK _A_DDRB
+        PUBWEAK _A_PIND
+        PUBWEAK _A_PORTB
+        PUBWEAK _A_PORTD
+        PUBWEAK _A_SPCR
+        PUBWEAK _A_SPDR
+        PUBWEAK _A_SPSR
+        PUBWEAK __?EEARH
+        PUBWEAK __?EEARL
+        PUBWEAK __?EECR
+        PUBWEAK __?EEDR
+
+// G:\AVR\EthRadio_buf_inline\vs.c
+//    1 
+//    2 #include "stdafx.h"
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02dH
+// <__C28> volatile __io _A_SPCR
+_A_SPCR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02eH
+// <__C30> volatile __io _A_SPSR
+_A_SPSR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,02fH
+// <__C32> volatile __io _A_SPDR
+_A_SPDR:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,030H
+// <__C34> volatile __io _A_PIND
+_A_PIND:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,032H
+// <__C38> volatile __io _A_PORTD
+_A_PORTD:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,037H
+// <__C48> volatile __io _A_DDRB
+_A_DDRB:
+        DS8 1
+
+        ASEGN ABSOLUTE:DATA:NOROOT,038H
+// <__C50> volatile __io _A_PORTB
+_A_PORTB:
+        DS8 1
+//    3 #include "compiler.h"
+//    4 #include "vs.h"
+//    5 
+//    6 
+//    7 
+//    8 //UCHAR* pVS_BUFFER32=&VS_BUFFER32[0];
+//    9 
+//   10 #pragma inline= forced
+//   11 UCHAR VS_SPI_RD (void)
+//   12 {
+//   13   cbr (SPSR, SPI2X); // set low freq. 1/4 SCLK (4MHz)
+//   14   SPDR = 0xAA;
+//   15   while (!(SPSR & (1<<SPIF))); // wait SPI comm. finished    
+//   16   sbr (SPSR, SPI2X); // restore hi freq. 1/2 SCLK (8MHz)
+//   17   return SPDR;
+//   18 }
+//   19 
+//   20 #pragma inline= forced
+//   21 void VS_SPI_WR (UCHAR DATA)
+//   22 {
+//   23   cbr (SPSR, SPI2X); // set low freq. 1/4 SCLK (4MHz)
+//   24   SPDR = DATA; // set new mode
+//   25   while (!(SPSR & (1<<SPIF))); // wait SPI comm. finished
+//   26   sbr (SPSR, SPI2X); // restore hi freq. 1/2 SCLK (8MHz)
+//   27 }
+//   28 
+//   29 //#pragma inline= forced
+//   30 // Send byte to SDI of VS1053
+
+        RSEG CODE:CODE:NOROOT(1)
+//   31 void VS_DATA (UINT8 DATA)
+VS_DATA:
+??VS_DATA_0:
+//   32 {
+//   33    VS_DREQ_wait();    // be shure that FIFO is free
+        SBIS    0x10, 0x07
+        RJMP    ??VS_DATA_0
+//   34    VS_DS_clr();
+        CBI     0x18, 0x03
+//   35    VS_SPI_WR(DATA); //write DATA
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_DATA_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA_1
+        SBI     0x0E, 0x00
+//   36    VS_DS_set();
+        SBI     0x18, 0x03
+//   37 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//   38 
+//   39 // Send 32 bytes to SDI of VS1053
+
+        RSEG CODE:CODE:NOROOT(1)
+//   40 void VS_DATA32 (UINT8* DATA)
+VS_DATA32:
+??VS_DATA32_0:
+//   41 {
+//   42   VS_DREQ_wait();   // be shure that FIFO is free
+        SBIS    0x10, 0x07
+        RJMP    ??VS_DATA32_0
+//   43 //  UINT8 i;
+//   44   VS_DS_clr();
+        CBI     0x18, 0x03
+//   45 //  for (i=0;i<=31; i++)
+//   46 //  {
+//   47   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_1
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_2
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_3
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_4
+        SBI     0x0E, 0x00
+//   48   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_5
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_6
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_7
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_8
+        SBI     0x0E, 0x00
+//   49   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_9:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_9
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_10:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_10
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_11:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_11
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_12
+        SBI     0x0E, 0x00
+//   50   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_13
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_14:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_14
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_15
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_16:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_16
+        SBI     0x0E, 0x00
+//   51   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_17:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_17
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_18:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_18
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_19:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_19
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_20:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_20
+        SBI     0x0E, 0x00
+//   52   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_21:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_21
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_22:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_22
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_23:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_23
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_24:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_24
+        SBI     0x0E, 0x00
+//   53   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_25:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_25
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_26:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_26
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_27:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_27
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_28:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_28
+        SBI     0x0E, 0x00
+//   54   VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);  VS_SPI_WR(*DATA++);
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_29:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_29
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_30:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_30
+        SBI     0x0E, 0x00
+        SUBI    R16, 255
+        SBCI    R17, 255
+        MOVW    R31:R30, R17:R16
+        LD      R18, Z
+        CBI     0x0E, 0x00
+        OUT     0x0F, R18
+??VS_DATA32_31:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_31
+        SBI     0x0E, 0x00
+        LDD     R16, Z+1
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_DATA32_32:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_DATA32_32
+        SBI     0x0E, 0x00
+//   55 //  }  
+//   56    VS_DS_set();
+        SBI     0x18, 0x03
+//   57 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//   58 
+//   59 
+//   60 #pragma inline= forced
+//   61 // Write 16 bit value in SCI register of VS1053
+//   62 void VS_SCI_WR (UCHAR REG, UINT16 DATA)
+//   63 {
+//   64    VS_CS_clr();
+//   65    VS_SPI_WR(SCI_WR); //write mode
+//   66    VS_SPI_WR(REG); //write REG number
+//   67    VS_SPI_WR((UCHAR)(DATA>>8)); //write DATA High
+//   68    VS_SPI_WR((UCHAR)(DATA&0x00FF)); //write DATA Low
+//   69    __no_operation();
+//   70    VS_CS_set();
+//   71    VS_DREQ_wait();
+//   72 }
+//   73 
+//   74 #pragma inline= forced
+//   75 // Read 16 bit value from SCI register of VS1053
+//   76 UINT16 VS_SCI_RD (UCHAR REG)
+//   77 {
+//   78    UINT16 DATA;
+//   79    VS_CS_clr();
+//   80    VS_SPI_WR(SCI_RD); //read mode
+//   81    VS_SPI_WR(REG); //write REG number
+//   82    DATA = VS_SPI_RD()<<8; // read most byte
+//   83    DATA |= VS_SPI_RD();   // read less byte
+//   84    __no_operation();
+//   85    VS_CS_set();
+//   86    VS_DREQ_wait();
+//   87    return DATA;
+//   88 }
+//   89 
+//   90 // VS1053 initialisation
+
+        RSEG CODE:CODE:NOROOT(1)
+//   91 void VS_INIT (void)
+VS_INIT:
+//   92 {  
+//   93   VS_DDR_CS_set(); // AVR CS_VS1053 pin as output
+        SBI     0x17, 0x04
+//   94   VS_DDR_DS_set(); // AVR DS_VS1053 pin as output
+        SBI     0x17, 0x03
+//   95   VS_DDR_RST_set(); // AVR RST_VS1053 as output (now VS1053 in reset state)
+        SBI     0x17, 0x00
+//   96   VS_CS_set();  // set CS and DS high
+        SBI     0x18, 0x04
+//   97   VS_DS_set(); 
+        SBI     0x18, 0x03
+//   98   VS_SPI_DDR|=(1<<VS_MOSI)|(1<<VS_SCK);
+        IN      R16, 0x17
+        ORI     R16, 0xA0
+        OUT     0x17, R16
+//   99   SPCR|=(1<<MSTR)|(1<<SPE); // Set MCU as Master and Enabled 
+        IN      R16, 0x0D
+        ORI     R16, 0x50
+        OUT     0x0D, R16
+//  100   VS_RST_clr(); // set RST VS1053 low
+        CBI     0x18, 0x00
+//  101   _delay_ms(2);     // wait 2 ms in RESET state
+        LDI     R16, 63
+        LDI     R17, 31
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  102   VS_RST_set();     // release RESET state
+        SBI     0x18, 0x00
+//  103   _delay_ms(2);
+        LDI     R16, 63
+        LDI     R17, 31
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  104     
+//  105   cbr (SPSR, SPI2X); // clear spi2x bit
+        CBI     0x0E, 0x00
+//  106   sbr (SPCR, SPR0); //  set SPI frequency as  1/16 of CPU_clk (1MHZ now)    
+        SBI     0x0D, 0x00
+//  107   
+//  108   VS_DREQ_wait();  // wait DREQ high   
+??VS_INIT_0:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_INIT_0
+//  109  // VS_SCI_WR(MODE, (1<<SM_SDINEW); // select new comm. mode
+//  110   VS_SCI_WR (SC_CLOCKF, SC_MULT6|SC_ADD0); // set 3.5x with 1x add
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_INIT_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 3
+        OUT     0x0F, R16
+??VS_INIT_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 192
+        OUT     0x0F, R16
+??VS_INIT_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_3
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_INIT_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_4
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_INIT_5:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_INIT_5
+//  111   _delay_ms(2);  
+        LDI     R16, 63
+        LDI     R17, 31
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  112   sbr (SPSR, SPI2X); // set spi2x bit
+        SBI     0x0E, 0x00
+//  113   cbr (SPCR, SPR0); // 1/2 of CPU_clk (8MHZ now!)
+        CBI     0x0D, 0x00
+//  114   VS_SCI_WR(SC_MODE, (1<<SM_SDINEW)|(1<<SM_RESET)); // activate SM_RESET bit
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_INIT_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_6
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_INIT_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_7
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 8
+        OUT     0x0F, R16
+??VS_INIT_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_8
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 4
+        OUT     0x0F, R16
+??VS_INIT_9:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_9
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_INIT_10:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_INIT_10
+//  115   _delay_ms(1);                           // wait at least 2 us
+        LDI     R16, 159
+        LDI     R17, 15
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  116   VS_DREQ_wait(); //After DREQ is up, you may continue playback as usual.
+??VS_INIT_11:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_INIT_11
+//  117  // VS_SCI_WR(MODE, (1<<SM_SDINEW)|(1<<SM_LAYER12)|(1<<SM_STREAM)); // activate SM_RESET bit
+//  118   VS_SCI_WR(SC_MODE, (1<<SM_SDINEW)|(1<<SM_LAYER12)); // activate SM_RESET bit
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_INIT_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_12
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_INIT_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_13
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 8
+        OUT     0x0F, R16
+??VS_INIT_14:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_14
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_INIT_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_INIT_15
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_INIT_16:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_INIT_16
+//  119 }
+        RET
+        REQUIRE _A_SPCR
+        REQUIRE _A_SPSR
+        REQUIRE _A_PIND
+        REQUIRE _A_DDRB
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPDR
+//  120 
+//  121 // VS1053 software reset
+
+        RSEG CODE:CODE:NOROOT(1)
+//  122 void VS_SOFTRST (void)
+VS_SOFTRST:
+//  123 {
+//  124   VS_SCI_WR(SC_MODE, (1<<SM_SDINEW)|(1<<SM_RESET)); // activate SM_RESET bit
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_SOFTRST_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SOFTRST_0
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_SOFTRST_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SOFTRST_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 8
+        OUT     0x0F, R16
+??VS_SOFTRST_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SOFTRST_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 4
+        OUT     0x0F, R16
+??VS_SOFTRST_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SOFTRST_3
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_SOFTRST_4:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SOFTRST_4
+//  125   _delay_ms(1);                           // wait at least 2 us
+        LDI     R16, 159
+        LDI     R17, 15
+        SUBI    R16, 1
+        SBCI    R17, 0
+        BRNE    $-4
+        RJMP    $+2
+        NOP
+//  126   VS_DREQ_wait(); //After DREQ is up, you may continue playback as usual.
+??VS_SOFTRST_5:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SOFTRST_5
+//  127   
+//  128 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  129 
+//  130 // VS1053 sine test in Native mode
+
+        RSEG CODE:CODE:NOROOT(1)
+//  131 void VS_SINTEST (void)
+VS_SINTEST:
+??VS_SINTEST_0:
+//  132 {  
+//  133   while (1)
+//  134   {
+//  135   sbi (PORTD, PD5);
+        SBI     0x12, 0x05
+//  136   //VS_INIT();   
+//  137   //VS_SOFTRST();
+//  138   //VS_SCI_WR(VOL, 0x0000); // set max volume
+//  139   VS_SCI_WR(SC_MODE, (1<<SM_TESTS)|(1<<SM_SDINEW)|(1<<SM_RESET)); // SCT: 0x02 0x00 0x8020
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_SINTEST_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINTEST_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_SINTEST_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINTEST_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 8
+        OUT     0x0F, R16
+??VS_SINTEST_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINTEST_3
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 36
+        OUT     0x0F, R16
+??VS_SINTEST_4:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINTEST_4
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_SINTEST_5:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SINTEST_5
+//  140   VS_DATA(0x53);
+        LDI     R16, 83
+        RCALL   VS_DATA
+//  141   VS_DATA(0xEF);
+        LDI     R16, 239
+        RCALL   VS_DATA
+//  142   VS_DATA(0x6E);
+        LDI     R16, 110
+        RCALL   VS_DATA
+//  143   VS_DATA(0x44);
+        LDI     R16, 68
+        RCALL   VS_DATA
+//  144   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  145   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  146   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  147   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  148   _delay_ms(1000);
+        LDI     R16, 255
+        LDI     R17, 211
+        LDI     R18, 48
+        SUBI    R16, 1
+        SBCI    R17, 0
+        SBCI    R18, 0
+        BRNE    $-6
+        RJMP    $+2
+        NOP
+//  149   cbi (PORTD, PD5);
+        CBI     0x12, 0x05
+//  150   VS_DATA(0x45);
+        LDI     R16, 69
+        RCALL   VS_DATA
+//  151   VS_DATA(0x78);
+        LDI     R16, 120
+        RCALL   VS_DATA
+//  152   VS_DATA(0x69);
+        LDI     R16, 105
+        RCALL   VS_DATA
+//  153   VS_DATA(0x74);
+        LDI     R16, 116
+        RCALL   VS_DATA
+//  154   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  155   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  156   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  157   VS_DATA(0x00);
+        LDI     R16, 0
+        RCALL   VS_DATA
+//  158    _delay_ms(1000);  
+        LDI     R16, 255
+        LDI     R17, 211
+        LDI     R18, 48
+        SUBI    R16, 1
+        SBCI    R17, 0
+        SBCI    R18, 0
+        BRNE    $-6
+        RJMP    $+2
+        NOP
+        RJMP    ??VS_SINTEST_0
+        REQUIRE _A_PORTD
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  159   }
+//  160 }
+//  161 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  162 void VS_NEW_SINTEST (void)
+VS_NEW_SINTEST:
+//  163 {
+//  164   #define sample_rate (44100|1)
+//  165   #define LFreq 440
+//  166   #define RFreq 880
+//  167   VS_SCI_WR(SC_VOL, 0x0000);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_0
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 11
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_3
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_NEW_SINTEST_4:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_NEW_SINTEST_4
+//  168   VS_SCI_WR(SC_AUDATA, sample_rate);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_5
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 5
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_6
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 172
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_7
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 69
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_8
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_NEW_SINTEST_9:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_NEW_SINTEST_9
+//  169   VS_SCI_WR(SC_AICTRL0,LFreq*65536/sample_rate);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_10:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_10
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 12
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_11:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_11
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_12
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 141
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_13
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_NEW_SINTEST_14:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_NEW_SINTEST_14
+//  170   VS_SCI_WR(SC_AICTRL1,RFreq*65536/sample_rate); 
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_15:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_15
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 13
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_16:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_16
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 5
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_17:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_17
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 27
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_18:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_18
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_NEW_SINTEST_19:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_NEW_SINTEST_19
+//  171   VS_SCI_WR(SC_AIADDR, 0x4020);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_20:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_20
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 10
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_21:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_21
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 64
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_22:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_22
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 32
+        OUT     0x0F, R16
+??VS_NEW_SINTEST_23:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_NEW_SINTEST_23
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_NEW_SINTEST_24:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_NEW_SINTEST_24
+//  172   
+//  173 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  174 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  175 void VS_SINSWEEP (void)
+VS_SINSWEEP:
+//  176 {
+//  177   VS_SCI_WR(SC_VOL, 0x0000);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_SINSWEEP_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_0
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 11
+        OUT     0x0F, R16
+??VS_SINSWEEP_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 0
+        OUT     0x0F, R16
+??VS_SINSWEEP_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_SINSWEEP_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_3
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_SINSWEEP_4:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SINSWEEP_4
+//  178   VS_SCI_WR(SC_AUDATA, 44101); 
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_SINSWEEP_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_5
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 5
+        OUT     0x0F, R16
+??VS_SINSWEEP_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_6
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 172
+        OUT     0x0F, R16
+??VS_SINSWEEP_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_7
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 69
+        OUT     0x0F, R16
+??VS_SINSWEEP_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_8
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_SINSWEEP_9:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SINSWEEP_9
+//  179   VS_SCI_WR(SC_AIADDR, 0x4022);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_SINSWEEP_10:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_10
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 10
+        OUT     0x0F, R16
+??VS_SINSWEEP_11:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_11
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 64
+        OUT     0x0F, R16
+??VS_SINSWEEP_12:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_12
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 34
+        OUT     0x0F, R16
+??VS_SINSWEEP_13:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_SINSWEEP_13
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_SINSWEEP_14:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_SINSWEEP_14
+//  180   
+//  181 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  182 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  183 void VS_VOL (void)
+VS_VOL:
+//  184 {
+//  185     #define LVol 220
+//  186     #define RVol 220
+//  187     #define LRVol  (((256-LVol)<<8)|(256-RVol))
+//  188     VS_SCI_WR(SC_VOL, LRVol);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_VOL_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_VOL_0
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 11
+        OUT     0x0F, R16
+??VS_VOL_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_VOL_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 36
+        OUT     0x0F, R16
+??VS_VOL_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_VOL_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_VOL_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_VOL_3
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_VOL_4:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_VOL_4
+//  189   //  if (VS_SCI_RD(SC_VOL)!=LRVol) while (1);    
+//  190 }
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  191 
+
+        RSEG CODE:CODE:NOROOT(1)
+//  192 UINT16 VS_endFillByte (void)
+VS_endFillByte:
+//  193 {
+//  194   VS_SCI_WR(SC_WRAMADDR, endFillByte);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 2
+        OUT     0x0F, R16
+??VS_endFillByte_0:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_0
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 7
+        OUT     0x0F, R16
+??VS_endFillByte_1:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_1
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 30
+        OUT     0x0F, R16
+??VS_endFillByte_2:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_2
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 6
+        OUT     0x0F, R16
+??VS_endFillByte_3:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_3
+        SBI     0x0E, 0x00
+        NOP
+        SBI     0x18, 0x04
+??VS_endFillByte_4:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_endFillByte_4
+//  195   return VS_SCI_RD(SC_WRAM);
+        CBI     0x18, 0x04
+        CBI     0x0E, 0x00
+        LDI     R16, 3
+        OUT     0x0F, R16
+??VS_endFillByte_5:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_5
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 6
+        OUT     0x0F, R16
+??VS_endFillByte_6:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_6
+        SBI     0x0E, 0x00
+        CBI     0x0E, 0x00
+        LDI     R16, 170
+        OUT     0x0F, R16
+??VS_endFillByte_7:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_7
+        SBI     0x0E, 0x00
+        IN      R17, 0x0F
+        CBI     0x0E, 0x00
+        OUT     0x0F, R16
+??VS_endFillByte_8:
+        SBIS    0x0E, 0x07
+        RJMP    ??VS_endFillByte_8
+        SBI     0x0E, 0x00
+        IN      R18, 0x0F
+        MOV     R16, R18
+        NOP
+        SBI     0x18, 0x04
+??VS_endFillByte_9:
+        SBIS    0x10, 0x07
+        RJMP    ??VS_endFillByte_9
+        RET
+        REQUIRE _A_PIND
+        REQUIRE _A_PORTB
+        REQUIRE _A_SPSR
+        REQUIRE _A_SPDR
+//  196 }
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01cH
+__?EECR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01dH
+__?EEDR:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01eH
+__?EEARL:
+
+        ASEGN ABSOLUTE:DATA:NOROOT,01fH
+__?EEARH:
+
+        END
+//  197 
+//  198 /*
+//  199       VS_BUFFER32[VS_BUFFER_pos++]=c; // Пока буфер не переполнился - пишем тело в буфер
+//  200       if (VS_BUFFER_pos>=32)         
+//  201       {
+//  202           // Иначе сваливаем в VS1053 и проигрываем,
+//  203           UREG *DATA=&VS_BUFFER32[0];
+//  204           VS_DREQ_wait();    // be shure that FIFO is free
+//  205           cbr (SPSR, SPI2X); // set low freq. 1/4 SCLK (4MHz)
+//  206           VS_DS_clr();
+//  207           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  208           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  209           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  210           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  211           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  212           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  213           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  214           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  215           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  216           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  217           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  218           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  219           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  220           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  221           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA++; while (!(SPSR & (1<<SPIF)));
+//  222           SPDR = *DATA++; while (!(SPSR & (1<<SPIF))); SPDR = *DATA;   while (!(SPSR & (1<<SPIF)));                              
+//  223           VS_DS_set();
+//  224           sbr (SPSR, SPI2X); // restore hi freq. 1/2 SCLK (8MHz)
+//  225         VS_BUFFER_pos=0;              // Возвращаем указатель буфера на начало
+//  226       }      
+//  227 */
+// 
+//     7 bytes in segment ABSOLUTE
+// 1 756 bytes in segment CODE
+// 
+// 1 756 bytes of CODE memory
+//     0 bytes of DATA memory (+ 7 bytes shared)
+//
+//Errors: none
+//Warnings: none

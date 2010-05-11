@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>2259083766</fileChecksum>
+  <configuration>
+    <name>Debug</name>
+    <outputs>
+      <file>$PROJ_DIR$\kb.c</file>
+      <file>$PROJ_DIR$\Debug\List\io.lst</file>
+      <file>$PROJ_DIR$\pages.h</file>
+      <file>$PROJ_DIR$\enc28j60.h</file>
+      <file>$PROJ_DIR$\http_srv.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\network.pbi</file>
+      <file>$PROJ_DIR$\Debug\List\station.lst</file>
+      <file>$PROJ_DIR$\stuff.asm</file>
+      <file>$PROJ_DIR$\FIFO.h</file>
+      <file>$PROJ_DIR$\Debug\List\io.s90</file>
+      <file>$PROJ_DIR$\Debug\List\kb.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\kb.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\network.r90</file>
+      <file>$PROJ_DIR$\lcd.c</file>
+      <file>$PROJ_DIR$\mac_rx.asm</file>
+      <file>$PROJ_DIR$\station.c</file>
+      <file>$PROJ_DIR$\Debug\Exe\NikeE1B.d90</file>
+      <file>$PROJ_DIR$\tcp.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\http_post.r90</file>
+      <file>$PROJ_DIR$\kb.h</file>
+      <file>$PROJ_DIR$\Debug\List\http_get.lst</file>
+      <file>$PROJ_DIR$\mac_tx.asm</file>
+      <file>$PROJ_DIR$\Debug\List\vs.s90</file>
+      <file>$PROJ_DIR$\Debug\List\FIFO.s90</file>
+      <file>$PROJ_DIR$\compiler.h</file>
+      <file>$PROJ_DIR$\nic.c</file>
+      <file>$PROJ_DIR$\Debug\List\network.lst</file>
+      <file>$PROJ_DIR$\network_routines_avr.c</file>
+      <file>$PROJ_DIR$\Debug\Obj\mac_rx.r90</file>
+      <file>$PROJ_DIR$\Debug\List\main.s90</file>
+      <file>$PROJ_DIR$\lcd.h</file>
+      <file>$PROJ_DIR$\Debug\List\mac.s90</file>
+      <file>$PROJ_DIR$\Debug\Obj\kb.r90</file>
+      <file>$PROJ_DIR$\Debug\List\nic.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\md5cheat.pbi</file>
+      <file>$PROJ_DIR$\http_post.c</file>
+      <file>$TOOLKIT_DIR$\src\template\cfg3soim.xcl</file>
+      <file>$PROJ_DIR$\vs.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\http_get.r90</file>
+      <file>$PROJ_DIR$\vs.c</file>
+      <file>$PROJ_DIR$\Debug\Obj\lcd.r90</file>
+      <file>$PROJ_DIR$\enc28j60.c</file>
+      <file>$PROJ_DIR$\Debug\Obj\eeprom_3.r90</file>
+      <file>$PROJ_DIR$\Debug\List\FIFO.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\mac_tx.r90</file>
+      <file>$PROJ_DIR$\md5cheat.c</file>
+      <file>$PROJ_DIR$\Debug\List\nic.s90</file>
+      <file>$TOOLKIT_DIR$\inc\clib\pgmspace.h</file>
+      <file>$PROJ_DIR$\FIFO.c</file>
+      <file>$PROJ_DIR$\Debug\Obj\network_routines_avr.pbi</file>
+      <file>$PROJ_DIR$\main.c</file>
+      <file>$PROJ_DIR$\nike_e.h</file>
+      <file>$PROJ_DIR$\player.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\vs.r90</file>
+      <file>$PROJ_DIR$\Debug\List\main.lst</file>
+      <file>$PROJ_DIR$\Debug\List\md5cheat.lst</file>
+      <file>$TOOLKIT_DIR$\src\template\cfgm32.xcl</file>
+      <file>$PROJ_DIR$\nic.h</file>
+      <file>$PROJ_DIR$\ip.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\pages.r90</file>
+      <file>$PROJ_DIR$\Debug\Obj\vs.pbi</file>
+      <file>$PROJ_DIR$\io.h</file>
+      <file>$PROJ_DIR$\icmp.h</file>
+      <file>$PROJ_DIR$\network.h</file>
+      <file>$PROJ_DIR$\mac.c</file>
+      <file>$TOOLKIT_DIR$\inc\intrinsics.h</file>
+      <file>$PROJ_DIR$\Debug\List\http_post.lst</file>
+      <file>$PROJ_DIR$\http_get.c</file>
+      <file>$PROJ_DIR$\Debug\List\network.s90</file>
+      <file>$PROJ_DIR$\arp.h</file>
+      <file>$PROJ_DIR$\eeprom_3.s90</file>
+      <file>$PROJ_DIR$\Debug\Obj\NikeE1B.pbd</file>
+      <file>$PROJ_DIR$\Debug\List\kb.s90</file>
+      <file>$PROJ_DIR$\pages.c</file>
+      <file>$PROJ_DIR$\Debug\List\lcd.lst</file>
+      <file>$PROJ_DIR$\Debug\List\pages.s90</file>
+      <file>$PROJ_DIR$\stdafx.h</file>
+      <file>$PROJ_DIR$\io.c</file>
+      <file>$TOOLKIT_DIR$\inc\ioavr.h</file>
+      <file>$PROJ_DIR$\http_get.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\enc28j60.r90</file>
+      <file>$PROJ_DIR$\Debug\List\vs.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\pages.pbi</file>
+      <file>$PROJ_DIR$\Debug\List\enc28j60.s90</file>
+      <file>$PROJ_DIR$\ethernet.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\nic.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\station.r90</file>
+      <file>$PROJ_DIR$\Debug\List\pages.lst</file>
+      <file>$PROJ_DIR$\network.c</file>
+      <file>$PROJ_DIR$\Debug\List\network_routines_avr.lst</file>
+      <file>$PROJ_DIR$\Debug\List\enc28j60.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\stuff.r90</file>
+      <file>$PROJ_DIR$\Debug\Exe\NikeE1B.ee.bin</file>
+      <file>$TOOLKIT_DIR$\inc\iomacro.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\FIFO.pbi</file>
+      <file>$PROJ_DIR$\network_addr.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\FIFO.r90</file>
+      <file>$PROJ_DIR$\Debug\Obj\enc28j60.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\nic.r90</file>
+      <file>$PROJ_DIR$\Debug\Exe\NikeE1B.ee.hex</file>
+      <file>$PROJ_DIR$\Debug\Obj\station.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\http_post.pbi</file>
+      <file>$PROJ_DIR$\Debug\List\lcd.s90</file>
+      <file>$PROJ_DIR$\Debug\Obj\io.r90</file>
+      <file>$PROJ_DIR$\Debug\List\http_post.s90</file>
+      <file>$PROJ_DIR$\station.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\http_get.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.r90</file>
+      <file>$PROJ_DIR$\Debug\Obj\md5cheat.r90</file>
+      <file>$PROJ_DIR$\Debug\Obj\mac.r90</file>
+      <file>$PROJ_DIR$\Debug\List\station.s90</file>
+      <file>$PROJ_DIR$\Debug\Obj\lcd.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\iom32.h</file>
+      <file>$PROJ_DIR$\Debug\Exe\NikeE1B.hex</file>
+      <file>$PROJ_DIR$\Debug\List\http_get.s90</file>
+      <file>$PROJ_DIR$\Debug\List\md5cheat.s90</file>
+      <file>$PROJ_DIR$\Debug\List\NikeE1B.map</file>
+      <file>$PROJ_DIR$\Debug\Obj\io.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\mac.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdbool.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$TOOLKIT_DIR$\lib\clib\cl3s-ec_mul-sf.r90</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\Debug\List\mac.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\network_routines_avr.r90</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\kb.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 72 10 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 17 58 85 79 106 8 30 52 19</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 17 58 85 79 106 8 30 52 19</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\stuff.asm</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 92</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 51 113 94</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\lcd.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 103 74 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 112</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 30</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 30</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mac_rx.asm</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 28</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 51 113 94</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\station.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 111 6 87</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 101</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 106 51 85</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 106 51 85</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\NikeE1B.d90</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 56 36 97 81 38 104 32 40 110 108 109 12 99 59 87 92 53 122</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mac_tx.asm</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 44</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 51 113 94</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\nic.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 46 33 99</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 86</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 57 24 113 94 65 47 80 121 120 3 51 76 78 85 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 57 24 113 94 65 47 80 121 120 3 51 76 78 85 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\network_routines_avr.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 125 90</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 49</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\http_post.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 105 66 18</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 102</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85 17 58 47 80 121</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85 17 58 47 80 121</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\vs.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 22 82 53</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 60</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 76 78 113 94 65 24 47 80 121 120 37</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 76 78 113 94 65 24 47 80 121 120 37</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\enc28j60.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 84 91 81</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 98</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85 24 47 80 121 120 3 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85 24 47 80 121 120 3 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\md5cheat.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 116 55 109</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 34</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 76 78 113 94 65</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 76 78 113 94 65</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\FIFO.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 23 43 97</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 95</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 8 17 58 85 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24 113 94 65 47 80 121 120 76 78 8 17 58 85 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 29 54 108</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 123</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 57 24 113 94 65 47 80 121 120 3 63 76 78 51 85 17 58 2 4 61 37 30 8 79 106 19 52</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 57 24 113 94 65 47 80 121 120 3 63 76 78 51 85 17 58 2 4 61 37 30 8 79 106 19 52</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mac.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 31 124 110</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 119</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\http_get.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 115 20 38</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 107</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85 17 58 47 80 121 37 24 120 8 79 30 106 52 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85 17 58 47 80 121 37 24 120 8 79 30 106 52 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\eeprom_3.s90</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 42</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Obj\NikeE1B.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 95 98 107 118 11 112 119 123 34 5 86 83 101 60</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\pages.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 75 88 59</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 83</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85 2</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85 2</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\io.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 9 1 104</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 118</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 76 78 113 94 65 24 47 80 121 120</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 76 78 113 94 65 24 47 80 121 120</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 114 117 100 93</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\network.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 68 26 12</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 5</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51 113 94 76 78 65 85 3 61 8 24 47 80 121 120 69 58 62 17 96 63 27</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51 113 94 76 78 65 85 3 61 8 24 47 80 121 120 69 58 62 17 96 63 27</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\NikeE1B.hex</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 117 100 93</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 56 36 97 81 38 104 32 40 110 108 109 12 99 59 87 92 53 122</file>
+        </tool>
+      </inputs>
+    </file>
+  </configuration>
+  <configuration>
+    <name>Release</name>
+    <outputs>
+      <file>$PROJ_DIR$\pages.h</file>
+      <file>$PROJ_DIR$\enc28j60.h</file>
+      <file>$PROJ_DIR$\http_srv.h</file>
+      <file>$PROJ_DIR$\Release\Obj\mac.r90</file>
+      <file>$PROJ_DIR$\stuff.asm</file>
+      <file>$PROJ_DIR$\FIFO.h</file>
+      <file>$PROJ_DIR$\lcd.c</file>
+      <file>$PROJ_DIR$\station.c</file>
+      <file>$PROJ_DIR$\Release\Obj\io.r90</file>
+      <file>$PROJ_DIR$\tcp.h</file>
+      <file>$PROJ_DIR$\compiler.h</file>
+      <file>$PROJ_DIR$\nic.c</file>
+      <file>$PROJ_DIR$\network_routines_avr.c</file>
+      <file>$PROJ_DIR$\lcd.h</file>
+      <file>$PROJ_DIR$\Release\Obj\main.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\eeprom_3.r90</file>
+      <file>$PROJ_DIR$\http_post.c</file>
+      <file>$PROJ_DIR$\vs.h</file>
+      <file>$PROJ_DIR$\vs.c</file>
+      <file>$PROJ_DIR$\enc28j60.c</file>
+      <file>$PROJ_DIR$\Release\Exe\NikeE1B.hex</file>
+      <file>$PROJ_DIR$\Release\Obj\md5cheat.pbi</file>
+      <file>$PROJ_DIR$\md5cheat.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\pgmspace.h</file>
+      <file>$PROJ_DIR$\Release\Obj\http_post.pbi</file>
+      <file>$PROJ_DIR$\FIFO.c</file>
+      <file>$PROJ_DIR$\main.c</file>
+      <file>$PROJ_DIR$\nike_e.h</file>
+      <file>$PROJ_DIR$\Release\Obj\network.pbi</file>
+      <file>$PROJ_DIR$\nic.h</file>
+      <file>$PROJ_DIR$\ip.h</file>
+      <file>$PROJ_DIR$\Release\Obj\lcd.r90</file>
+      <file>$PROJ_DIR$\io.h</file>
+      <file>$PROJ_DIR$\icmp.h</file>
+      <file>$PROJ_DIR$\network.h</file>
+      <file>$PROJ_DIR$\mac.c</file>
+      <file>$TOOLKIT_DIR$\inc\intrinsics.h</file>
+      <file>$PROJ_DIR$\http_get.c</file>
+      <file>$PROJ_DIR$\arp.h</file>
+      <file>$PROJ_DIR$\Release\Obj\NikeE1B.pbd</file>
+      <file>$PROJ_DIR$\eeprom_3.s90</file>
+      <file>$PROJ_DIR$\Release\Obj\nic.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\pages.c</file>
+      <file>$PROJ_DIR$\stdafx.h</file>
+      <file>$PROJ_DIR$\io.c</file>
+      <file>$TOOLKIT_DIR$\inc\ioavr.h</file>
+      <file>$PROJ_DIR$\http_get.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\ethernet.h</file>
+      <file>$PROJ_DIR$\network.c</file>
+      <file>$PROJ_DIR$\Release\Obj\FIFO.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\network.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\station.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\lcd.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\iomacro.h</file>
+      <file>$PROJ_DIR$\Release\Obj\stuff.r90</file>
+      <file>$PROJ_DIR$\network_addr.h</file>
+      <file>$PROJ_DIR$\Release\Obj\pages.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\md5cheat.r90</file>
+      <file>$PROJ_DIR$\station.h</file>
+      <file>$PROJ_DIR$\Release\Obj\vs.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\iom168.h</file>
+      <file>$PROJ_DIR$\Release\Obj\mac.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\http_get.r90</file>
+      <file>$TOOLKIT_DIR$\inc\iom32.h</file>
+      <file>$PROJ_DIR$\Release\Obj\pages.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\http_post.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\io.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\station.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\nic.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdbool.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\Release\Obj\FIFO.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\enc28j60.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\vs.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\enc28j60.r90</file>
+      <file>$PROJ_DIR$\Release\Obj\http_get.pbi</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\stuff.asm</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 56</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\lcd.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 31</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 54</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 65 55 36 23 48 72 71 44 46 62 13</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\station.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 69</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 53</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 65 55 36 23 48 72 71 44 46 62 60 27 49</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\nic.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 70</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 10 65 55 36 23 48 72 71 1 27 44 46 62 49 32</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\http_post.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 67</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49 9 30 23 48 72</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\vs.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 75</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 61</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 44 46 62 55 36 10 65 23 48 72 71 17</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\enc28j60.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 76</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 74</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49 10 23 48 72 71 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\md5cheat.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 59</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 21</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 44 46 62 55 36</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\FIFO.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 51</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 73</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 65 55 36 23 48 72 71 44 46 62 5 49</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 14</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 42</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 10 65 55 36 23 48 72 71 1 34 44 46 62 27 49 9 30 0 2 32 17 13 5 47 60</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\mac.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 3</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 63</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\http_get.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 64</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 77</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49 9 30 23 48 72 17 10 71 5 47 13 60</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Release\Obj\NikeE1B.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 73 74 77 24 68 54 63 42 21 28 70 66 53 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\eeprom_3.s90</name>
+      <outputs>
+        <tool>
+          <name>AAVR</name>
+          <file> 15</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\pages.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 58</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 66</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49 0</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\io.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 8</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 68</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 65 55 36 23 48 72 71</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 20</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\network.c</name>
+      <outputs>
+        <tool>
+          <name>ICCAVR</name>
+          <file> 52</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 28</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27 65 55 44 46 62 36 49 1 32 5 38 30 33 9 57 34 12</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+
